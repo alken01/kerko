@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SearchFormProps {
   onSearch: (firstName: string, lastName: string) => void;
