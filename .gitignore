@@ -15,19 +15,11 @@ dist/
 # Misc
 .DS_Store
 *.pem
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Local env files
-.env*.local
 
 # Vercel
 .vercel
@@ -65,9 +57,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
+# Environment variables and sensitive configs
 .env
 .env.local
 .env.development.local
 .env.test.local
-.env.production.local 
+.env.production.local
+appsettings*.json
+
+# Database
+database/
