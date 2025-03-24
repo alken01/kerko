@@ -18,7 +18,6 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
-        <div className={cardStyles.headerGradient} />
         <div className="relative z-10">
           <h2 className={cardStyles.title}>
             {patronazhist.emri}{" "}

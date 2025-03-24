@@ -11,7 +11,6 @@ export function TargatCard({ targat }: TargatCardProps) {
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
-        <div className={cardStyles.headerGradient} />
         <div className="relative z-10">
           <h2 className={cardStyles.title}>
             {targat.emri} <span className="font-bold">{targat.mbiemri}</span>

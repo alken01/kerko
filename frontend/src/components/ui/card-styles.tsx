@@ -4,8 +4,6 @@ export const cardStyles = {
   root: "overflow-hidden border-2 border-[#2a1a1a] bg-[#0a0303] shadow-[0_0_15px_rgba(0,0,0,0.5)]",
   header:
     "bg-gradient-to-br from-[#120606] to-[#0a0303] py-4 px-5 border-b-2 border-[#2a1a1a] relative",
-  headerGradient:
-    "absolute inset-0 bg-gradient-to-br from-[#ffffff05] to-transparent opacity-30",
   title: "text-xl font-bold tracking-tight text-white uppercase",
   infoList: "mt-1.5 space-y-2",
   infoItem: "text-[#999] flex items-start gap-2 text-sm",

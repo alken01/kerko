@@ -22,7 +22,6 @@ export function PersonCard({ person }: PersonCardProps) {
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
-        <div className={cardStyles.headerGradient} />
         <div className="relative z-10">
           <h2 className={cardStyles.title}>
             {person.emri} <span className="font-bold">{person.mbiemri}</span>
