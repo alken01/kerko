@@ -1,0 +1,40 @@
+# Dependencies
+**/bin/
+**/obj/
+**/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+processed_data/
+
+# Environment files
+*.env
+appsettings.Development.json
+appsettings.Production.json
+
+# Misc
+.DS_Store
+*.pem
+*.pyc 
