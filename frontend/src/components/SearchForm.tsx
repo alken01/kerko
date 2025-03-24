@@ -99,7 +99,7 @@ export function SearchForm({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 bg-[#120606] text-[#999] border-[#2a1a1a] hover:bg-[#2a1a1a] hover:text-white h-12 shadow-[0_0_1px_1px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.05)] relative overflow-hidden group touch-manipulation font-normal"
+              className="flex-1 bg-[#120606] border-2 border-[#2a1a1a] text-[#999] hover:bg-[#2a1a1a] hover:text-white h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
               style={{ WebkitTapHighlightColor: "transparent" }}
               onClick={() => {
                 setEmri("");
@@ -107,19 +107,15 @@ export function SearchForm({
                 setNumriTarges("");
               }}
             >
-              <span className="absolute inset-0 bg-gradient-to-br from-[#ffffff10] to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></span>
-              <span className="relative z-10">Pastro</span>
+              Pastro
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-gradient-to-br from-[#333] to-[#222] text-white border-[#444] hover:from-[#444] hover:to-[#333] h-12 font-bold shadow-[0_0_1px_1px_rgba(0,0,0,0.2)] relative overflow-hidden group touch-manipulation disabled:opacity-50 border"
+              className="flex-1 bg-[#120606] border-2 border-[#2a1a1a] text-white hover:bg-[#2a1a1a] h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation disabled:opacity-50"
               style={{ WebkitTapHighlightColor: "transparent" }}
               disabled={isLoading}
             >
-              <span className="absolute inset-0 bg-gradient-to-br from-white to-transparent opacity-0 group-hover:opacity-10 transition-opacity"></span>
-              <span className="relative z-10">
-                {isLoading ? "Duke kërkuar..." : "Kërko"}
-              </span>
+              {isLoading ? "Duke kërkuar..." : "Kërko"}
             </Button>
           </div>
         </form>
