@@ -14,6 +14,9 @@ public class SearchService : ISearchService
 {
     private readonly ApplicationDbContext _db;
     private readonly ILogger<SearchService> _logger;
+    private const int MaxResults = 100;
+    private const int MinTargesLength = 3;
+    private const int MinNameLength = 2;
 
     public SearchService(ApplicationDbContext db, ILogger<SearchService> logger)
     {
@@ -28,9 +31,15 @@ public class SearchService : ISearchService
             throw new ArgumentException("Emri dhe mbiemri nuk mund te jene bosh");
         }
 
+        if (mbiemri.Length < MinNameLength || emri.Length < MinNameLength)
+        {
+            throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
+        }
+
         var personResults = await _db.Person
             .Where(p => p.Mbiemer != null && p.Mbiemer.ToLower().Contains(mbiemri.ToLower()) &&
                         p.Emer != null && p.Emer.ToLower().Contains(emri.ToLower()))
+            .Take(MaxResults)
             .Select(p => new PersonResponse
             {
                 Adresa = p.Adresa,
@@ -49,9 +58,12 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
+        personResults = personResults.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri)).ToList();
+
         var rrogatResults = await _db.Rrogat
             .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri.ToLower()) &&
                         p.Emri != null && p.Emri.ToLower().Contains(emri.ToLower()))
+            .Take(MaxResults)
             .Select(r => new RrogatResponse
             {
                 NumriPersonal = r.NumriPersonal,
@@ -65,9 +77,12 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
+        rrogatResults = rrogatResults.Where(r => !IsNameBanned(r?.Emri, r?.Mbiemri)).ToList();
+
         var targatResults = await _db.Targat
             .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri.ToLower()) &&
                         p.Emri != null && p.Emri.ToLower().Contains(emri.ToLower()))
+            .Take(MaxResults)
             .Select(t => new TargatResponse
             {
                 NumriTarges = t.NumriTarges,
@@ -80,9 +95,12 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
+        targatResults = targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri)).ToList();
+
         var patronazhistResults = await _db.Patronazhist
             .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri.ToLower()) &&
                         p.Emri != null && p.Emri.ToLower().Contains(emri.ToLower()))
+            .Take(MaxResults)
             .Select(p => new PatronazhistResponse
             {
                 NumriPersonal = p.NumriPersonal,
@@ -107,6 +125,8 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
+        patronazhistResults = patronazhistResults.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri)).ToList();
+
         return new SearchResponse
         {
             Person = personResults,
@@ -123,19 +143,45 @@ public class SearchService : ISearchService
             throw new ArgumentException("Numri i targes nuk mund te jene bosh");
         }
 
+        if (numriTarges.Length < MinTargesLength)
+        {
+            throw new ArgumentException($"Numri i targes duhet te kete te pakten {MinTargesLength} karaktere");
+        }
+
         var targatResults = await _db.Targat
-            .Where(t => t.NumriTarges == numriTarges)
+            .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(numriTarges.ToLower()))
+            .Take(MaxResults)
             .Select(t => new TargatResponse
             {
                 NumriTarges = t.NumriTarges,
                 Marka = t.Marka,
                 Modeli = t.Modeli,
+                Ngjyra = t.Ngjyra,
+                NumriPersonal = t.NumriPersonal,
+                Emri = t.Emri,
+                Mbiemri = t.Mbiemri
             })
             .ToListAsync();
+
+        targatResults = targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri)).ToList();
 
         return new SearchResponse
         {
             Targat = targatResults
         };
+    }
+
+    private bool IsNameBanned(string? emri, string? mbiemri)
+    {
+        if (string.IsNullOrEmpty(emri) || string.IsNullOrEmpty(mbiemri))
+        {
+            return false;
+        }
+
+        var bannedNames = new[] { "gabriele gjoka", "alvi tafa" };
+        var bannedLastNames = new[] { "rrokaj" };
+
+        return bannedNames.Contains($"{emri.Trim().ToLower()} {mbiemri.Trim().ToLower()}") || 
+               bannedLastNames.Contains(mbiemri.Trim().ToLower());
     }
 } 
