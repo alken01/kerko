@@ -57,7 +57,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#120404] overflow-x-hidden touch-manipulation dark">
+    <div className="min-h-screen bg-[#0a0303] overflow-x-hidden touch-manipulation dark">
       <GlobalStyles />
       <main className="container mx-auto py-8 space-y-6 px-4 md:px-6">
         <h1 className="text-center text-3xl font-bold tracking-tight text-white">
