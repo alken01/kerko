@@ -35,28 +35,28 @@ export function SearchForm({
     <Card className={cardStyles.root}>
       <CardContent className="p-5 space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-wrap space-x-0 space-y-1 sm:space-y-0 sm:space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
+          <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
             <button
               type="button"
               onClick={() => setSearchType("name")}
-              className={`w-full sm:flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+              className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 searchType === "name"
                   ? "bg-[#2a1a1a] text-white shadow-sm"
                   : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
               }`}
             >
-              Kërko sipas Emrit
+              Emri
             </button>
             <button
               type="button"
               onClick={() => setSearchType("plate")}
-              className={`w-full sm:flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+              className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 searchType === "plate"
                   ? "bg-[#2a1a1a] text-white shadow-sm"
                   : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
               }`}
             >
-              Kërko sipas Targës
+              Targa
             </button>
           </div>
 
