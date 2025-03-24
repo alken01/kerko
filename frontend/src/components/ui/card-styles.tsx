@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
 
 export const cardStyles = {
   root: "overflow-hidden border-2 border-[#2a1a1a] bg-[#0a0303] shadow-[0_0_15px_rgba(0,0,0,0.5)]",
@@ -29,37 +30,38 @@ export const InfoItem = ({
   value,
   className,
 }: {
-  icon: React.ElementType;
+  icon: LucideIcon;
   label: string;
   value: string | React.ReactNode;
   className?: string;
 }) => (
-  <p className={cn(cardStyles.infoItem, className)}>
+  <div className={cn(cardStyles.infoItem, className)}>
     <Icon className={cardStyles.infoIcon} />
-    <span className={cardStyles.infoLabel}>{label}:</span>
+    <span className={cardStyles.infoLabel}>{label}</span>
     {typeof value === "string" ? (
       <span className={cardStyles.infoValue}>{value}</span>
     ) : (
       value
     )}
-  </p>
+  </div>
 );
 
 export const DetailRow = ({
   label,
   value,
   className,
+  icon: Icon,
 }: {
   label: string;
-  value: string | React.ReactNode;
+  value: React.ReactNode;
   className?: string;
+  icon?: LucideIcon;
 }) => (
   <div className={cn(cardStyles.detailsRow, className)}>
-    <span className={cardStyles.detailsLabel}>{label}</span>
-    {typeof value === "string" ? (
-      <span className={cardStyles.detailsValue}>{value}</span>
-    ) : (
-      value
-    )}
+    <div className="flex items-center gap-1">
+      {Icon && <Icon className="w-3 h-3 text-[#666]" />}
+      <span className={cardStyles.detailsLabel}>{label}</span>
+    </div>
+    <span className={cardStyles.detailsValue}>{value}</span>
   </div>
 );

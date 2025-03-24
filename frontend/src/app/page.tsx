@@ -63,7 +63,6 @@ export default function Home() {
         <h1 className="text-center text-3xl font-bold tracking-tight text-white">
           Kërko
         </h1>
-
         <div className="max-w-md mx-auto">
           <SearchForm
             onSearch={handleSearch}

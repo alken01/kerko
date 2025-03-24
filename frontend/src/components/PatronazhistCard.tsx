@@ -7,6 +7,7 @@ import {
   Building2,
   Globe,
   FileText,
+  User,
 } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
 
@@ -46,6 +47,26 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
       <CardContent className={cardStyles.content}>
         <div className={cardStyles.section}>
           <h3 className={cardStyles.sectionTitle}>
+            <User className={cardStyles.sectionIcon} />
+            Informacion Personal
+          </h3>
+          <div className={cardStyles.detailsContainer}>
+            <div className={cardStyles.detailsGrid}>
+              <DetailRow
+                label="Emri i Babait"
+                value={patronazhist.atesi || "N/A"}
+              />
+              <DetailRow
+                label="Kod Banese"
+                value={patronazhist.kodBanese || "N/A"}
+              />
+              <DetailRow label="Telefoni" value={patronazhist.tel || "N/A"} />
+            </div>
+          </div>
+        </div>
+
+        <div className={cardStyles.section}>
+          <h3 className={cardStyles.sectionTitle}>
             <Building2 className={cardStyles.sectionIcon} />
             Informacion i Patronazhistit
           </h3>
@@ -60,14 +81,9 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
                 label="Numri i Listës"
                 value={patronazhist.listaNr || "N/A"}
               />
-              <DetailRow label="Telefoni" value={patronazhist.tel || "N/A"} />
               <DetailRow
-                label="Kod Banese"
-                value={patronazhist.kodBanese || "N/A"}
-              />
-              <DetailRow
-                label="Emri i Babait"
-                value={patronazhist.atesi || "N/A"}
+                label="Kompania"
+                value={patronazhist.kompania || "N/A"}
               />
             </div>
           </div>
@@ -97,7 +113,7 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
         <div className={cardStyles.section}>
           <h3 className={cardStyles.sectionTitle}>
             <FileText className={cardStyles.sectionIcon} />
-            Preferenca dhe Komente
+            Preferenca Politike dhe Komente
           </h3>
           <div className={cardStyles.detailsContainer}>
             <div className={cardStyles.detailsGrid}>
@@ -114,9 +130,10 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
                 value={patronazhist.census2013Siguria || "N/A"}
               />
               {patronazhist.koment && (
-                <div className="col-span-full">
-                  <p className={cardStyles.comment}>{patronazhist.koment}</p>
-                </div>
+                <DetailRow
+                  label="Koment"
+                  value={patronazhist.koment || "N/A"}
+                />
               )}
             </div>
           </div>

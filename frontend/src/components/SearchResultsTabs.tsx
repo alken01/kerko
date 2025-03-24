@@ -21,31 +21,29 @@ export function SearchResultsTabs({
 }: SearchResultsTabsProps) {
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-      <div className="flex flex-wrap space-x-0 space-y-1 sm:space-y-0 sm:space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
+      <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
         {(["person", "rrogat", "targat", "patronazhist"] as TabType[]).map(
-          (type, index) => (
+          (type) => (
             <button
               key={type}
               onClick={() => onTabChange(type)}
-              className={`w-full sm:flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
-                index > 0 ? "mt-1 sm:mt-0" : ""
-              } ${
+              className={`flex-1 px-2 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
                 activeTab === type
                   ? "bg-[#2a1a1a] text-white shadow-sm"
                   : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
               }`}
             >
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-1">
                 <span>
                   {type === "person"
-                    ? "Persona"
+                    ? "Person"
                     : type === "rrogat"
                     ? "Rrogat"
                     : type === "targat"
                     ? "Targat"
-                    : "Patronazhist"}
+                    : "Politik"}
                 </span>
-                <span className="text-xs bg-[#1a1a1a] px-2 py-0.5 rounded-full">
+                <span className="text-xs bg-[#1a1a1a] px-1.5 py-0.5 rounded-full">
                   {searchResults[type]?.length || 0}
                 </span>
               </div>
