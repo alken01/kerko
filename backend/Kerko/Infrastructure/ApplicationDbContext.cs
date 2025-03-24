@@ -29,6 +29,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(t => t.Mbiemri);
         modelBuilder.Entity<Targat>()
             .HasIndex(t => t.Emri);
+        modelBuilder.Entity<Targat>()
+            .HasIndex(t => t.NumriTarges);
 
         modelBuilder.Entity<Patronazhist>()
             .HasIndex(p => p.Mbiemri);
