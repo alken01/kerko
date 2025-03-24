@@ -13,17 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`antialiased min-h-screen bg-[#0a0303]`}
-        style={{
-          backgroundImage: "url('/alb.png')",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-          backgroundBlendMode: "soft-light",
-          backgroundAttachment: "fixed",
-        }}
-      >
+      <body className={`antialiased min-h-screen bg-[#0a0303]`}>
         {children}
       </body>
     </html>
