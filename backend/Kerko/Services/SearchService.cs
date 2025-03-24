@@ -173,15 +173,17 @@ public class SearchService : ISearchService
 
     private bool IsNameBanned(string? emri, string? mbiemri)
     {
-        if (string.IsNullOrEmpty(emri) || string.IsNullOrEmpty(mbiemri))
-        {
-            return false;
-        }
+        return false;
+        // TODO: update this later with a proper endpoint
+        // if (string.IsNullOrEmpty(emri) || string.IsNullOrEmpty(mbiemri))
+        // {
+        //     return false;
+        // }
 
-        var bannedNames = new[] { "gabriele gjoka", "alvi tafa" };
-        var bannedLastNames = new[] { "rrokaj" };
+        // var bannedNames = new[] { "gabriele gjoka", "alvi tafa" };
+        // var bannedLastNames = new[] { "rrokaj" };
 
-        return bannedNames.Contains($"{emri.Trim().ToLower()} {mbiemri.Trim().ToLower()}") || 
-               bannedLastNames.Contains(mbiemri.Trim().ToLower());
+        // return bannedNames.Contains($"{emri.Trim().ToLower()} {mbiemri.Trim().ToLower()}") || 
+        //        bannedLastNames.Contains(mbiemri.Trim().ToLower());
     }
 } 
