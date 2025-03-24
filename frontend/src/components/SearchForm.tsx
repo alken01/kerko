@@ -9,12 +9,14 @@ import { cardStyles } from "./ui/card-styles";
 interface SearchFormProps {
   onSearch: (emri: string, mbiemri: string) => void;
   onSearchTarga: (numriTarges: string) => void;
+  onClear?: () => void;
   isLoading: boolean;
 }
 
 export function SearchForm({
   onSearch,
   onSearchTarga,
+  onClear,
   isLoading,
 }: SearchFormProps) {
   const [emri, setEmri] = useState("");
@@ -28,6 +30,15 @@ export function SearchForm({
       onSearch(emri, mbiemri);
     } else {
       onSearchTarga(numriTarges);
+    }
+  };
+
+  const handleClear = () => {
+    setEmri("");
+    setMbiemri("");
+    setNumriTarges("");
+    if (onClear) {
+      onClear();
     }
   };
 
@@ -99,13 +110,9 @@ export function SearchForm({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 bg-[#120606] border-2 border-[#2a1a1a] text-[#999] hover:bg-[#2a1a1a] hover:text-white h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+              className="flex-1 bg-[#120606] border-2 border-[#2a1a1a] text-[#666] hover:bg-[#2a1a1a] hover:text-white h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
               style={{ WebkitTapHighlightColor: "transparent" }}
-              onClick={() => {
-                setEmri("");
-                setMbiemri("");
-                setNumriTarges("");
-              }}
+              onClick={handleClear}
             >
               Pastro
             </Button>

@@ -56,6 +56,11 @@ export default function Home() {
     handleSearch(emri, mbiemri);
   };
 
+  const handleClear = () => {
+    setSearchResults(null);
+    setError(null);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0303] overflow-x-hidden touch-manipulation dark">
       <GlobalStyles />
@@ -67,6 +72,7 @@ export default function Home() {
           <SearchForm
             onSearch={handleSearch}
             onSearchTarga={handleSearchTarga}
+            onClear={handleClear}
             isLoading={isLoading}
           />
         </div>
