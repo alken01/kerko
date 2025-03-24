@@ -15,7 +15,7 @@ public class SearchService : ISearchService
     private readonly ApplicationDbContext _db;
     private readonly ILogger<SearchService> _logger;
     private const int MaxResults = 100;
-    private const int MinTargesLength = 3;
+    private const int MinTargesLength = 6;
     private const int MinNameLength = 2;
 
     public SearchService(ApplicationDbContext db, ILogger<SearchService> logger)

@@ -21,7 +21,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("person");
 
-  const handleSearch = async (firstName: string, lastName: string) => {
+  const handleSearch = async (emri: string, mbiemri: string) => {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
@@ -29,13 +29,8 @@ export default function Home() {
     try {
       const response = await fetch(
         `${API_URL}/api/kerko?emri=${encodeURIComponent(
-          firstName
-        )}&mbiemri=${encodeURIComponent(lastName)}`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-        }
+          emri
+        )}&mbiemri=${encodeURIComponent(mbiemri)}`
       );
 
       if (!response.ok) {
@@ -61,6 +56,43 @@ export default function Home() {
     }
   };
 
+  const handleSearchTarga = async (numriTarges: string) => {
+    setIsLoading(true);
+    setError(null);
+    setSearchResults(null);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/targat?numriTarges=${encodeURIComponent(numriTarges)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch search results");
+      }
+
+      const data = await response.json();
+      if (!data) {
+        throw new Error("Nuk u gjet asnjë rezultat");
+      }
+
+      setSearchResults({
+        person: [],
+        rrogat: [],
+        targat: [data],
+        patronazhist: [],
+      });
+    } catch (err) {
+      console.error("Search error:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNameClick = (emri: string, mbiemri: string) => {
+    handleSearch(emri, mbiemri);
+  };
+
   return (
     <div className="min-h-screen bg-[#120404] overflow-x-hidden touch-manipulation dark">
       <style jsx global>{`
@@ -74,6 +106,13 @@ export default function Home() {
             min-height: -webkit-fill-available;
           }
         }
+        ::-webkit-scrollbar {
+          display: none;
+        }
+        * {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
       <main className="container mx-auto py-8 space-y-6 px-4 md:px-6">
         <h1 className="text-center text-3xl font-bold tracking-tight text-white">
@@ -81,7 +120,11 @@ export default function Home() {
         </h1>
 
         <div className="max-w-md mx-auto">
-          <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+          <SearchForm
+            onSearch={handleSearch}
+            onSearchTarga={handleSearchTarga}
+            isLoading={isLoading}
+          />
         </div>
 
         {error && (
@@ -94,7 +137,7 @@ export default function Home() {
         )}
 
         {searchResults && (
-          <div className="flex flex-col gap-4 max-w-2xl mx-auto w-full">
+          <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
             <div className="flex flex-wrap space-x-0 space-y-1 sm:space-y-0 sm:space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
               {(
                 ["person", "rrogat", "targat", "patronazhist"] as TabType[]
@@ -110,7 +153,7 @@ export default function Home() {
                       : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
                   }`}
                 >
-                  <div className="flex items-center justify-between sm:justify-start">
+                  <div className="flex items-center justify-center gap-2">
                     <span>
                       {type === "person"
                         ? "Persona"
@@ -120,7 +163,7 @@ export default function Home() {
                         ? "Targat"
                         : "Patronazhist"}
                     </span>
-                    <span className="ml-2 text-xs bg-[#1a1a1a] px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-[#1a1a1a] px-2 py-0.5 rounded-full">
                       {searchResults[type]?.length || 0}
                     </span>
                   </div>
@@ -130,28 +173,32 @@ export default function Home() {
 
             <div className="relative overflow-hidden">
               {activeTab === "person" && (
-                <div className="space-y-2 animate-in fade-in duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
                   {searchResults.person?.map((person, index) => (
                     <PersonCard key={index} person={person} />
                   ))}
                 </div>
               )}
               {activeTab === "rrogat" && (
-                <div className="space-y-2 animate-in fade-in duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
                   {searchResults.rrogat?.map((rrogat, index) => (
                     <RrogatCard key={index} rrogat={rrogat} />
                   ))}
                 </div>
               )}
               {activeTab === "targat" && (
-                <div className="space-y-2 animate-in fade-in duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
                   {searchResults.targat?.map((targat, index) => (
-                    <TargatCard key={index} targat={targat} />
+                    <TargatCard
+                      key={index}
+                      targat={targat}
+                      onNameClick={handleNameClick}
+                    />
                   ))}
                 </div>
               )}
               {activeTab === "patronazhist" && (
-                <div className="space-y-2 animate-in fade-in duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
                   {searchResults.patronazhist?.map((patronazhist, index) => (
                     <PatronazhistCard key={index} patronazhist={patronazhist} />
                   ))}
