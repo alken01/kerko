@@ -1,0 +1,18 @@
+@Kerko_HostAddress = http://localhost:5120
+
+GET {{Kerko_HostAddress}}/api/kerko?emri=mario&mbiemri=telha
+
+###
+
+GET {{Kerko_HostAddress}}/api/people
+
+###
+
+GET {{Kerko_HostAddress}}/health
+
+###
+
+GET {{Kerko_HostAddress}}/api/diagnostics/db
+
+###
+POST {{Kerko_HostAddress}}/api/import

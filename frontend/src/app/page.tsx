@@ -2,35 +2,59 @@
 
 import { useState } from "react";
 import { SearchForm } from "@/components/SearchForm";
-import { PersonDetails } from "@/components/PersonDetails";
-import { Person } from "@/types/person";
+import { PersonCard } from "@/components/PersonCard";
+import { RrogatCard } from "@/components/RrogatCard";
+import { TargatCard } from "@/components/TargatCard";
+import { PatronazhistCard } from "@/components/PatronazhistCard";
+import { SearchResponse } from "@/types/search";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+type TabType = "person" | "rrogat" | "targat" | "patronazhist";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5120";
+
 export default function Home() {
-  const [person, setPerson] = useState<Person | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResponse | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("person");
 
   const handleSearch = async (firstName: string, lastName: string) => {
     setIsLoading(true);
     setError(null);
+    setSearchResults(null);
 
     try {
       const response = await fetch(
-        `/api/search?firstName=${encodeURIComponent(
+        `${API_URL}/api/kerko?emri=${encodeURIComponent(
           firstName
-        )}&lastName=${encodeURIComponent(lastName)}`
+        )}&mbiemri=${encodeURIComponent(lastName)}`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch person data");
+        if (response.status === 404) {
+          throw new Error("Nuk u gjet asnjë rezultat");
+        }
+        throw new Error("Pati një problem gjatë kërkimit");
       }
 
       const data = await response.json();
-      setPerson(data);
+      if (!data) {
+        throw new Error("Nuk u gjet asnjë rezultat");
+      }
+
+      setSearchResults(data);
     } catch (err) {
+      console.error("Search error:", err);
       setError(
-        err instanceof Error ? err.message : "An error occurred while searching"
+        err instanceof Error ? err.message : "Pati një problem gjatë kërkimit"
       );
     } finally {
       setIsLoading(false);
@@ -51,12 +75,14 @@ export default function Home() {
           }
         }
       `}</style>
-      <main className="container py-8 space-y-4">
+      <main className="container mx-auto py-8 space-y-6 px-4 md:px-6">
         <h1 className="text-center text-3xl font-bold tracking-tight text-white">
           Kërko
         </h1>
 
-        <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+        <div className="max-w-md mx-auto">
+          <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+        </div>
 
         {error && (
           <Alert
@@ -67,7 +93,73 @@ export default function Home() {
           </Alert>
         )}
 
-        {person && <PersonDetails person={person} />}
+        {searchResults && (
+          <div className="flex flex-col gap-4 max-w-2xl mx-auto w-full">
+            <div className="flex flex-wrap space-x-0 space-y-1 sm:space-y-0 sm:space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
+              {(
+                ["person", "rrogat", "targat", "patronazhist"] as TabType[]
+              ).map((type, index) => (
+                <button
+                  key={type}
+                  onClick={() => setActiveTab(type)}
+                  className={`w-full sm:flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+                    index > 0 ? "mt-1 sm:mt-0" : ""
+                  } ${
+                    activeTab === type
+                      ? "bg-[#2a1a1a] text-white shadow-sm"
+                      : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between sm:justify-start">
+                    <span>
+                      {type === "person"
+                        ? "Persona"
+                        : type === "rrogat"
+                        ? "Rrogat"
+                        : type === "targat"
+                        ? "Targat"
+                        : "Patronazhist"}
+                    </span>
+                    <span className="ml-2 text-xs bg-[#1a1a1a] px-2 py-0.5 rounded-full">
+                      {searchResults[type]?.length || 0}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="relative overflow-hidden">
+              {activeTab === "person" && (
+                <div className="space-y-2 animate-in fade-in duration-200">
+                  {searchResults.person?.map((person, index) => (
+                    <PersonCard key={index} person={person} />
+                  ))}
+                </div>
+              )}
+              {activeTab === "rrogat" && (
+                <div className="space-y-2 animate-in fade-in duration-200">
+                  {searchResults.rrogat?.map((rrogat, index) => (
+                    <RrogatCard key={index} rrogat={rrogat} />
+                  ))}
+                </div>
+              )}
+              {activeTab === "targat" && (
+                <div className="space-y-2 animate-in fade-in duration-200">
+                  {searchResults.targat?.map((targat, index) => (
+                    <TargatCard key={index} targat={targat} />
+                  ))}
+                </div>
+              )}
+              {activeTab === "patronazhist" && (
+                <div className="space-y-2 animate-in fade-in duration-200">
+                  {searchResults.patronazhist?.map((patronazhist, index) => (
+                    <PatronazhistCard key={index} patronazhist={patronazhist} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

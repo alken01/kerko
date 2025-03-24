@@ -59,8 +59,8 @@ export function PersonDetails({ person }: PersonDetailsProps) {
       transition={{ duration: 0.3 }}
       className="w-full max-w-md mx-auto"
     >
-      <Card className="overflow-hidden border border-[#1a0a0a] bg-[#0a0303] shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-        <CardHeader className="bg-gradient-to-br from-[#120606] to-[#0a0303] py-4 px-5 border-b border-[#1a0a0a] relative">
+      <Card className="overflow-hidden border-2 border-[#2a1a1a] bg-[#0a0303] shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+        <CardHeader className="bg-gradient-to-br from-[#120606] to-[#0a0303] py-4 px-5 border-b border-[#2a1a1a] relative">
           <div className="absolute inset-0 bg-gradient-to-br from-[#ffffff05] to-transparent opacity-30"></div>
           <div className="relative z-10">
             <h2 className="text-xl font-bold tracking-tight text-white">
@@ -73,7 +73,7 @@ export function PersonDetails({ person }: PersonDetailsProps) {
                 {formatDate(person.birthDate)}
                 <Badge
                   variant="outline"
-                  className="ml-1 bg-[#120606] text-[#cccccc] border-[#1a0a0a] hover:bg-[#1a0a0a] text-xs font-normal"
+                  className="ml-1 bg-[#120606] text-[#cccccc] border-[#2a1a1a] hover:bg-[#2a1a1a] text-xs font-normal"
                 >
                   {calculateAge(person.birthDate)} vjet
                 </Badge>
@@ -93,7 +93,7 @@ export function PersonDetails({ person }: PersonDetailsProps) {
               <User className="h-4 w-4 text-[#cccccc]" />
               Informacion Personal
             </h3>
-            <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border border-[#1a0a0a]">
+            <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border-2 border-[#2a1a1a]">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-[#999] font-normal">
@@ -149,7 +149,7 @@ export function PersonDetails({ person }: PersonDetailsProps) {
                 <Building2 className="h-4 w-4 text-[#cccccc]" />
                 Informacion Patronazhi
               </h3>
-              <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border border-[#1a0a0a]">
+              <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border-2 border-[#2a1a1a]">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-[#999] font-normal">QV</span>
@@ -211,11 +211,11 @@ export function PersonDetails({ person }: PersonDetailsProps) {
                 <Car className="h-4 w-4 text-[#cccccc]" />
                 Informacion i Automjetit
               </h3>
-              <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border border-[#1a0a0a]">
+              <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border-2 border-[#2a1a1a]">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-[#999] font-normal">Targa</span>
-                    <Badge className="bg-[#120606] hover:bg-[#1a0a0a] text-[#cccccc] border-[#1a0a0a] font-mono">
+                    <Badge className="bg-[#120606] hover:bg-[#2a1a1a] text-[#cccccc] border-[#2a1a1a] font-mono">
                       {person.vehicle.licensePlate}
                     </Badge>
                   </div>
@@ -248,7 +248,7 @@ export function PersonDetails({ person }: PersonDetailsProps) {
                 <Wallet className="h-4 w-4 text-[#cccccc]" />
                 Informacion Financiar
               </h3>
-              <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border border-[#1a0a0a]">
+              <div className="bg-[#120606] rounded-lg p-3 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border-2 border-[#2a1a1a]">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-[#999] font-normal">Kompania</span>
