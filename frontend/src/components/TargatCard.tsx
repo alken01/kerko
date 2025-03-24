@@ -1,6 +1,5 @@
 import { TargatResponse } from "@/types/search";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Car, CircleDot } from "lucide-react";
 
 interface TargatCardProps {
@@ -23,11 +22,6 @@ export function TargatCard({ targat }: TargatCardProps) {
                 Numri Personal:
               </span>{" "}
               <span className="uppercase">{targat.numriPersonal || "N/A"}</span>
-            </p>
-            <p className="text-[#999] flex items-center gap-1.5 text-sm">
-              <Car className="h-3.5 w-3.5 text-[#cccccc]" />
-              <span className="text-[#666] font-normal">Targa:</span>{" "}
-              <span className="uppercase">{targat.numriTarges || "N/A"}</span>
             </p>
           </div>
         </div>

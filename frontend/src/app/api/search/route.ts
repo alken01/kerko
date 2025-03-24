@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SearchResponse } from "@/types/search";
 
-// Mock data based on the C# models
-
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const firstName = searchParams.get("firstName");
@@ -16,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5120";
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     const response = await fetch(
       `${API_URL}/api/kerko?emri=${encodeURIComponent(

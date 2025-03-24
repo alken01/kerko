@@ -1,6 +1,6 @@
 import { RrogatResponse } from "@/types/search";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Wallet, Building2, Briefcase } from "lucide-react";
+import { Wallet, Briefcase } from "lucide-react";
 
 interface RrogatCardProps {
   rrogat: RrogatResponse;
@@ -17,8 +17,10 @@ export function RrogatCard({ rrogat }: RrogatCardProps) {
           </h2>
           <div className="mt-1.5 space-y-1">
             <p className="text-[#999] flex items-center gap-1.5 text-sm">
-              <Building2 className="h-3.5 w-3.5 text-[#cccccc]" />
-              <span className="text-[#666] font-normal">Numri Personal:</span>{" "}
+              <CircleDot className="h-3.5 w-3.5 text-[#cccccc]" />
+              <span className="text-[#666] font-normal">
+                Numri Personal:
+              </span>{" "}
               <span className="uppercase">{rrogat.numriPersonal || "N/A"}</span>
             </p>
             <p className="text-[#999] flex items-start gap-1.5 text-sm">
