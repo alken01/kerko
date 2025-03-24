@@ -1,6 +1,6 @@
 import { RrogatResponse } from "@/types/search";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Wallet, Briefcase } from "lucide-react";
+import { Wallet, Briefcase, CircleDot } from "lucide-react";
 
 interface RrogatCardProps {
   rrogat: RrogatResponse;
