@@ -2,7 +2,6 @@ namespace Kerko.Models;
 
 public class PersonResponse
 {
-    public string Source { get; init; } = "Person";
     public string? Adresa { get; init; }
     public string? NrBaneses { get; init; }
     public string? Emri { get; init; }
@@ -20,7 +19,6 @@ public class PersonResponse
 
 public class RrogatResponse
 {
-    public string Source { get; init; } = "Rrogat";
     public string? NumriPersonal { get; init; }
     public string? Emri { get; init; }
     public string? Mbiemri { get; init; }
@@ -33,7 +31,6 @@ public class RrogatResponse
 
 public class TargatResponse
 {
-    public string Source { get; init; } = "Targat";
     public string? NumriTarges { get; init; }
     public string? Marka { get; init; }
     public string? Modeli { get; init; }
@@ -45,7 +42,6 @@ public class TargatResponse
 
 public class PatronazhistResponse
 {
-    public string Source { get; init; } = "Patronazhist";
     public string? NumriPersonal { get; init; }
     public string? Emri { get; init; }
     public string? Mbiemri { get; init; }

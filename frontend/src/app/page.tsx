@@ -6,7 +6,7 @@ import { PersonCard } from "@/components/PersonCard";
 import { RrogatCard } from "@/components/RrogatCard";
 import { TargatCard } from "@/components/TargatCard";
 import { PatronazhistCard } from "@/components/PatronazhistCard";
-import { SearchResponse } from "@/types/search";
+import { SearchResponse } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type TabType = "person" | "rrogat" | "targat" | "patronazhist";

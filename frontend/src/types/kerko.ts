@@ -1,5 +1,4 @@
 export interface PersonResponse {
-  source: string;
   adresa: string | null;
   nrBaneses: string | null;
   emri: string | null;
@@ -16,7 +15,6 @@ export interface PersonResponse {
 }
 
 export interface RrogatResponse {
-  source: string;
   numriPersonal: string | null;
   emri: string | null;
   mbiemri: string | null;
@@ -28,7 +26,6 @@ export interface RrogatResponse {
 }
 
 export interface TargatResponse {
-  source: string;
   numriTarges: string | null;
   marka: string | null;
   modeli: string | null;
@@ -39,7 +36,6 @@ export interface TargatResponse {
 }
 
 export interface PatronazhistResponse {
-  source: string;
   numriPersonal: string | null;
   emri: string | null;
   mbiemri: string | null;
