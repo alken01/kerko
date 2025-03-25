@@ -18,34 +18,32 @@ RUN dotnet publish "Kerko/Kerko.csproj" -c Release -o /app/publish /p:UseAppHost
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
-    rm -rf /var/lib/apt/lists/*
+# Install curl for healthcheck and sqlite3 for database operations
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -f http://localhost:80/health || exit 1
+    CMD curl -f http://localhost:8080/health || exit 1
 
 # Copy the published artifacts
 COPY --from=build /app/publish .
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data
-
-# Copy the SQLite database file
-COPY --from=build /src/Kerko/kerko.db /app/data/
+# Create necessary directories
+RUN mkdir -p /app/data /app/Kerko/certificates
 
 # Create a non-root user
 RUN adduser --disabled-password --gecos "" appuser && \
-    chown -R appuser /app /app/data
+    chown -R appuser /app /app/data /app/Kerko/certificates && \
+    chmod 700 /app/Kerko/certificates && \
+    chmod 755 /app/data
 USER appuser
 
 # Set environment variables for production
-ENV ASPNETCORE_URLS=http://+:80
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV TZ=UTC
-# Point connection string to data directory
-ENV ConnectionStrings__DefaultConnection="Data Source=/app/data/kerko.db;Cache=Shared"
 
 # Configure logging
 ENV ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true
@@ -53,11 +51,12 @@ ENV ASPNETCORE_LOGGING__LOGLEVEL__DEFAULT=Information
 ENV ASPNETCORE_LOGGING__LOGLEVEL__MICROSOFT=Warning
 ENV ASPNETCORE_LOGGING__LOGLEVEL__MICROSOFT.HOSTING.LIFETIME=Information
 
-# Expose the port the app will run on
-EXPOSE 80
+# Expose the ports the app will run on
+EXPOSE 8080
+EXPOSE 8443
 
-# Volume for persistent data
-VOLUME ["/app/data"]
+# Volumes for persistent data and certificates
+VOLUME ["/app/data", "/app/Kerko/certificates"]
 
 # Set the entry point
 ENTRYPOINT ["dotnet", "Kerko.dll"]
