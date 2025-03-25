@@ -1,6 +1,11 @@
 namespace Kerko.Models;
 
-public class PersonResponse
+public interface IResponseModel
+{
+    string? Emri { get; init; }
+    string? Mbiemri { get; init; }
+}
+public class PersonResponse : IResponseModel
 {
     public string? Adresa { get; init; }
     public string? NrBaneses { get; init; }
@@ -17,7 +22,7 @@ public class PersonResponse
     public string? Kombesia { get; init; }
 }
 
-public class RrogatResponse
+public class RrogatResponse : IResponseModel
 {
     public string? NumriPersonal { get; init; }
     public string? Emri { get; init; }
@@ -29,7 +34,7 @@ public class RrogatResponse
     public string? Kategoria { get; init; }
 }
 
-public class TargatResponse
+public class TargatResponse : IResponseModel
 {
     public string? NumriTarges { get; init; }
     public string? Marka { get; init; }
@@ -40,7 +45,7 @@ public class TargatResponse
     public string? Mbiemri { get; init; }
 }
 
-public class PatronazhistResponse
+public class PatronazhistResponse : IResponseModel
 {
     public string? NumriPersonal { get; init; }
     public string? Emri { get; init; }

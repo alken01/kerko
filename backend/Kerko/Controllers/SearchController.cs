@@ -59,4 +59,27 @@ public class Controller : ControllerBase
             return StatusCode(500, "An error occurred while processing your request");
         }
     }
+
+
+    [HttpGet("health")]
+    public IActionResult Health()
+    {
+        return Ok("OK");
+    }
+
+    // TODO: fix later
+    // [HttpGet("db-status")]
+    // public async Task<IActionResult> DbStatus()
+    // {
+    //     try
+    //     {
+    //         var result = await _searchService.DbStatusAsync();
+    //         return Ok(result);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Error occurred while checking database status");
+    //         return StatusCode(500, "An error occurred while checking database status");
+    //     }
+    // }
 } 

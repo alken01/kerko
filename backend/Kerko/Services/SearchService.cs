@@ -8,6 +8,7 @@ public interface ISearchService
 {
     Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri);
     Task<SearchResponse> TargatAsync(string? numriTarges);
+    Task<List<Dictionary<string, int>>> DbStatusAsync();
 }
 
 public class SearchService : ISearchService
@@ -36,10 +37,36 @@ public class SearchService : ISearchService
             throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
         }
 
-        var personResults = await _db.Person
-            .Where(p => p.Mbiemer != null && p.Mbiemer.ToLower().Contains(mbiemri.ToLower()) &&
-                        p.Emer != null && p.Emer.ToLower().Contains(emri.ToLower()))
+        var normalizedMbiemri = mbiemri.ToLower().Trim();
+        var normalizedEmri = emri.ToLower().Trim();
+
+        var tasks = new List<Task<IEnumerable<IResponseModel>>>
+        {
+            GetPersonResults(normalizedMbiemri, normalizedEmri),
+            GetRrogatResults(normalizedMbiemri, normalizedEmri),
+            GetTargatResults(normalizedMbiemri, normalizedEmri),
+            GetPatronazhistResults(normalizedMbiemri, normalizedEmri)
+        };
+
+        await Task.WhenAll(tasks);
+
+        return new SearchResponse
+        {
+            Person = (await tasks[0]).Cast<PersonResponse>().ToList(),
+            Rrogat = (await tasks[1]).Cast<RrogatResponse>().ToList(),
+            Targat = (await tasks[2]).Cast<TargatResponse>().ToList(),
+            Patronazhist = (await tasks[3]).Cast<PatronazhistResponse>().ToList()
+        };
+    }
+
+    private async Task<IEnumerable<IResponseModel>> GetPersonResults(string mbiemri, string emri)
+    {
+        var results = await _db.Person
+            .AsNoTracking()
+            .Where(p => p.Mbiemer != null && p.Mbiemer.ToLower().Contains(mbiemri) &&
+                       p.Emer != null && p.Emer.ToLower().Contains(emri))
             .Take(MaxResults)
+            .OrderBy(p => p.Mbiemer)
             .Select(p => new PersonResponse
             {
                 Adresa = p.Adresa,
@@ -58,12 +85,17 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
-        personResults = personResults.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri)).ToList();
+        return results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri));
+    }
 
-        var rrogatResults = await _db.Rrogat
-            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri.ToLower()) &&
-                        p.Emri != null && p.Emri.ToLower().Contains(emri.ToLower()))
+    private async Task<IEnumerable<IResponseModel>> GetRrogatResults(string mbiemri, string emri)
+    {
+        var results = await _db.Rrogat
+            .AsNoTracking()
+            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri) &&
+                       p.Emri != null && p.Emri.ToLower().Contains(emri))
             .Take(MaxResults)
+            .OrderBy(p => p.Mbiemri)
             .Select(r => new RrogatResponse
             {
                 NumriPersonal = r.NumriPersonal,
@@ -77,12 +109,17 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
-        rrogatResults = rrogatResults.Where(r => !IsNameBanned(r?.Emri, r?.Mbiemri)).ToList();
+        return results.Where(r => !IsNameBanned(r?.Emri, r?.Mbiemri));
+    }
 
-        var targatResults = await _db.Targat
-            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri.ToLower()) &&
-                        p.Emri != null && p.Emri.ToLower().Contains(emri.ToLower()))
+    private async Task<IEnumerable<IResponseModel>> GetTargatResults(string mbiemri, string emri)
+    {
+        var results = await _db.Targat
+            .AsNoTracking()
+            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri) &&
+                       p.Emri != null && p.Emri.ToLower().Contains(emri))
             .Take(MaxResults)
+            .OrderBy(t => t.NumriTarges)
             .Select(t => new TargatResponse
             {
                 NumriTarges = t.NumriTarges,
@@ -95,12 +132,17 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
-        targatResults = targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri)).ToList();
+        return results.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri));
+    }
 
-        var patronazhistResults = await _db.Patronazhist
-            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri.ToLower()) &&
-                        p.Emri != null && p.Emri.ToLower().Contains(emri.ToLower()))
+    private async Task<IEnumerable<IResponseModel>> GetPatronazhistResults(string mbiemri, string emri)
+    {
+        var results = await _db.Patronazhist
+            .AsNoTracking()
+            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri) &&
+                       p.Emri != null && p.Emri.ToLower().Contains(emri))
             .Take(MaxResults)
+            .OrderBy(p => p.Mbiemri)
             .Select(p => new PatronazhistResponse
             {
                 NumriPersonal = p.NumriPersonal,
@@ -125,15 +167,7 @@ public class SearchService : ISearchService
             })
             .ToListAsync();
 
-        patronazhistResults = patronazhistResults.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri)).ToList();
-
-        return new SearchResponse
-        {
-            Person = personResults,
-            Rrogat = rrogatResults,
-            Targat = targatResults,
-            Patronazhist = patronazhistResults
-        };
+        return results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri));
     }
 
     public async Task<SearchResponse> TargatAsync(string? numriTarges)
@@ -148,9 +182,13 @@ public class SearchService : ISearchService
             throw new ArgumentException($"Numri i targes duhet te kete te pakten {MinTargesLength} karaktere");
         }
 
+        var normalizedNumriTarges = numriTarges.ToLower().Trim();
+
         var targatResults = await _db.Targat
-            .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(numriTarges.ToLower()))
+            .AsNoTracking()
+            .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(normalizedNumriTarges))
             .Take(MaxResults)
+            .OrderBy(t => t.NumriTarges)
             .Select(t => new TargatResponse
             {
                 NumriTarges = t.NumriTarges,
@@ -171,6 +209,21 @@ public class SearchService : ISearchService
         };
     }
 
+    public async Task<List<Dictionary<string, int>>> DbStatusAsync()
+    {
+        var tables = _db.Model.GetEntityTypes().Select(t => t.GetTableName()).ToList();
+        _logger.LogInformation("Tables: {tables}", tables);
+        var result = new List<Dictionary<string, int>>();
+        
+        var tasks = tables.Select(async table => {
+            var rows = await _db.Database.ExecuteSqlRawAsync($"SELECT COUNT(*) FROM {table}");
+            _logger.LogInformation("Table: {table}, Rows: {rows}", table, rows);
+            return new Dictionary<string, int> { { table ?? "Unknown", rows } };
+        });
+
+        return (await Task.WhenAll(tasks)).ToList();
+    }
+
     private bool IsNameBanned(string? emri, string? mbiemri)
     {
         return false;
@@ -186,4 +239,4 @@ public class SearchService : ISearchService
         // return bannedNames.Contains($"{emri.Trim().ToLower()} {mbiemri.Trim().ToLower()}") || 
         //        bannedLastNames.Contains(mbiemri.Trim().ToLower());
     }
-} 
+}

@@ -19,11 +19,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(p => p.Mbiemer);
         modelBuilder.Entity<Person>()
             .HasIndex(p => p.Emer);
+        modelBuilder.Entity<Person>()
+            .HasIndex(p => new { p.Mbiemer, p.Emer });
 
         modelBuilder.Entity<Rrogat>()
             .HasIndex(r => r.Mbiemri);
         modelBuilder.Entity<Rrogat>()
             .HasIndex(r => r.Emri);
+        modelBuilder.Entity<Rrogat>()
+            .HasIndex(r => new { r.Mbiemri, r.Emri });
 
         modelBuilder.Entity<Targat>()
             .HasIndex(t => t.Mbiemri);
@@ -31,10 +35,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(t => t.Emri);
         modelBuilder.Entity<Targat>()
             .HasIndex(t => t.NumriTarges);
+        modelBuilder.Entity<Targat>()
+            .HasIndex(t => new { t.Mbiemri, t.Emri });
 
         modelBuilder.Entity<Patronazhist>()
             .HasIndex(p => p.Mbiemri);
         modelBuilder.Entity<Patronazhist>()
             .HasIndex(p => p.Emri);
+        modelBuilder.Entity<Patronazhist>()
+            .HasIndex(p => new { p.Mbiemri, p.Emri });
     }
 } 

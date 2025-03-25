@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kerko.Infrastructure;
 using Kerko.Services;
+using Kerko.Models;
 using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,29 +11,38 @@ if (!builder.Environment.IsDevelopment()) // Only use custom certificate in prod
 {
     builder.WebHost.ConfigureKestrel(serverOptions =>
     {
-        serverOptions.ListenAnyIP(80); // Standard HTTP port
-        serverOptions.ListenAnyIP(443, listenOptions => // Standard HTTPS port
+        var kestrelConfig = builder.Configuration.GetSection("Kestrel").Get<KestrelConfig>();
+        
+        // Configure HTTP endpoint
+        if (kestrelConfig?.Endpoints?.Http != null)
         {
-            listenOptions.UseHttps(options =>
+            serverOptions.ListenAnyIP(8080); // HTTP port
+        }
+
+        // Configure HTTPS endpoint
+        if (kestrelConfig?.Endpoints?.Https != null)
+        {
+            serverOptions.ListenAnyIP(8443, listenOptions => // HTTPS port
             {
-                // Load certificate and private key
-                var certPath = Path.Combine(builder.Environment.ContentRootPath, "certificates", "certificate.crt");
-                var keyPath = Path.Combine(builder.Environment.ContentRootPath, "certificates", "private.key");
-                
-                // Read certificate and private key content
-                var certContent = File.ReadAllText(certPath);
-                var keyContent = File.ReadAllText(keyPath);
-                
-                // Combine certificate and private key into a PFX
-                using var cert = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-                
-                // Create a copy with exportable private key
-                var certWithPrivateKey = new X509Certificate2(cert.Export(X509ContentType.Pfx));
-                
-                options.ServerCertificate = certWithPrivateKey;
-                options.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13;
+                listenOptions.UseHttps(options =>
+                {
+                    var certConfig = kestrelConfig.Endpoints.Https.Certificate;
+                    var certPath = Path.Combine(builder.Environment.ContentRootPath, certConfig.Path);
+                    var keyPath = Path.Combine(builder.Environment.ContentRootPath, certConfig.KeyPath);
+                    
+                    if (!File.Exists(certPath) || !File.Exists(keyPath))
+                    {
+                        throw new FileNotFoundException("SSL certificate or private key not found");
+                    }
+
+                    using var cert = X509Certificate2.CreateFromPemFile(certPath, keyPath);
+                    var certWithPrivateKey = new X509Certificate2(cert.Export(X509ContentType.Pfx));
+                    
+                    options.ServerCertificate = certWithPrivateKey;
+                    options.SslProtocols = System.Security.Authentication.SslProtocols.Tls13; // Only allow TLS 1.3
+                });
             });
-        });
+        }
     });
 }
 
@@ -82,12 +92,16 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        // Ensure database exists
+        context.Database.EnsureCreated();
+        // Apply migrations
         context.Database.Migrate();
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "An error occurred while initializing the database.");
+        // Don't throw here, let the application start even if database initialization fails
     }
 }
 
