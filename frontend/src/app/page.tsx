@@ -17,11 +17,18 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("person");
+  const [isTargaSearch, setIsTargaSearch] = useState(false);
+  const [searchFormData, setSearchFormData] = useState<{
+    emri: string;
+    mbiemri: string;
+  } | null>(null);
 
   const handleSearch = async (emri: string, mbiemri: string) => {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
+    setIsTargaSearch(false);
+    setActiveTab("person");
 
     try {
       const data = await ApiService.searchPerson(emri, mbiemri);
@@ -41,6 +48,7 @@ export default function Home() {
     setError(null);
     setSearchResults(null);
     setActiveTab("targat");
+    setIsTargaSearch(true);
 
     try {
       const data = await ApiService.searchTarga(numriTarges);
@@ -54,6 +62,7 @@ export default function Home() {
   };
 
   const handleNameClick = (emri: string, mbiemri: string) => {
+    setSearchFormData({ emri, mbiemri });
     handleSearch(emri, mbiemri);
   };
 
@@ -75,6 +84,7 @@ export default function Home() {
             onSearchTarga={handleSearchTarga}
             onClear={handleClear}
             isLoading={isLoading}
+            defaultValues={searchFormData}
           />
         </div>
 
@@ -93,6 +103,7 @@ export default function Home() {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             onNameClick={handleNameClick}
+            isTargaSearch={isTargaSearch}
           />
         )}
       </main>

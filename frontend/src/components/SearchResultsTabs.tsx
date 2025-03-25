@@ -11,6 +11,7 @@ interface SearchResultsTabsProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
   onNameClick: (emri: string, mbiemri: string) => void;
+  isTargaSearch: boolean;
 }
 
 export function SearchResultsTabs({
@@ -18,38 +19,38 @@ export function SearchResultsTabs({
   activeTab,
   onTabChange,
   onNameClick,
+  isTargaSearch,
 }: SearchResultsTabsProps) {
+  const tabs = isTargaSearch
+    ? [{ value: "targat", label: "Targat" }]
+    : [
+        { value: "person", label: "Persona" },
+        { value: "rrogat", label: "Rrogat" },
+        { value: "targat", label: "Targat" },
+        { value: "patronazhist", label: "Patronazhistë" },
+      ];
+
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
       <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
-        {(["person", "rrogat", "targat", "patronazhist"] as TabType[]).map(
-          (type) => (
-            <button
-              key={type}
-              onClick={() => onTabChange(type)}
-              className={`flex-1 px-2 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
-                activeTab === type
-                  ? "bg-[#2a1a1a] text-white shadow-sm"
-                  : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
-              }`}
-            >
-              <div className="flex items-center justify-center gap-1">
-                <span>
-                  {type === "person"
-                    ? "Person"
-                    : type === "rrogat"
-                    ? "Rrogat"
-                    : type === "targat"
-                    ? "Targat"
-                    : "Politik"}
-                </span>
-                <span className="text-xs bg-[#1a1a1a] px-1.5 py-0.5 rounded-full">
-                  {searchResults[type]?.length || 0}
-                </span>
-              </div>
-            </button>
-          )
-        )}
+        {tabs.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => onTabChange(tab.value as TabType)}
+            className={`flex-1 px-2 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+              activeTab === tab.value
+                ? "bg-[#2a1a1a] text-white shadow-sm"
+                : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
+            }`}
+          >
+            <div className="flex items-center justify-center gap-1">
+              <span>{tab.label}</span>
+              <span className="text-xs bg-[#1a1a1a] px-1.5 py-0.5 rounded-full">
+                {searchResults[tab.value]?.length || 0}
+              </span>
+            </div>
+          </button>
+        ))}
       </div>
 
       <div className="relative overflow-hidden">
