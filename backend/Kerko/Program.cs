@@ -13,7 +13,7 @@ if (!builder.Environment.IsDevelopment()) // Only use custom certificate in prod
     builder.WebHost.ConfigureKestrel(serverOptions =>
     {
         var kestrelConfig = builder.Configuration.GetSection("Kestrel").Get<KestrelConfig>();
-        
+
         // Configure HTTP endpoint
         if (kestrelConfig?.Endpoints?.Http != null)
         {
@@ -30,15 +30,15 @@ if (!builder.Environment.IsDevelopment()) // Only use custom certificate in prod
                     var certConfig = kestrelConfig.Endpoints.Https.Certificate;
                     var certPath = Path.Combine(builder.Environment.ContentRootPath, certConfig.Path);
                     var keyPath = Path.Combine(builder.Environment.ContentRootPath, certConfig.KeyPath);
-                    
+
                     if (!File.Exists(certPath) || !File.Exists(keyPath))
                     {
                         throw new FileNotFoundException("SSL certificate or private key not found");
                     }
 
                     using var cert = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-                    var certWithPrivateKey = new X509Certificate2(cert.Export(X509ContentType.Pfx));
-                    
+                    var certWithPrivateKey = X509Certificate2.CreateFromPemFile(certPath, keyPath);
+
                     options.ServerCertificate = certWithPrivateKey;
                     options.SslProtocols = System.Security.Authentication.SslProtocols.Tls13; // Only allow TLS 1.3
                 });

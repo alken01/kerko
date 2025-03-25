@@ -189,7 +189,7 @@ public class SearchService : ISearchService
 
         var tasks = tables.Select(async table =>
         {
-            var rows = await _db.Database.ExecuteSqlRawAsync($"SELECT COUNT(*) FROM {table}");
+            var rows = await _db.Database.ExecuteSqlAsync($"SELECT COUNT(*) FROM {table}");
             _logger.LogInformation("Table: {table}, Rows: {rows}", table, rows);
             return new Dictionary<string, int> {
                 { table ?? "Unknown", rows
