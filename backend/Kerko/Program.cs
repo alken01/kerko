@@ -19,13 +19,15 @@ if (!builder.Environment.IsDevelopment()) // Only use custom certificate in prod
         // Configure HTTP endpoint
         if (kestrelConfig?.Endpoints?.Http != null)
         {
-            serverOptions.ListenAnyIP(8080); // HTTP port
+            var httpPort = kestrelConfig.Endpoints.Http.Url.Split(':')[2];
+            serverOptions.ListenAnyIP(int.Parse(httpPort));
         }
 
         // Configure HTTPS endpoint
         if (kestrelConfig?.Endpoints?.Https != null)
         {
-            serverOptions.ListenAnyIP(8443, listenOptions => // HTTPS port
+            var httpsPort = kestrelConfig.Endpoints.Https.Url.Split(':')[2];
+            serverOptions.ListenAnyIP(int.Parse(httpsPort), listenOptions =>
             {
                 listenOptions.UseHttps(options =>
                 {

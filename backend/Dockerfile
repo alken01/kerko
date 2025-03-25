@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:80/health || exit 1
 
 # Copy the published artifacts
 COPY --from=build /app/publish .
@@ -51,9 +51,12 @@ ENV ASPNETCORE_LOGGING__LOGLEVEL__DEFAULT=Information
 ENV ASPNETCORE_LOGGING__LOGLEVEL__MICROSOFT=Warning
 ENV ASPNETCORE_LOGGING__LOGLEVEL__MICROSOFT.HOSTING.LIFETIME=Information
 
-# Expose the ports the app will run on
-EXPOSE 8080
-EXPOSE 8443
+# Update environment variables for AWS
+ENV ASPNETCORE_URLS="http://+:80"
+
+# Change the exposed port to standard HTTP/HTTPS ports
+EXPOSE 80
+EXPOSE 443
 
 # Volumes for persistent data and certificates
 VOLUME ["/app/data", "/app/Kerko/certificates"]
