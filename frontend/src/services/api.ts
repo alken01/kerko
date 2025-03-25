@@ -14,6 +14,9 @@ export class ApiService {
     );
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("Qetsohu cik mplak, prit pak edhe provo prap");
+      }
       const text = await response.text();
       throw new Error(text || "Pati një problem gjatë kërkimit të personit");
     }
@@ -40,6 +43,9 @@ export class ApiService {
     );
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("Qetsohu cik mplak, prit pak edhe provo prap");
+      }
       const text = await response.text();
       throw new Error(text || "Pati një problem gjatë kërkimit të targës");
     }
