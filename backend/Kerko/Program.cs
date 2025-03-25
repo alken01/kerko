@@ -3,6 +3,7 @@ using Kerko.Infrastructure;
 using Kerko.Services;
 using Kerko.Models;
 using System.Security.Cryptography.X509Certificates;
+using Kerko.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,6 +84,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors(); // Add CORS middleware
 app.UseAuthorization();
+app.UseApiKeyAuth();
 app.MapControllers();
 
 // Create database and tables

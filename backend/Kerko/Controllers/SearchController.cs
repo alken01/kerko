@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Kerko.Services;
+using Kerko.Authentication;
 
 namespace Kerko.Controllers;
 
@@ -21,10 +22,11 @@ public class Controller : ControllerBase
     {
         try
         {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             _logger.LogInformation("Kerko: emri: {emri}, mbiemri: {mbiemri}, {IpAddress}", 
-                emri, mbiemri, HttpContext.Connection.RemoteIpAddress);
+                emri, mbiemri, ipAddress);
 
-            var result = await _searchService.KerkoAsync(mbiemri, emri);
+            var result = await _searchService.KerkoAsync(mbiemri, emri, ipAddress);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -43,10 +45,11 @@ public class Controller : ControllerBase
     {
         try
         {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             _logger.LogInformation("Targat: numriTarges: {numriTarges}, {IpAddress}", 
-                numriTarges, HttpContext.Connection.RemoteIpAddress);
+                numriTarges, ipAddress);
 
-            var result = await _searchService.TargatAsync(numriTarges);
+            var result = await _searchService.TargatAsync(numriTarges, ipAddress);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -60,26 +63,47 @@ public class Controller : ControllerBase
         }
     }
 
-
     [HttpGet("health")]
     public IActionResult Health()
     {
         return Ok("OK");
     }
 
-    // TODO: fix later
-    // [HttpGet("db-status")]
-    // public async Task<IActionResult> DbStatus()
-    // {
-    //     try
-    //     {
-    //         var result = await _searchService.DbStatusAsync();
-    //         return Ok(result);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _logger.LogError(ex, "Error occurred while checking database status");
-    //         return StatusCode(500, "An error occurred while checking database status");
-    //     }
-    // }
+    [HttpGet("search-logs")]
+    [RequireApiKey]
+    public async Task<IActionResult> GetSearchLogs(
+        [FromQuery] string? ipAddress,
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate)
+    {
+        try
+        {
+            var requestingIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            _logger.LogInformation("Search logs accessed by IP: {IpAddress}", requestingIp);
+            
+            var logs = await _searchService.GetSearchLogsAsync(ipAddress, startDate, endDate);
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving search logs");
+            return StatusCode(500, "An error occurred while retrieving search logs");
+        }
+    }
+
+    [RequireApiKey]
+    [HttpGet("db-status")]
+    public async Task<IActionResult> DbStatus()
+    {
+        try
+        {
+            var result = await _searchService.DbStatusAsync();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while checking database status");
+            return StatusCode(500, "An error occurred while checking database status");
+        }
+    }
 } 

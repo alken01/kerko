@@ -9,6 +9,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Rrogat> Rrogat { get; set; }
     public DbSet<Targat> Targat { get; set; }
     public DbSet<Patronazhist> Patronazhist { get; set; }
+    public DbSet<SearchLog> SearchLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,5 +45,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(p => p.Emri);
         modelBuilder.Entity<Patronazhist>()
             .HasIndex(p => new { p.Mbiemri, p.Emri });
+
+        modelBuilder.Entity<SearchLog>()
+            .HasIndex(s => s.IpAddress);
+        modelBuilder.Entity<SearchLog>()
+            .HasIndex(s => s.Timestamp);
     }
 } 

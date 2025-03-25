@@ -6,9 +6,10 @@ namespace Kerko.Services;
 
 public interface ISearchService
 {
-    Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri);
-    Task<SearchResponse> TargatAsync(string? numriTarges);
+    Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, string ipAddress);
+    Task<SearchResponse> TargatAsync(string? numriTarges, string ipAddress);
     Task<List<Dictionary<string, int>>> DbStatusAsync();
+    Task<IEnumerable<SearchLog>> GetSearchLogsAsync(string? ipAddress = null, DateTime? startDate = null, DateTime? endDate = null);
 }
 
 public class SearchService : ISearchService
@@ -25,38 +26,192 @@ public class SearchService : ISearchService
         _logger = logger;
     }
 
-    public async Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri)
+    public async Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, string ipAddress)
     {
-        if (string.IsNullOrEmpty(mbiemri) || string.IsNullOrEmpty(emri))
+        try
         {
-            throw new ArgumentException("Emri dhe mbiemri nuk mund te jene bosh");
+            await LogSearchAsync(new SearchLog
+            {
+                IpAddress = ipAddress,
+                SearchType = "Name",
+                SearchParams = $"emri: {emri}, mbiemri: {mbiemri}",
+                Timestamp = DateTime.UtcNow,
+                WasSuccessful = true
+            });
+
+            if (string.IsNullOrEmpty(mbiemri) || string.IsNullOrEmpty(emri))
+            {
+                throw new ArgumentException("Emri dhe mbiemri nuk mund te jene bosh");
+            }
+
+            if (mbiemri.Length < MinNameLength || emri.Length < MinNameLength)
+            {
+                throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
+            }
+
+            var normalizedMbiemri = mbiemri.ToLower().Trim();
+            var normalizedEmri = emri.ToLower().Trim();
+
+            var tasks = new List<Task<IEnumerable<IResponseModel>>>
+            {
+                GetPersonResults(normalizedMbiemri, normalizedEmri),
+                GetRrogatResults(normalizedMbiemri, normalizedEmri),
+                GetTargatResults(normalizedMbiemri, normalizedEmri),
+                GetPatronazhistResults(normalizedMbiemri, normalizedEmri)
+            };
+
+            await Task.WhenAll(tasks);
+
+            return new SearchResponse
+            {
+                Person = (await tasks[
+                    0
+                ]).Cast<PersonResponse>().ToList(),
+                Rrogat = (await tasks[
+                    1
+                ]).Cast<RrogatResponse>().ToList(),
+                Targat = (await tasks[
+                    2
+                ]).Cast<TargatResponse>().ToList(),
+                Patronazhist = (await tasks[
+                    3
+                ]).Cast<PatronazhistResponse>().ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            await LogSearchAsync(new SearchLog
+            {
+                IpAddress = ipAddress,
+                SearchType = "Name",
+                SearchParams = $"emri: {emri}, mbiemri: {mbiemri}",
+                Timestamp = DateTime.UtcNow,
+                WasSuccessful = false,
+                ErrorMessage = ex.Message
+            });
+            throw;
+        }
+    }
+
+    public async Task<SearchResponse> TargatAsync(string? numriTarges, string ipAddress)
+    {
+        try
+        {
+            await LogSearchAsync(new SearchLog
+            {
+                IpAddress = ipAddress,
+                SearchType = "Plate",
+                SearchParams = $"numriTarges: {numriTarges}",
+                Timestamp = DateTime.UtcNow,
+                WasSuccessful = true
+            });
+
+            if (string.IsNullOrEmpty(numriTarges))
+            {
+                throw new ArgumentException("Numri i targes nuk mund te jene bosh");
+            }
+
+            if (numriTarges.Length < MinTargesLength)
+            {
+                throw new ArgumentException($"Numri i targes duhet te kete te pakten {MinTargesLength} karaktere");
+            }
+
+            var normalizedNumriTarges = numriTarges.ToLower().Trim();
+
+            var targatResults = await _db.Targat
+                .AsNoTracking()
+                .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(normalizedNumriTarges))
+                .Take(MaxResults)
+                .OrderBy(t => t.NumriTarges)
+                .Select(t => new TargatResponse
+                {
+                    NumriTarges = t.NumriTarges,
+                    Marka = t.Marka,
+                    Modeli = t.Modeli,
+                    Ngjyra = t.Ngjyra,
+                    NumriPersonal = t.NumriPersonal,
+                    Emri = t.Emri,
+                    Mbiemri = t.Mbiemri
+                })
+                .ToListAsync();
+
+            targatResults = targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri)).ToList();
+
+            return new SearchResponse
+            {
+                Targat = targatResults
+            };
+        }
+        catch (Exception ex)
+        {
+            await LogSearchAsync(new SearchLog
+            {
+                IpAddress = ipAddress,
+                SearchType = "Plate",
+                SearchParams = $"numriTarges: {numriTarges}",
+                Timestamp = DateTime.UtcNow,
+                WasSuccessful = false,
+                ErrorMessage = ex.Message
+            });
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<SearchLog>> GetSearchLogsAsync(string? ipAddress = null, DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var query = _db.SearchLogs.AsNoTracking();
+
+        if (!string.IsNullOrEmpty(ipAddress))
+        {
+            query = query.Where(l => l.IpAddress == ipAddress);
         }
 
-        if (mbiemri.Length < MinNameLength || emri.Length < MinNameLength)
+        if (startDate.HasValue)
         {
-            throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
+            query = query.Where(l => l.Timestamp >= startDate.Value);
         }
 
-        var normalizedMbiemri = mbiemri.ToLower().Trim();
-        var normalizedEmri = emri.ToLower().Trim();
-
-        var tasks = new List<Task<IEnumerable<IResponseModel>>>
+        if (endDate.HasValue)
         {
-            GetPersonResults(normalizedMbiemri, normalizedEmri),
-            GetRrogatResults(normalizedMbiemri, normalizedEmri),
-            GetTargatResults(normalizedMbiemri, normalizedEmri),
-            GetPatronazhistResults(normalizedMbiemri, normalizedEmri)
-        };
+            query = query.Where(l => l.Timestamp <= endDate.Value);
+        }
 
-        await Task.WhenAll(tasks);
+        return await query
+            .OrderByDescending(l => l.Timestamp)
+            .ToListAsync();
+    }
 
-        return new SearchResponse
+    public async Task<List<Dictionary<string, int>>> DbStatusAsync()
+    {
+        var tables = _db.Model.GetEntityTypes().Select(t => t.GetTableName()).ToList();
+        _logger.LogInformation("Tables: {tables}", tables);
+        var result = new List<Dictionary<string, int>>();
+
+        var tasks = tables.Select(async table =>
         {
-            Person = (await tasks[0]).Cast<PersonResponse>().ToList(),
-            Rrogat = (await tasks[1]).Cast<RrogatResponse>().ToList(),
-            Targat = (await tasks[2]).Cast<TargatResponse>().ToList(),
-            Patronazhist = (await tasks[3]).Cast<PatronazhistResponse>().ToList()
-        };
+            var rows = await _db.Database.ExecuteSqlRawAsync($"SELECT COUNT(*) FROM {table}");
+            _logger.LogInformation("Table: {table}, Rows: {rows}", table, rows);
+            return new Dictionary<string, int> {
+                { table ?? "Unknown", rows
+                }
+            };
+        });
+
+        return (await Task.WhenAll(tasks)).ToList();
+    }
+
+    private bool IsNameBanned(string? emri, string? mbiemri)
+    {
+        return false;
+        // TODO: update this later with a proper endpoint
+        // if (string.IsNullOrEmpty(emri) || string.IsNullOrEmpty(mbiemri))
+        // {
+        //     return false;
+        // }
+        // var bannedNames = new[] { "gabriele gjoka", "alvi tafa" };
+        // var bannedLastNames = new[] { "rrokaj" };
+        // return bannedNames.Contains($"{emri.Trim().ToLower()} {mbiemri.Trim().ToLower()}") || 
+        //        bannedLastNames.Contains(mbiemri.Trim().ToLower());
     }
 
     private async Task<IEnumerable<IResponseModel>> GetPersonResults(string mbiemri, string emri)
@@ -170,73 +325,9 @@ public class SearchService : ISearchService
         return results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri));
     }
 
-    public async Task<SearchResponse> TargatAsync(string? numriTarges)
+    private async Task LogSearchAsync(SearchLog log)
     {
-        if (string.IsNullOrEmpty(numriTarges))
-        {
-            throw new ArgumentException("Numri i targes nuk mund te jene bosh");
-        }
-
-        if (numriTarges.Length < MinTargesLength)
-        {
-            throw new ArgumentException($"Numri i targes duhet te kete te pakten {MinTargesLength} karaktere");
-        }
-
-        var normalizedNumriTarges = numriTarges.ToLower().Trim();
-
-        var targatResults = await _db.Targat
-            .AsNoTracking()
-            .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(normalizedNumriTarges))
-            .Take(MaxResults)
-            .OrderBy(t => t.NumriTarges)
-            .Select(t => new TargatResponse
-            {
-                NumriTarges = t.NumriTarges,
-                Marka = t.Marka,
-                Modeli = t.Modeli,
-                Ngjyra = t.Ngjyra,
-                NumriPersonal = t.NumriPersonal,
-                Emri = t.Emri,
-                Mbiemri = t.Mbiemri
-            })
-            .ToListAsync();
-
-        targatResults = targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri)).ToList();
-
-        return new SearchResponse
-        {
-            Targat = targatResults
-        };
-    }
-
-    public async Task<List<Dictionary<string, int>>> DbStatusAsync()
-    {
-        var tables = _db.Model.GetEntityTypes().Select(t => t.GetTableName()).ToList();
-        _logger.LogInformation("Tables: {tables}", tables);
-        var result = new List<Dictionary<string, int>>();
-        
-        var tasks = tables.Select(async table => {
-            var rows = await _db.Database.ExecuteSqlRawAsync($"SELECT COUNT(*) FROM {table}");
-            _logger.LogInformation("Table: {table}, Rows: {rows}", table, rows);
-            return new Dictionary<string, int> { { table ?? "Unknown", rows } };
-        });
-
-        return (await Task.WhenAll(tasks)).ToList();
-    }
-
-    private bool IsNameBanned(string? emri, string? mbiemri)
-    {
-        return false;
-        // TODO: update this later with a proper endpoint
-        // if (string.IsNullOrEmpty(emri) || string.IsNullOrEmpty(mbiemri))
-        // {
-        //     return false;
-        // }
-
-        // var bannedNames = new[] { "gabriele gjoka", "alvi tafa" };
-        // var bannedLastNames = new[] { "rrokaj" };
-
-        // return bannedNames.Contains($"{emri.Trim().ToLower()} {mbiemri.Trim().ToLower()}") || 
-        //        bannedLastNames.Contains(mbiemri.Trim().ToLower());
+        await _db.SearchLogs.AddAsync(log);
+        await _db.SaveChangesAsync();
     }
 }
