@@ -32,7 +32,7 @@ export function SearchResultsTabs({
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-      <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
+      <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border-2 border-[#2a1a1a]">
         {tabs.map((tab) => (
           <button
             key={tab.value}
@@ -46,7 +46,7 @@ export function SearchResultsTabs({
             <div className="flex items-center justify-center gap-1">
               <span>{tab.label}</span>
               <span className="text-xs bg-[#1a1a1a] px-1.5 py-0.5 rounded-full">
-                {searchResults[tab.value]?.length || 0}
+                {searchResults[tab.value as keyof SearchResponse]?.length || 0}
               </span>
             </div>
           </button>

@@ -56,7 +56,7 @@ export function SearchForm({
     <Card className={cardStyles.root}>
       <CardContent className="p-5 space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border border-[#2a1a1a]">
+          <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border-2 border-[#2a1a1a]">
             <button
               type="button"
               onClick={() => setActiveTab("name")}
