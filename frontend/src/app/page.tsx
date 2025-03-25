@@ -40,6 +40,7 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
+    setActiveTab("targat");
 
     try {
       const data = await ApiService.searchTarga(numriTarges);
