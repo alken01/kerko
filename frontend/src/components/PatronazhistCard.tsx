@@ -64,7 +64,42 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
             </div>
           </div>
         </div>
-
+        <div className={cardStyles.section}>
+          <h3 className={cardStyles.sectionTitle}>
+            <FileText className={cardStyles.sectionIcon} />
+            Preferenca Politike dhe Komente
+          </h3>
+          <div className={cardStyles.detailsContainer}>
+            <div className={cardStyles.detailsGrid}>
+              <DetailRow
+                label="Preferenca"
+                value={patronazhist.preferenca || "N/A"}
+              />
+              <DetailRow
+                label="Preferenca e Sigurte"
+                value={patronazhist.iSigurte || "N/A"}
+              />
+              <DetailRow
+                label="Preferenca Census 2013"
+                value={patronazhist.census2013Preferenca || "N/A"}
+              />
+              <DetailRow
+                label="Siguria Census 2013"
+                value={
+                  patronazhist.census2013Siguria
+                    ? `${patronazhist.census2013Siguria}/10`
+                    : "N/A"
+                }
+              />
+              {patronazhist.koment && (
+                <DetailRow
+                  label="Koment"
+                  value={patronazhist.koment || "N/A"}
+                />
+              )}
+            </div>
+          </div>
+        </div>
         <div className={cardStyles.section}>
           <h3 className={cardStyles.sectionTitle}>
             <Building2 className={cardStyles.sectionIcon} />
@@ -98,46 +133,19 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
             <div className={cardStyles.detailsContainer}>
               <div className={cardStyles.detailsGrid}>
                 <DetailRow
-                  label="Vendi i Emigrimit"
-                  value={patronazhist.country || "N/A"}
+                  label="Emigrant"
+                  value={patronazhist.emigrant || "N/A"}
                 />
-                <DetailRow
-                  label="Statusi i Sigurimit"
-                  value={patronazhist.iSigurte || "N/A"}
-                />
+                {patronazhist.country && (
+                  <DetailRow
+                    label="Vendi i Emigrimit"
+                    value={patronazhist.country || "N/A"}
+                  />
+                )}
               </div>
             </div>
           </div>
         )}
-
-        <div className={cardStyles.section}>
-          <h3 className={cardStyles.sectionTitle}>
-            <FileText className={cardStyles.sectionIcon} />
-            Preferenca Politike dhe Komente
-          </h3>
-          <div className={cardStyles.detailsContainer}>
-            <div className={cardStyles.detailsGrid}>
-              <DetailRow
-                label="Preferenca"
-                value={patronazhist.preferenca || "N/A"}
-              />
-              <DetailRow
-                label="Preferenca Census 2013"
-                value={patronazhist.census2013Preferenca || "N/A"}
-              />
-              <DetailRow
-                label="Siguria Census 2013"
-                value={patronazhist.census2013Siguria || "N/A"}
-              />
-              {patronazhist.koment && (
-                <DetailRow
-                  label="Koment"
-                  value={patronazhist.koment || "N/A"}
-                />
-              )}
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
