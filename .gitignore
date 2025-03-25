@@ -71,3 +71,6 @@ backend/Kerko/processed_data/
 backend/Kerko/kerko.db
 backend/Kerko/kerko.db-shm
 backend/Kerko/kerko.db-wal
+
+# Certificates
+backend/Kerko/certificates
