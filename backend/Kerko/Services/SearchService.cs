@@ -30,7 +30,7 @@ public class SearchService : ISearchService
     {
         try
         {
-            await LogSearchAsync(new SearchLog
+            LogSearchAsync(new SearchLog
             {
                 IpAddress = ipAddress,
                 SearchType = "Name",
@@ -80,7 +80,7 @@ public class SearchService : ISearchService
         }
         catch (Exception ex)
         {
-            await LogSearchAsync(new SearchLog
+            LogSearchAsync(new SearchLog
             {
                 IpAddress = ipAddress,
                 SearchType = "Name",
@@ -97,7 +97,7 @@ public class SearchService : ISearchService
     {
         try
         {
-            await LogSearchAsync(new SearchLog
+            LogSearchAsync(new SearchLog
             {
                 IpAddress = ipAddress,
                 SearchType = "Plate",
@@ -135,7 +135,7 @@ public class SearchService : ISearchService
                 })
                 .ToListAsync();
 
-            targatResults = targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri)).ToList();
+            targatResults = [.. targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri))];
 
             return new SearchResponse
             {
@@ -144,7 +144,7 @@ public class SearchService : ISearchService
         }
         catch (Exception ex)
         {
-            await LogSearchAsync(new SearchLog
+            LogSearchAsync(new SearchLog
             {
                 IpAddress = ipAddress,
                 SearchType = "Plate",
@@ -183,45 +183,30 @@ public class SearchService : ISearchService
 
     public async Task<List<Dictionary<string, int>>> DbStatusAsync()
     {
-        var tables = _db.Model.GetEntityTypes().Select(t => t.GetTableName()).ToList();
-        _logger.LogInformation("Tables: {tables}", tables);
-        var result = new List<Dictionary<string, int>>();
-
-        var tasks = tables.Select(async table =>
-        {
-            var rows = await _db.Database.ExecuteSqlAsync($"SELECT COUNT(*) FROM {table}");
-            _logger.LogInformation("Table: {table}, Rows: {rows}", table, rows);
-            return new Dictionary<string, int> {
-                { table ?? "Unknown", rows
-                }
-            };
-        });
-
-        return (await Task.WhenAll(tasks)).ToList();
+        return
+        [
+            new() { { "Person", await _db.Person.CountAsync() } },
+            new() { { "Rrogat", await _db.Rrogat.CountAsync() } },
+            new() { { "Targat", await _db.Targat.CountAsync() } },
+            new() { { "Patronazhist", await _db.Patronazhist.CountAsync() } },
+            new() { { "SearchLogs", await _db.SearchLogs.CountAsync() } }
+        ];
     }
 
     private bool IsNameBanned(string? emri, string? mbiemri)
     {
         return false;
-        // TODO: update this later with a proper endpoint
-        // if (string.IsNullOrEmpty(emri) || string.IsNullOrEmpty(mbiemri))
-        // {
-        //     return false;
-        // }
-        // var bannedNames = new[] { "gabriele gjoka", "alvi tafa" };
-        // var bannedLastNames = new[] { "rrokaj" };
-        // return bannedNames.Contains($"{emri.Trim().ToLower()} {mbiemri.Trim().ToLower()}") || 
-        //        bannedLastNames.Contains(mbiemri.Trim().ToLower());
     }
 
     private async Task<IEnumerable<IResponseModel>> GetPersonResults(string mbiemri, string emri)
     {
         var results = await _db.Person
             .AsNoTracking()
-            .Where(p => p.Mbiemer != null && p.Mbiemer.ToLower().Contains(mbiemri) &&
-                       p.Emer != null && p.Emer.ToLower().Contains(emri))
-            .Take(MaxResults)
+            .Where(p => p.Mbiemer != null && p.Emer != null)
+            .Where(p => EF.Functions.Like(p.Mbiemer, $"%{mbiemri}%") &&
+                       EF.Functions.Like(p.Emer, $"%{emri}%"))
             .OrderBy(p => p.Mbiemer)
+            .Take(MaxResults)
             .Select(p => new PersonResponse
             {
                 Adresa = p.Adresa,
@@ -247,8 +232,9 @@ public class SearchService : ISearchService
     {
         var results = await _db.Rrogat
             .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri) &&
-                       p.Emri != null && p.Emri.ToLower().Contains(emri))
+            .Where(p => p.Mbiemri != null && p.Emri != null)
+            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
+                       EF.Functions.Like(p.Emri, $"%{emri}%"))
             .Take(MaxResults)
             .OrderBy(p => p.Mbiemri)
             .Select(r => new RrogatResponse
@@ -271,8 +257,9 @@ public class SearchService : ISearchService
     {
         var results = await _db.Targat
             .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri) &&
-                       p.Emri != null && p.Emri.ToLower().Contains(emri))
+            .Where(p => p.Mbiemri != null && p.Emri != null)
+            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
+                       EF.Functions.Like(p.Emri, $"%{emri}%"))
             .Take(MaxResults)
             .OrderBy(t => t.NumriTarges)
             .Select(t => new TargatResponse
@@ -294,8 +281,9 @@ public class SearchService : ISearchService
     {
         var results = await _db.Patronazhist
             .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Mbiemri.ToLower().Contains(mbiemri) &&
-                       p.Emri != null && p.Emri.ToLower().Contains(emri))
+            .Where(p => p.Mbiemri != null && p.Emri != null)
+            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
+                       EF.Functions.Like(p.Emri, $"%{emri}%"))
             .Take(MaxResults)
             .OrderBy(p => p.Mbiemri)
             .Select(p => new PatronazhistResponse
@@ -325,9 +313,19 @@ public class SearchService : ISearchService
         return results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri));
     }
 
-    private async Task LogSearchAsync(SearchLog log)
+    private void LogSearchAsync(SearchLog log)
     {
-        await _db.SearchLogs.AddAsync(log);
-        await _db.SaveChangesAsync();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _db.SearchLogs.AddAsync(log);
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error logging search");
+            }
+        });
     }
 }

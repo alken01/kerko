@@ -4,6 +4,8 @@ using Kerko.Services;
 using Kerko.Models;
 using System.Security.Cryptography.X509Certificates;
 using Kerko.Authentication;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,16 +38,32 @@ if (!builder.Environment.IsDevelopment()) // Only use custom certificate in prod
                         throw new FileNotFoundException("SSL certificate or private key not found");
                     }
 
-                    using var cert = X509Certificate2.CreateFromPemFile(certPath, keyPath);
                     var certWithPrivateKey = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-
                     options.ServerCertificate = certWithPrivateKey;
-                    options.SslProtocols = System.Security.Authentication.SslProtocols.Tls13; // Only allow TLS 1.3
+                    options.SslProtocols = System.Security.Authentication.SslProtocols.Tls13;
                 });
             });
         }
     });
 }
+
+// Add rate limiting
+// Add rate limiting service
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 20,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -59,9 +77,18 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         var origins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>();
-        policy.WithOrigins(origins ?? Array.Empty<string>())
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        if (origins == null || origins.Length == 0)
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .WithMethods("GET");
+        }
+        else
+        {
+            policy.WithOrigins(origins)
+                  .AllowAnyHeader()
+                  .WithMethods("GET");
+        }
     });
 });
 
@@ -82,7 +109,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors(); // Add CORS middleware
+app.UseCors();
+app.UseRateLimiter(); // Add rate limiting middleware
 app.UseAuthorization();
 app.UseApiKeyAuth();
 app.MapControllers();

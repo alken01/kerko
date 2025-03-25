@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 namespace Kerko.Authentication;
 
 public class ApiKeyAuthMiddleware
@@ -26,7 +29,9 @@ public class ApiKeyAuthMiddleware
 
             var apiKey = configuration["AdminApiKey"];
             
-            if (!apiKey?.Equals(extractedApiKey) ?? true)
+            if (string.IsNullOrEmpty(apiKey) || !CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(apiKey), 
+                Encoding.UTF8.GetBytes(extractedApiKey.ToString())))
             {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsJsonAsync(new { message = "Invalid API Key" });
