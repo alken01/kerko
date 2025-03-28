@@ -21,13 +21,13 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Restore dependencies
-        run: dotnet restore Kerko/Kerko.csproj
+        run: dotnet restore backend/Kerko/Kerko.csproj
 
       - name: Build with dotnet
-        run: dotnet build Kerko/Kerko.csproj --configuration Release --no-restore
+        run: dotnet build backend/Kerko/Kerko.csproj --configuration Release --no-restore
 
       - name: Publish with dotnet
-        run: dotnet publish Kerko/Kerko.csproj --configuration Release --output ./publish --no-build
+        run: dotnet publish backend/Kerko/Kerko.csproj --configuration Release --output ./publish --no-build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
