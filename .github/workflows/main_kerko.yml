@@ -51,6 +51,17 @@ jobs:
         with:
           name: .net-app
 
+      - name: Set up .NET Core for migrations
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Restore dependencies for migrations
+        run: dotnet restore backend/Kerko/Kerko.csproj
+
+      - name: Run database migrations
+        run: dotnet ef database update --project backend/Kerko/Kerko.csproj --configuration Production
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -63,5 +74,5 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'kerko'
-          slot-name: 'Production'
+          slot-name: 'production'
           package: .
