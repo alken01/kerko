@@ -73,6 +73,10 @@ backend/Kerko/processed_data/
 backend/Kerko/kerko.db
 backend/Kerko/kerko.db-shm
 backend/Kerko/kerko.db-wal
+backend/Kerko/kerko_dump.sql
 
 # Certificates
 backend/Kerko/certificates
+
+# Build
+publish/
