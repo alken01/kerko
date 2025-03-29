@@ -51,26 +51,6 @@ jobs:
         with:
           name: .net-app
 
-      - name: Checkout code for migrations
-        uses: actions/checkout@v4
-      
-      - name: Set up .NET Core for migrations
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.x'
-
-      - name: Install EF Core tools
-        run: dotnet tool install --global dotnet-ef
-
-      - name: Restore dependencies for migrations
-        run: dotnet restore backend/Kerko/Kerko.csproj
-
-      - name: Run database migrations
-        run: dotnet ef database update --project backend/Kerko/Kerko.csproj --configuration Production
-        env:
-          ConnectionStrings__DefaultConnection__Password: ${{ secrets.DB_PASSWORD }}
-          ASPNETCORE_ENVIRONMENT: "Production"
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
