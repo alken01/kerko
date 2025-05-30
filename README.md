@@ -1,6 +1,6 @@
 # Kërko
 
-A modern search platform offering unified access to various Albanian public record databases through a streamlined web interface.
+A search platform to access various Albanian public record databases.
 Built with **.NET 9** and **Next.js 15**.
 
 **Database Size:** 1.1GB+ of indexed and searchable records
