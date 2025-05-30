@@ -10,7 +10,12 @@ export class ApiService {
     const response = await fetch(
       `${API_URL}/api/kerko?emri=${encodeURIComponent(
         emri
-      )}&mbiemri=${encodeURIComponent(mbiemri)}`
+      )}&mbiemri=${encodeURIComponent(mbiemri)}`,
+      {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      }
     );
 
     if (!response.ok) {
@@ -39,7 +44,12 @@ export class ApiService {
 
   static async searchTarga(numriTarges: string): Promise<SearchResponse> {
     const response = await fetch(
-      `${API_URL}/api/targat?numriTarges=${encodeURIComponent(numriTarges)}`
+      `${API_URL}/api/targat?numriTarges=${encodeURIComponent(numriTarges)}`,
+      {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      }
     );
 
     if (!response.ok) {

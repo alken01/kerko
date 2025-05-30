@@ -2,49 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using Kerko.Infrastructure;
 using Kerko.Services;
 using Kerko.Models;
-using System.Security.Cryptography.X509Certificates;
 using Kerko.Authentication;
-using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Kestrel with HTTPS
-if (!builder.Environment.IsDevelopment()) // Only use custom certificate in production
+if (!builder.Environment.IsDevelopment())
 {
     builder.WebHost.ConfigureKestrel(serverOptions =>
     {
         var kestrelConfig = builder.Configuration.GetSection("Kestrel").Get<KestrelConfig>();
-
         // Configure HTTP endpoint
         if (kestrelConfig?.Endpoints?.Http != null)
         {
             var httpPort = kestrelConfig.Endpoints.Http.Url.Split(':')[2];
             serverOptions.ListenAnyIP(int.Parse(httpPort));
-        }
-
-        // Configure HTTPS endpoint
-        if (kestrelConfig?.Endpoints?.Https != null)
-        {
-            var httpsPort = kestrelConfig.Endpoints.Https.Url.Split(':')[2];
-            serverOptions.ListenAnyIP(int.Parse(httpsPort), listenOptions =>
-            {
-                listenOptions.UseHttps(options =>
-                {
-                    var certConfig = kestrelConfig.Endpoints.Https.Certificate;
-                    var certPath = Path.Combine(builder.Environment.ContentRootPath, certConfig.Path);
-                    var keyPath = Path.Combine(builder.Environment.ContentRootPath, certConfig.KeyPath);
-
-                    if (!File.Exists(certPath) || !File.Exists(keyPath))
-                    {
-                        throw new FileNotFoundException("SSL certificate or private key not found");
-                    }
-
-                    var certWithPrivateKey = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-                    options.ServerCertificate = certWithPrivateKey;
-                    options.SslProtocols = System.Security.Authentication.SslProtocols.Tls13;
-                });
-            });
         }
     });
 }
@@ -94,9 +66,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure PostgreSQL
+// Configure SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services
 builder.Services.AddScoped<ISearchService, SearchService>();
