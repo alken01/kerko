@@ -22,11 +22,9 @@ public class Controller : ControllerBase
     {
         try
         {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            _logger.LogInformation("Kerko: emri: {emri}, mbiemri: {mbiemri}, {IpAddress}", 
-                emri, mbiemri, ipAddress);
+            _logger.LogInformation("Kerko: emri: {emri}, mbiemri: {mbiemri}", emri, mbiemri);
 
-            var result = await _searchService.KerkoAsync(mbiemri, emri, ipAddress);
+            var result = await _searchService.KerkoAsync(mbiemri, emri);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -45,11 +43,9 @@ public class Controller : ControllerBase
     {
         try
         {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            _logger.LogInformation("Targat: numriTarges: {numriTarges}, {IpAddress}", 
-                numriTarges, ipAddress);
+            _logger.LogInformation("Targat: numriTarges: {numriTarges}", numriTarges);
 
-            var result = await _searchService.TargatAsync(numriTarges, ipAddress);
+            var result = await _searchService.TargatAsync(numriTarges);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -72,16 +68,13 @@ public class Controller : ControllerBase
     [HttpGet("search-logs")]
     [RequireApiKey]
     public async Task<IActionResult> GetSearchLogs(
-        [FromQuery] string? ipAddress,
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate)
     {
         try
         {
-            var requestingIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            _logger.LogInformation("Search logs accessed by IP: {IpAddress}", requestingIp);
-            
-            var logs = await _searchService.GetSearchLogsAsync(ipAddress, startDate, endDate);
+            _logger.LogInformation("Search logs accessed");
+            var logs = await _searchService.GetSearchLogsAsync(startDate, endDate);
             return Ok(logs);
         }
         catch (Exception ex)
@@ -106,4 +99,4 @@ public class Controller : ControllerBase
             return StatusCode(500, "An error occurred while checking database status");
         }
     }
-} 
+}

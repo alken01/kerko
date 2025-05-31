@@ -6,10 +6,10 @@ namespace Kerko.Services;
 
 public interface ISearchService
 {
-    Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, string ipAddress);
-    Task<SearchResponse> TargatAsync(string? numriTarges, string ipAddress);
+    Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri);
+    Task<SearchResponse> TargatAsync(string? numriTarges);
     Task<List<Dictionary<string, int>>> DbStatusAsync();
-    Task<IEnumerable<SearchLog>> GetSearchLogsAsync(string? ipAddress = null, DateTime? startDate = null, DateTime? endDate = null);
+    Task<IEnumerable<SearchLog>> GetSearchLogsAsync(DateTime? startDate = null, DateTime? endDate = null);
 }
 
 public class SearchService : ISearchService
@@ -26,19 +26,10 @@ public class SearchService : ISearchService
         _logger = logger;
     }
 
-    public async Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, string ipAddress)
+    public async Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri)
     {
         try
         {
-            LogSearchAsync(new SearchLog
-            {
-                IpAddress = ipAddress,
-                SearchType = "Name",
-                SearchParams = $"emri: {emri}, mbiemri: {mbiemri}",
-                Timestamp = DateTime.UtcNow,
-                WasSuccessful = true
-            });
-
             if (string.IsNullOrEmpty(mbiemri) || string.IsNullOrEmpty(emri))
             {
                 throw new ArgumentException("Emri dhe mbiemri nuk mund te jene bosh");
@@ -64,48 +55,23 @@ public class SearchService : ISearchService
 
             return new SearchResponse
             {
-                Person = (await tasks[
-                    0
-                ]).Cast<PersonResponse>().ToList(),
-                Rrogat = (await tasks[
-                    1
-                ]).Cast<RrogatResponse>().ToList(),
-                Targat = (await tasks[
-                    2
-                ]).Cast<TargatResponse>().ToList(),
-                Patronazhist = (await tasks[
-                    3
-                ]).Cast<PatronazhistResponse>().ToList()
+                Person = [.. (await tasks[0]).Cast<PersonResponse>()],
+                Rrogat = [.. (await tasks[1]).Cast<RrogatResponse>()],
+                Targat = [.. (await tasks[2]).Cast<TargatResponse>()],
+                Patronazhist = [.. (await tasks[3]).Cast<PatronazhistResponse>()]
             };
         }
         catch (Exception ex)
         {
-            LogSearchAsync(new SearchLog
-            {
-                IpAddress = ipAddress,
-                SearchType = "Name",
-                SearchParams = $"emri: {emri}, mbiemri: {mbiemri}",
-                Timestamp = DateTime.UtcNow,
-                WasSuccessful = false,
-                ErrorMessage = ex.Message
-            });
+            _logger.LogError(ex, "Error searching for {mbiemri} {emri}", mbiemri, emri);
             throw;
         }
     }
 
-    public async Task<SearchResponse> TargatAsync(string? numriTarges, string ipAddress)
+    public async Task<SearchResponse> TargatAsync(string? numriTarges)
     {
         try
         {
-            LogSearchAsync(new SearchLog
-            {
-                IpAddress = ipAddress,
-                SearchType = "Plate",
-                SearchParams = $"numriTarges: {numriTarges}",
-                Timestamp = DateTime.UtcNow,
-                WasSuccessful = true
-            });
-
             if (string.IsNullOrEmpty(numriTarges))
             {
                 throw new ArgumentException("Numri i targes nuk mund te jene bosh");
@@ -144,27 +110,14 @@ public class SearchService : ISearchService
         }
         catch (Exception ex)
         {
-            LogSearchAsync(new SearchLog
-            {
-                IpAddress = ipAddress,
-                SearchType = "Plate",
-                SearchParams = $"numriTarges: {numriTarges}",
-                Timestamp = DateTime.UtcNow,
-                WasSuccessful = false,
-                ErrorMessage = ex.Message
-            });
+            _logger.LogError(ex, "Error searching for targat {numriTarges}", numriTarges);
             throw;
         }
     }
 
-    public async Task<IEnumerable<SearchLog>> GetSearchLogsAsync(string? ipAddress = null, DateTime? startDate = null, DateTime? endDate = null)
+    public async Task<IEnumerable<SearchLog>> GetSearchLogsAsync(DateTime? startDate = null, DateTime? endDate = null)
     {
         var query = _db.SearchLogs.AsNoTracking();
-
-        if (!string.IsNullOrEmpty(ipAddress))
-        {
-            query = query.Where(l => l.IpAddress == ipAddress);
-        }
 
         if (startDate.HasValue)
         {
@@ -311,21 +264,5 @@ public class SearchService : ISearchService
             .ToListAsync();
 
         return results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri));
-    }
-
-    private void LogSearchAsync(SearchLog log)
-    {
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await _db.SearchLogs.AddAsync(log);
-                await _db.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error logging search");
-            }
-        });
     }
 }
