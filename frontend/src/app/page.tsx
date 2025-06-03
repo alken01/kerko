@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResultsTabs } from "@/components/SearchResultsTabs";
 import { GlobalStyles } from "@/components/GlobalStyles";
 import { SearchResponse } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
+import { useSearchParams } from "next/navigation";
 
 type TabType = "person" | "rrogat" | "targat" | "patronazhist";
 
-export default function Home() {
+function SearchContent() {
+  const searchParams = useSearchParams();
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(
     null
   );
@@ -22,6 +24,20 @@ export default function Home() {
     emri: string;
     mbiemri: string;
   } | null>(null);
+
+  // Handle URL parameters on initial load
+  useEffect(() => {
+    const emri = searchParams.get("emri");
+    const mbiemri = searchParams.get("mbiemri");
+    const targa = searchParams.get("targa");
+
+    if (targa) {
+      handleSearchTarga(targa);
+    } else if (emri && mbiemri) {
+      setSearchFormData({ emri, mbiemri });
+      handleSearch(emri, mbiemri);
+    }
+  }, [searchParams]);
 
   const handleSearch = async (emri: string, mbiemri: string) => {
     setIsLoading(true);
@@ -72,40 +88,52 @@ export default function Home() {
   };
 
   return (
+    <>
+      <div className="max-w-md mx-auto">
+        <SearchForm
+          onSearch={handleSearch}
+          onSearchTarga={handleSearchTarga}
+          onClear={handleClear}
+          isLoading={isLoading}
+          defaultValues={searchFormData}
+        />
+      </div>
+
+      {error && (
+        <Alert
+          variant="destructive"
+          className="max-w-md mx-auto bg-[#2a0f0f] border-[#aa0000] text-[#ff4040]"
+        >
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {searchResults && (
+        <SearchResultsTabs
+          searchResults={searchResults}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onNameClick={handleNameClick}
+          isTargaSearch={isTargaSearch}
+        />
+      )}
+    </>
+  );
+}
+
+export default function Home() {
+  return (
     <div className="min-h-screen bg-[#0a0303] overflow-x-hidden touch-manipulation dark">
       <GlobalStyles />
       <main className="container mx-auto py-6 space-y-4 px-4 md:px-6">
         <h1 className="text-center text-3xl font-bold tracking-tight text-white">
           Kërko
         </h1>
-        <div className="max-w-md mx-auto">
-          <SearchForm
-            onSearch={handleSearch}
-            onSearchTarga={handleSearchTarga}
-            onClear={handleClear}
-            isLoading={isLoading}
-            defaultValues={searchFormData}
-          />
-        </div>
-
-        {error && (
-          <Alert
-            variant="destructive"
-            className="max-w-md mx-auto bg-[#2a0f0f] border-[#aa0000] text-[#ff4040]"
-          >
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {searchResults && (
-          <SearchResultsTabs
-            searchResults={searchResults}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            onNameClick={handleNameClick}
-            isTargaSearch={isTargaSearch}
-          />
-        )}
+        <Suspense
+          fallback={<div className="text-white text-center">Loading...</div>}
+        >
+          <SearchContent />
+        </Suspense>
       </main>
     </div>
   );

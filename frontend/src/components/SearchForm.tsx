@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { cardStyles } from "./ui/card-styles";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface SearchFormProps {
   onSearch: (emri: string, mbiemri: string) => void;
@@ -21,24 +22,42 @@ export function SearchForm({
   isLoading,
   defaultValues,
 }: SearchFormProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<"name" | "targa">("name");
   const [emri, setEmri] = useState("");
   const [mbiemri, setMbiemri] = useState("");
   const [targa, setTarga] = useState("");
 
   useEffect(() => {
-    if (defaultValues) {
+    const urlTarga = searchParams.get("targa");
+    if (urlTarga) {
+      setActiveTab("targa");
+      setTarga(urlTarga);
+    } else if (defaultValues) {
       setActiveTab("name");
       setEmri(defaultValues.emri);
       setMbiemri(defaultValues.mbiemri);
     }
-  }, [defaultValues]);
+  }, [defaultValues, searchParams]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === "name") {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("emri", emri);
+      params.set("mbiemri", mbiemri);
+      params.delete("targa");
+      router.push(`?${params.toString()}`, { scroll: false });
+
       onSearch(emri, mbiemri);
     } else {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("targa", targa);
+      params.delete("emri");
+      params.delete("mbiemri");
+      router.push(`?${params.toString()}`, { scroll: false });
+
       onSearchTarga(targa);
     }
   };
@@ -47,6 +66,7 @@ export function SearchForm({
     setEmri("");
     setMbiemri("");
     setTarga("");
+    router.replace("/", { scroll: false });
     if (onClear) {
       onClear();
     }
