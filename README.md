@@ -30,10 +30,10 @@ Built with **.NET 9** and **Next.js 15**.
 **Features:** Rate limiting, CORS, Swagger API, Docker support
 
 ```text
-┌──────────────┐      ┌──────────────┐      ┌────────────┐
+┌──────────────┐    ┌──────────────┐    ┌────────────┐
 │   Frontend   │◄──►│   Backend    │◄──►│  Database  │
-│  Next.js 15  │      │  .NET 9 API  │      │  SQLite    │
-└──────────────┘      └──────────────┘      └────────────┘
+│  Next.js 15  │    │  .NET 9 API  │    │  SQLite    │
+└──────────────┘    └──────────────┘    └────────────┘
 
 kerko/
 ├── frontend/                 # Next.js 15 application
