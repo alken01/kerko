@@ -68,4 +68,31 @@ export class ApiService {
 
     return data;
   }
+
+  static async searchTelefon(numriTelefonit: string): Promise<SearchResponse> {
+    const response = await fetch(
+      `${API_URL}/api/telefon?numriTelefonit=${encodeURIComponent(numriTelefonit)}`,
+      {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("Qetsohu cik mplak, prit pak edhe provo prap");
+      }
+      const text = await response.text();
+      throw new Error(text || "Pati një problem gjatë kërkimit të telefonit");
+    }
+
+    const data: SearchResponse = await response.json();
+
+    if (!data || data.patronazhist.length === 0) {
+      throw new Error("Nuk u gjet asnjë rezultat");
+    }
+
+    return data;
+  }
 }
