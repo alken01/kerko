@@ -22,7 +22,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Kerko: emri: {emri}, mbiemri: {mbiemri}", emri, mbiemri);
+            _logger.LogInformation("Emri: {emri}, Mbiemri: {mbiemri}", emri, mbiemri);
 
             var result = await _searchService.KerkoAsync(mbiemri, emri);
             return Ok(result);
@@ -43,7 +43,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Targat: numriTarges: {numriTarges}", numriTarges);
+            _logger.LogInformation("Targa: {numriTarges}", numriTarges);
 
             var result = await _searchService.TargatAsync(numriTarges);
             return Ok(result);
@@ -55,6 +55,27 @@ public class Controller : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while searching for targat");
+            return StatusCode(500, "An error occurred while processing your request");
+        }
+    }
+
+    [HttpGet("telefon")]
+    public async Task<IActionResult> Telefon([FromQuery] string? numriTelefonit)
+    {
+        try
+        {
+            _logger.LogInformation("Telefon: {numriTelefonit}", numriTelefonit);
+
+            var result = await _searchService.TelefonAsync(numriTelefonit);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while searching for telefon");
             return StatusCode(500, "An error occurred while processing your request");
         }
     }
@@ -81,22 +102,6 @@ public class Controller : ControllerBase
         {
             _logger.LogError(ex, "Error occurred while retrieving search logs");
             return StatusCode(500, "An error occurred while retrieving search logs");
-        }
-    }
-
-    [RequireApiKey]
-    [HttpGet("db-status")]
-    public async Task<IActionResult> DbStatus()
-    {
-        try
-        {
-            var result = await _searchService.DbStatusAsync();
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while checking database status");
-            return StatusCode(500, "An error occurred while checking database status");
         }
     }
 }

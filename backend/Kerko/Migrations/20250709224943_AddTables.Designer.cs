@@ -3,6 +3,7 @@ using System;
 using Kerko.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kerko.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250709224943_AddTables")]
+    partial class AddTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
@@ -82,14 +85,6 @@ namespace Kerko.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Emri");
-
-                    b.HasIndex("Mbiemri");
-
-                    b.HasIndex("Tel");
-
-                    b.HasIndex("Mbiemri", "Emri");
-
                     b.ToTable("Patronazhist");
                 });
 
@@ -140,12 +135,6 @@ namespace Kerko.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Emer");
-
-                    b.HasIndex("Mbiemer");
-
-                    b.HasIndex("Mbiemer", "Emer");
-
                     b.ToTable("Person");
                 });
 
@@ -181,12 +170,6 @@ namespace Kerko.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Emri");
-
-                    b.HasIndex("Mbiemri");
-
-                    b.HasIndex("Mbiemri", "Emri");
-
                     b.ToTable("Rrogat");
                 });
 
@@ -219,10 +202,6 @@ namespace Kerko.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IpAddress");
-
-                    b.HasIndex("Timestamp");
-
                     b.ToTable("SearchLogs");
                 });
 
@@ -254,14 +233,6 @@ namespace Kerko.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Emri");
-
-                    b.HasIndex("Mbiemri");
-
-                    b.HasIndex("NumriTarges");
-
-                    b.HasIndex("Mbiemri", "Emri");
 
                     b.ToTable("Targat");
                 });
