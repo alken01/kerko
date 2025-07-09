@@ -12,6 +12,7 @@ interface SearchResultsTabsProps {
   onTabChange: (tab: TabType) => void;
   onNameClick: (emri: string, mbiemri: string) => void;
   isTargaSearch: boolean;
+  isTelefonSearch: boolean;
 }
 
 export function SearchResultsTabs({
@@ -20,9 +21,12 @@ export function SearchResultsTabs({
   onTabChange,
   onNameClick,
   isTargaSearch,
+  isTelefonSearch,
 }: SearchResultsTabsProps) {
   const tabs = isTargaSearch
     ? [{ value: "targat", label: "Targat" }]
+    : isTelefonSearch
+    ? [{ value: "patronazhist", label: "Patronazhistë" }]
     : [
         { value: "person", label: "Persona" },
         { value: "rrogat", label: "Rrogat" },

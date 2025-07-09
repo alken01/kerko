@@ -20,6 +20,7 @@ function SearchContent() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("person");
   const [isTargaSearch, setIsTargaSearch] = useState(false);
+  const [isTelefonSearch, setIsTelefonSearch] = useState(false);
   const [searchFormData, setSearchFormData] = useState<{
     emri: string;
     mbiemri: string;
@@ -30,9 +31,12 @@ function SearchContent() {
     const emri = searchParams.get("emri");
     const mbiemri = searchParams.get("mbiemri");
     const targa = searchParams.get("targa");
+    const telefon = searchParams.get("telefon");
 
     if (targa) {
       handleSearchTarga(targa);
+    } else if (telefon) {
+      handleSearchTelefon(telefon);
     } else if (emri && mbiemri) {
       setSearchFormData({ emri, mbiemri });
       handleSearch(emri, mbiemri);
@@ -44,6 +48,7 @@ function SearchContent() {
     setError(null);
     setSearchResults(null);
     setIsTargaSearch(false);
+    setIsTelefonSearch(false);
     setActiveTab("person");
 
     try {
@@ -65,9 +70,29 @@ function SearchContent() {
     setSearchResults(null);
     setActiveTab("targat");
     setIsTargaSearch(true);
+    setIsTelefonSearch(false);
 
     try {
       const data = await ApiService.searchTarga(numriTarges);
+      setSearchResults(data);
+    } catch (err) {
+      console.error("Search error:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearchTelefon = async (numriTelefonit: string) => {
+    setIsLoading(true);
+    setError(null);
+    setSearchResults(null);
+    setActiveTab("patronazhist");
+    setIsTargaSearch(false);
+    setIsTelefonSearch(true);
+
+    try {
+      const data = await ApiService.searchTelefon(numriTelefonit);
       setSearchResults(data);
     } catch (err) {
       console.error("Search error:", err);
@@ -85,6 +110,8 @@ function SearchContent() {
   const handleClear = () => {
     setSearchResults(null);
     setError(null);
+    setIsTargaSearch(false);
+    setIsTelefonSearch(false);
   };
 
   return (
@@ -93,6 +120,7 @@ function SearchContent() {
         <SearchForm
           onSearch={handleSearch}
           onSearchTarga={handleSearchTarga}
+          onSearchTelefon={handleSearchTelefon}
           onClear={handleClear}
           isLoading={isLoading}
           defaultValues={searchFormData}
@@ -115,6 +143,7 @@ function SearchContent() {
           onTabChange={setActiveTab}
           onNameClick={handleNameClick}
           isTargaSearch={isTargaSearch}
+          isTelefonSearch={isTelefonSearch}
         />
       )}
     </>

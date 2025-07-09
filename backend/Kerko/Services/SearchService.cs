@@ -8,6 +8,7 @@ public interface ISearchService
 {
     Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri);
     Task<SearchResponse> TargatAsync(string? numriTarges);
+    Task<SearchResponse> TelefonAsync(string? numriTelefonit);
     Task<List<Dictionary<string, int>>> DbStatusAsync();
     Task<IEnumerable<SearchLog>> GetSearchLogsAsync(DateTime? startDate = null, DateTime? endDate = null);
 }
@@ -87,8 +88,8 @@ public class SearchService : ISearchService
             var targatResults = await _db.Targat
                 .AsNoTracking()
                 .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(normalizedNumriTarges))
-                .Take(MaxResults)
                 .OrderBy(t => t.NumriTarges)
+                .Take(MaxResults)
                 .Select(t => new TargatResponse
                 {
                     NumriTarges = t.NumriTarges,
@@ -111,6 +112,65 @@ public class SearchService : ISearchService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching for targat {numriTarges}", numriTarges);
+            throw;
+        }
+    }
+
+    public async Task<SearchResponse> TelefonAsync(string? numriTelefonit)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(numriTelefonit))
+            {
+                throw new ArgumentException("Numri i telefonit nuk mund te jene bosh");
+            }
+
+            if (numriTelefonit.Length < 10)
+            {
+                throw new ArgumentException("Numri i telefonit duhet te kete te pakten 10 karaktere");
+            }
+
+            var normalizedNumriTelefonit = numriTelefonit.Trim();
+
+            var patronazhistResults = await _db.Patronazhist
+                .AsNoTracking()
+                .Where(p => p.Tel != null && p.Tel.Contains(normalizedNumriTelefonit))
+                .OrderBy(p => p.Tel)
+                .Take(MaxResults)
+                .Select(p => new PatronazhistResponse
+                {
+                    NumriPersonal = p.NumriPersonal,
+                    Emri = p.Emri,
+                    Mbiemri = p.Mbiemri,
+                    Atesi = p.Atesi,
+                    Datelindja = p.Datelindja,
+                    QV = p.QV,
+                    ListaNr = p.ListaNr,
+                    Tel = p.Tel,
+                    Emigrant = p.Emigrant,
+                    Country = p.Country,
+                    ISigurte = p.ISigurte,
+                    Koment = p.Koment,
+                    Patronazhisti = p.Patronazhisti,
+                    Preferenca = p.Preferenca,
+                    Census2013Preferenca = p.Census2013Preferenca,
+                    Census2013Siguria = p.Census2013Siguria,
+                    Vendlindja = p.Vendlindja,
+                    Kompania = p.Kompania,
+                    KodBanese = p.KodBanese
+                })
+                .ToListAsync();
+
+            patronazhistResults = [.. patronazhistResults.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri))];
+
+            return new SearchResponse
+            {
+                Patronazhist = patronazhistResults
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching for telefon {numriTelefonit}", numriTelefonit);
             throw;
         }
     }
@@ -188,8 +248,8 @@ public class SearchService : ISearchService
             .Where(p => p.Mbiemri != null && p.Emri != null)
             .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
                        EF.Functions.Like(p.Emri, $"%{emri}%"))
-            .Take(MaxResults)
             .OrderBy(p => p.Mbiemri)
+            .Take(MaxResults)
             .Select(r => new RrogatResponse
             {
                 NumriPersonal = r.NumriPersonal,
@@ -213,8 +273,8 @@ public class SearchService : ISearchService
             .Where(p => p.Mbiemri != null && p.Emri != null)
             .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
                        EF.Functions.Like(p.Emri, $"%{emri}%"))
-            .Take(MaxResults)
             .OrderBy(t => t.NumriTarges)
+            .Take(MaxResults)
             .Select(t => new TargatResponse
             {
                 NumriTarges = t.NumriTarges,
@@ -237,8 +297,8 @@ public class SearchService : ISearchService
             .Where(p => p.Mbiemri != null && p.Emri != null)
             .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
                        EF.Functions.Like(p.Emri, $"%{emri}%"))
-            .Take(MaxResults)
             .OrderBy(p => p.Mbiemri)
+            .Take(MaxResults)
             .Select(p => new PatronazhistResponse
             {
                 NumriPersonal = p.NumriPersonal,

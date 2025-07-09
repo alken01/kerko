@@ -44,6 +44,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<Patronazhist>()
             .HasIndex(p => p.Emri);
         modelBuilder.Entity<Patronazhist>()
+            .HasIndex(p => p.Tel);
+        modelBuilder.Entity<Patronazhist>()
             .HasIndex(p => new { p.Mbiemri, p.Emri });
 
         modelBuilder.Entity<SearchLog>()
@@ -51,4 +53,4 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<SearchLog>()
             .HasIndex(s => s.Timestamp);
     }
-} 
+}
