@@ -22,7 +22,10 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Emri: {emri}, Mbiemri: {mbiemri}", emri, mbiemri);
+            var clientIp = GetClientIpAddress();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            _logger.LogInformation("Search request - Name: {emri} {mbiemri} | IP: {clientIp} | UserAgent: {userAgent}",
+                emri ?? "N/A", mbiemri ?? "N/A", clientIp, userAgent);
 
             var result = await _searchService.KerkoAsync(mbiemri, emri);
             return Ok(result);
@@ -43,7 +46,10 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Targa: {numriTarges}", numriTarges);
+            var clientIp = GetClientIpAddress();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            _logger.LogInformation("License plate search - Targa: {numriTarges} | IP: {clientIp} | UserAgent: {userAgent}",
+                numriTarges ?? "N/A", clientIp, userAgent);
 
             var result = await _searchService.TargatAsync(numriTarges);
             return Ok(result);
@@ -64,7 +70,10 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Telefon: {numriTelefonit}", numriTelefonit);
+            var clientIp = GetClientIpAddress();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            _logger.LogInformation("Phone search - Telefon: {numriTelefonit} | IP: {clientIp} | UserAgent: {userAgent}",
+                numriTelefonit ?? "N/A", clientIp, userAgent);
 
             var result = await _searchService.TelefonAsync(numriTelefonit);
             return Ok(result);
@@ -103,5 +112,22 @@ public class Controller : ControllerBase
             _logger.LogError(ex, "Error occurred while retrieving search logs");
             return StatusCode(500, "An error occurred while retrieving search logs");
         }
+    }
+
+    private string GetClientIpAddress()
+    {
+        var xForwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(xForwardedFor))
+        {
+            return xForwardedFor.Split(',').FirstOrDefault()?.Trim() ?? "Unknown";
+        }
+
+        var xRealIp = Request.Headers["X-Real-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(xRealIp))
+        {
+            return xRealIp;
+        }
+
+        return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
     }
 }
