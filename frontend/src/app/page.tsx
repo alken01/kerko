@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResultsTabs } from "@/components/SearchResultsTabs";
 import { GlobalStyles } from "@/components/GlobalStyles";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
@@ -153,7 +154,7 @@ function SearchContent() {
       {error && (
         <Alert
           variant="destructive"
-          className="max-w-md mx-auto bg-[#2a0f0f] border-[#aa0000] text-[#ff4040]"
+          className="max-w-md mx-auto"
         >
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -176,14 +177,22 @@ function SearchContent() {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#0a0303] overflow-x-hidden touch-manipulation dark">
+    <div className="min-h-screen bg-surface-primary overflow-x-hidden touch-manipulation">
       <GlobalStyles />
+
       <main className="container mx-auto py-6 space-y-4 px-4 md:px-6">
-        <h1 className="text-center text-3xl font-bold tracking-tight text-white">
-          Kërko
-        </h1>
+        {/* Title with theme toggle on same line */}
+        <div className="flex items-center justify-center relative">
+          <h1 className="text-3xl font-bold tracking-tight text-text-primary">
+            Kërko
+          </h1>
+          <div className="absolute right-0">
+            <ThemeToggle />
+          </div>
+        </div>
+
         <Suspense
-          fallback={<div className="text-white text-center">Loading...</div>}
+          fallback={<div className="text-text-primary text-center">Loading...</div>}
         >
           <SearchContent />
         </Suspense>

@@ -102,14 +102,14 @@ export function SearchForm({
     <Card className={cardStyles.root}>
       <CardContent className="p-5 space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex space-x-1 p-1 bg-[#120606] rounded-lg border-2 border-[#2a1a1a]">
+          <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary">
             <button
               type="button"
               onClick={() => setActiveTab("name")}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "name"
-                  ? "bg-[#2a1a1a] text-white shadow-sm"
-                  : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
+                  ? "bg-surface-tertiary text-text-primary dark:shadow-sm"
+                  : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
               Emri
@@ -119,8 +119,8 @@ export function SearchForm({
               onClick={() => setActiveTab("targa")}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "targa"
-                  ? "bg-[#2a1a1a] text-white shadow-sm"
-                  : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
+                  ? "bg-surface-tertiary text-text-primary dark:shadow-sm"
+                  : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
               Targa
@@ -135,8 +135,8 @@ export function SearchForm({
               }}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "telefon"
-                  ? "bg-[#2a1a1a] text-white shadow-sm"
-                  : "text-[#999] hover:text-white hover:bg-[#1a1a1a]"
+                  ? "bg-surface-tertiary text-text-primary dark:shadow-sm"
+                  : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
               Telefon
@@ -150,7 +150,7 @@ export function SearchForm({
                 placeholder="Emri"
                 value={emri}
                 onChange={(e) => setEmri(e.target.value)}
-                className="w-full bg-[#120606] border-2 border-[#2a1a1a] text-white placeholder:text-[#666] placeholder:font-normal focus-visible:ring-[#333] focus-visible:ring-offset-0 h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 disabled={isLoading}
               />
@@ -159,7 +159,7 @@ export function SearchForm({
                 placeholder="Mbiemri"
                 value={mbiemri}
                 onChange={(e) => setMbiemri(e.target.value)}
-                className="w-full bg-[#120606] border-2 border-[#2a1a1a] text-white placeholder:text-[#666] placeholder:font-normal focus-visible:ring-[#333] focus-visible:ring-offset-0 h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 disabled={isLoading}
               />
@@ -171,7 +171,7 @@ export function SearchForm({
                 placeholder="Targa"
                 value={targa}
                 onChange={(e) => setTarga(e.target.value)}
-                className="w-full bg-[#120606] border-2 border-[#2a1a1a] text-white placeholder:text-[#666] placeholder:font-normal focus-visible:ring-[#333] focus-visible:ring-offset-0 h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 disabled={isLoading}
               />
@@ -190,7 +190,7 @@ export function SearchForm({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 bg-[#120606] border-2 border-[#2a1a1a] text-[#666] hover:bg-[#2a1a1a] hover:text-white h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+              className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-tertiary hover:bg-surface-tertiary hover:text-text-primary h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
               style={{ WebkitTapHighlightColor: "transparent" }}
               onClick={handleClear}
             >
@@ -198,7 +198,7 @@ export function SearchForm({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-[#120606] border-2 border-[#2a1a1a] text-white hover:bg-[#2a1a1a] h-12 shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation disabled:opacity-50"
+              className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary hover:bg-surface-tertiary h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation disabled:opacity-50"
               style={{ WebkitTapHighlightColor: "transparent" }}
               disabled={
                 isLoading || (activeTab === "telefon" && telefon.length < 10)

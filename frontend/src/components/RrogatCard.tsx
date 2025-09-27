@@ -44,9 +44,9 @@ export function RrogatCard({ rrogat }: RrogatCardProps) {
                 label="Paga Bruto"
                 value={
                   rrogat.pagaBruto ? (
-                    <div className="text-lg font-bold text-white">
+                    <div className="text-lg font-bold text-text-primary">
                       {new Intl.NumberFormat("sq-AL").format(rrogat.pagaBruto)}
-                      <span className="text-[#cccccc] ml-1">ALL</span>
+                      <span className="text-text-secondary ml-1">ALL</span>
                     </div>
                   ) : (
                     "N/A"

@@ -41,6 +41,26 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Semantic surface colors */
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-interactive: var(--surface-interactive);
+  --color-surface-interactive-hover: var(--surface-interactive-hover);
+  --color-surface-interactive-active: var(--surface-interactive-active);
+
+  /* Semantic text colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-inverted: var(--text-inverted);
+
+  /* Semantic border colors */
+  --color-border-semantic-primary: var(--border-primary);
+  --color-border-semantic-secondary: var(--border-secondary);
+  --color-border-semantic-interactive: var(--border-interactive);
 }
 
 :root {
@@ -76,6 +96,26 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Semantic surface colors for consistent theming */
+  --surface-primary: oklch(1 0 0);
+  --surface-secondary: oklch(0.96 0 0);
+  --surface-tertiary: oklch(0.88 0 0);
+  --surface-elevated: oklch(1 0 0);
+  --surface-interactive: oklch(0.93 0 0);
+  --surface-interactive-hover: oklch(0.90 0 0);
+  --surface-interactive-active: oklch(0.85 0 0);
+
+  /* Text colors */
+  --text-primary: oklch(0.145 0 0);
+  --text-secondary: oklch(0.456 0 0);
+  --text-tertiary: oklch(0.608 0 0);
+  --text-inverted: oklch(0.985 0 0);
+
+  /* Border colors */
+  --border-primary: oklch(0.90 0 0);
+  --border-secondary: oklch(0.94 0 0);
+  --border-interactive: oklch(0.82 0 0);
 }
 
 .dark {
@@ -110,6 +150,26 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Semantic surface colors for dark mode */
+  --surface-primary: oklch(0.039 0 0); /* #0a0303 equivalent */
+  --surface-secondary: oklch(0.071 0 0); /* #120606 equivalent */
+  --surface-tertiary: oklch(0.165 0 0); /* #2a1a1a equivalent */
+  --surface-elevated: oklch(0.205 0 0);
+  --surface-interactive: oklch(0.104 0 0); /* #1a1a1a equivalent */
+  --surface-interactive-hover: oklch(0.165 0 0); /* #2a1a1a equivalent */
+  --surface-interactive-active: oklch(0.225 0 0);
+
+  /* Text colors for dark mode */
+  --text-primary: oklch(0.985 0 0);
+  --text-secondary: oklch(0.708 0 0);
+  --text-tertiary: oklch(0.4 0 0); /* #666 equivalent */
+  --text-inverted: oklch(0.145 0 0);
+
+  /* Border colors for dark mode */
+  --border-primary: oklch(1 0 0 / 10%);
+  --border-secondary: oklch(0.165 0 0); /* #2a1a1a equivalent */
+  --border-interactive: oklch(1 0 0 / 15%);
 }
 
 @tailwind base;
@@ -145,7 +205,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#0a0303] text-foreground;
+    @apply bg-surface-primary text-text-primary;
     font-family: 'Zed Sans', system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }

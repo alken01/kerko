@@ -53,8 +53,8 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
         disabled={!hasPrevious}
         className={`px-3 py-2 text-sm rounded-md transition-colors ${
           hasPrevious
-            ? "bg-[#2a1a1a] text-white hover:bg-[#3a2a2a] border border-[#444]"
-            : "bg-[#1a1a1a] text-[#666] cursor-not-allowed border border-[#333]"
+            ? "bg-surface-secondary text-text-primary hover:bg-surface-interactive border border-border-semantic-secondary"
+            : "bg-surface-interactive text-text-tertiary cursor-not-allowed border border-border-semantic-secondary"
         }`}
       >
         ← Para
@@ -68,10 +68,10 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
             disabled={typeof page === "string"}
             className={`px-3 py-2 text-sm rounded-md transition-colors min-w-[40px] ${
               page === currentPage
-                ? "bg-[#444] text-[#ffffff] border border-[#666] font-semibold"
+                ? "bg-surface-tertiary text-text-primary border border-border-semantic-interactive font-semibold"
                 : typeof page === "string"
-                ? "bg-transparent text-[#666] cursor-default"
-                : "bg-[#2a1a1a] text-white hover:bg-[#3a2a2a] border border-[#444]"
+                ? "bg-transparent text-text-tertiary cursor-default"
+                : "bg-surface-secondary text-text-primary hover:bg-surface-interactive border border-border-semantic-secondary"
             }`}
           >
             {page}
@@ -84,8 +84,8 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
         disabled={!hasNext}
         className={`px-3 py-2 text-sm rounded-md transition-colors ${
           hasNext
-            ? "bg-[#2a1a1a] text-white hover:bg-[#3a2a2a] border border-[#444]"
-            : "bg-[#1a1a1a] text-[#666] cursor-not-allowed border border-[#333]"
+            ? "bg-surface-secondary text-text-primary hover:bg-surface-interactive border border-border-semantic-secondary"
+            : "bg-surface-interactive text-text-tertiary cursor-not-allowed border border-border-semantic-secondary"
         }`}
       >
         Pas →

@@ -50,8 +50,8 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
                   }
                   className={cn(
                     "w-full py-2 px-4 rounded-lg font-medium",
-                    "bg-[#1a0808] text-[#999] hover:bg-[#2a1a1a] hover:text-white",
-                    "border-2 border-[#2a1a1a]",
+                    "bg-surface-interactive text-text-tertiary hover:bg-surface-interactive-hover hover:text-text-primary",
+                    "border-2 border-border-semantic-secondary",
                     "transition-all duration-200",
                     "flex items-center justify-center gap-2"
                   )}
