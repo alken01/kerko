@@ -1,5 +1,21 @@
 namespace Kerko.Models;
 
+public class PaginationInfo
+{
+    public int CurrentPage { get; init; }
+    public int PageSize { get; init; }
+    public int TotalItems { get; init; }
+    public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
+    public bool HasPrevious => CurrentPage > 1;
+    public bool HasNext => CurrentPage < TotalPages;
+}
+
+public class PaginatedResult<T>
+{
+    public List<T> Items { get; init; } = new();
+    public PaginationInfo Pagination { get; init; } = new();
+}
+
 public interface IResponseModel
 {
     string? Emri { get; init; }
@@ -70,16 +86,8 @@ public class PatronazhistResponse : IResponseModel
 
 public class SearchResponse
 {
-    public List<PersonResponse>? Person { get; init; }
-    public List<RrogatResponse>? Rrogat { get; init; }
-    public List<TargatResponse>? Targat { get; init; }
-    public List<PatronazhistResponse>? Patronazhist { get; init; }
-
-    public SearchResponse()
-    {
-        Person = new List<PersonResponse>();
-        Rrogat = new List<RrogatResponse>();
-        Targat = new List<TargatResponse>();
-        Patronazhist = new List<PatronazhistResponse>();
-    }
+    public PaginatedResult<PersonResponse> Person { get; init; } = new();
+    public PaginatedResult<RrogatResponse> Rrogat { get; init; } = new();
+    public PaginatedResult<TargatResponse> Targat { get; init; } = new();
+    public PaginatedResult<PatronazhistResponse> Patronazhist { get; init; } = new();
 }

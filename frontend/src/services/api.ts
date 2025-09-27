@@ -1,16 +1,23 @@
-import { SearchResponse } from "@/types/kerko";
+import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export class ApiService {
   static async searchPerson(
     emri: string,
-    mbiemri: string
+    mbiemri: string,
+    pageNumber: number = 1,
+    pageSize: number = 10
   ): Promise<SearchResponse> {
+    const params = new URLSearchParams({
+      emri,
+      mbiemri,
+      pageNumber: pageNumber.toString(),
+      pageSize: pageSize.toString()
+    });
+
     const response = await fetch(
-      `${API_URL}/api/kerko?emri=${encodeURIComponent(
-        emri
-      )}&mbiemri=${encodeURIComponent(mbiemri)}`,
+      `${API_URL}/api/kerko?${params}`,
       {
         headers: {
           'ngrok-skip-browser-warning': 'true'
@@ -30,10 +37,10 @@ export class ApiService {
     if (
       !data ||
       Object.values(data).every(
-        (arr) =>
-          !Array.isArray(arr) ||
-          arr.length === 0 ||
-          arr.every((item) => !Object.values(item).some(Boolean))
+        (result) =>
+          !result.items ||
+          result.items.length === 0 ||
+          result.items.every((item: Record<string, unknown>) => !Object.values(item).some(Boolean))
       )
     ) {
       throw new Error("Nuk u gjet asnjë rezultat");
@@ -42,9 +49,19 @@ export class ApiService {
     return data;
   }
 
-  static async searchTarga(numriTarges: string): Promise<SearchResponse> {
+  static async searchTarga(
+    numriTarges: string,
+    pageNumber: number = 1,
+    pageSize: number = 10
+  ): Promise<TargatSearchResponse> {
+    const params = new URLSearchParams({
+      numriTarges,
+      pageNumber: pageNumber.toString(),
+      pageSize: pageSize.toString()
+    });
+
     const response = await fetch(
-      `${API_URL}/api/targat?numriTarges=${encodeURIComponent(numriTarges)}`,
+      `${API_URL}/api/targat?${params}`,
       {
         headers: {
           'ngrok-skip-browser-warning': 'true'
@@ -60,18 +77,28 @@ export class ApiService {
       throw new Error(text || "Pati një problem gjatë kërkimit të targës");
     }
 
-    const data: SearchResponse = await response.json();
+    const data: TargatSearchResponse = await response.json();
 
-    if (!data || data.targat.length === 0) {
+    if (!data || data.items.length === 0) {
       throw new Error("Nuk u gjet asnjë rezultat");
     }
 
     return data;
   }
 
-  static async searchTelefon(numriTelefonit: string): Promise<SearchResponse> {
+  static async searchTelefon(
+    numriTelefonit: string,
+    pageNumber: number = 1,
+    pageSize: number = 10
+  ): Promise<PatronazhistSearchResponse> {
+    const params = new URLSearchParams({
+      numriTelefonit,
+      pageNumber: pageNumber.toString(),
+      pageSize: pageSize.toString()
+    });
+
     const response = await fetch(
-      `${API_URL}/api/telefon?numriTelefonit=${encodeURIComponent(numriTelefonit)}`,
+      `${API_URL}/api/telefon?${params}`,
       {
         headers: {
           'ngrok-skip-browser-warning': 'true'
@@ -87,9 +114,9 @@ export class ApiService {
       throw new Error(text || "Pati një problem gjatë kërkimit të telefonit");
     }
 
-    const data: SearchResponse = await response.json();
+    const data: PatronazhistSearchResponse = await response.json();
 
-    if (!data || data.patronazhist.length === 0) {
+    if (!data || data.items.length === 0) {
       throw new Error("Nuk u gjet asnjë rezultat");
     }
 

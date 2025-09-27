@@ -21,23 +21,25 @@ if (!builder.Environment.IsDevelopment())
     });
 }
 
-// Add rate limiting
-// Add rate limiting service
-builder.Services.AddRateLimiter(options =>
+// Add rate limiting (skip in testing environment)
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
-            factory: partition => new FixedWindowRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                PermitLimit = 20,
-                QueueLimit = 0,
-                Window = TimeSpan.FromMinutes(1)
-            }));
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
+                factory: partition => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 20,
+                    QueueLimit = 0,
+                    Window = TimeSpan.FromMinutes(1)
+                }));
 
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-});
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    });
+}
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -84,7 +86,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
-app.UseRateLimiter(); // Add rate limiting middleware
+
+// Use rate limiter only in non-testing environments
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseRateLimiter();
+}
+
 app.UseAuthorization();
 app.UseApiKeyAuth();
 app.MapControllers();
@@ -110,3 +118,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Make the implicit Program class accessible to tests
+public partial class Program { }

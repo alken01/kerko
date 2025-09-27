@@ -57,9 +57,33 @@ export interface PatronazhistResponse {
   kodBanese: string | null;
 }
 
+export interface PaginationInfo {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  pagination: PaginationInfo;
+}
+
 export interface SearchResponse {
-  person: PersonResponse[];
-  rrogat: RrogatResponse[];
-  targat: TargatResponse[];
-  patronazhist: PatronazhistResponse[];
+  person: PaginatedResult<PersonResponse>;
+  rrogat: PaginatedResult<RrogatResponse>;
+  targat: PaginatedResult<TargatResponse>;
+  patronazhist: PaginatedResult<PatronazhistResponse>;
+}
+
+export interface TargatSearchResponse {
+  items: TargatResponse[];
+  pagination: PaginationInfo;
+}
+
+export interface PatronazhistSearchResponse {
+  items: PatronazhistResponse[];
+  pagination: PaginationInfo;
 }

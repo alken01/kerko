@@ -18,16 +18,17 @@ public class Controller : ControllerBase
     }
 
     [HttpGet("kerko")]
-    public async Task<IActionResult> Kerko([FromQuery] string? emri, [FromQuery] string? mbiemri)
+    public async Task<IActionResult> Kerko([FromQuery] string? emri, [FromQuery] string? mbiemri,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
             var clientIp = GetClientIpAddress();
             var userAgent = Request.Headers["User-Agent"].ToString();
-            _logger.LogInformation("Search request - Name: {emri} {mbiemri} | IP: {clientIp} | UserAgent: {userAgent}",
-                emri ?? "N/A", mbiemri ?? "N/A", clientIp, userAgent);
+            _logger.LogInformation("Search request - Name: {emri} {mbiemri} | Page: {pageNumber} | PageSize: {pageSize} | IP: {clientIp} | UserAgent: {userAgent}",
+                emri ?? "N/A", mbiemri ?? "N/A", pageNumber, pageSize, clientIp, userAgent);
 
-            var result = await _searchService.KerkoAsync(mbiemri, emri);
+            var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -42,16 +43,17 @@ public class Controller : ControllerBase
     }
 
     [HttpGet("targat")]
-    public async Task<IActionResult> Targat([FromQuery] string? numriTarges)
+    public async Task<IActionResult> Targat([FromQuery] string? numriTarges,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
             var clientIp = GetClientIpAddress();
             var userAgent = Request.Headers["User-Agent"].ToString();
-            _logger.LogInformation("License plate search - Targa: {numriTarges} | IP: {clientIp} | UserAgent: {userAgent}",
-                numriTarges ?? "N/A", clientIp, userAgent);
+            _logger.LogInformation("License plate search - Targa: {numriTarges} | Page: {pageNumber} | PageSize: {pageSize} | IP: {clientIp} | UserAgent: {userAgent}",
+                numriTarges ?? "N/A", pageNumber, pageSize, clientIp, userAgent);
 
-            var result = await _searchService.TargatAsync(numriTarges);
+            var result = await _searchService.TargatAsync(numriTarges, pageNumber, pageSize);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -66,16 +68,17 @@ public class Controller : ControllerBase
     }
 
     [HttpGet("telefon")]
-    public async Task<IActionResult> Telefon([FromQuery] string? numriTelefonit)
+    public async Task<IActionResult> Telefon([FromQuery] string? numriTelefonit,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
             var clientIp = GetClientIpAddress();
             var userAgent = Request.Headers["User-Agent"].ToString();
-            _logger.LogInformation("Phone search - Telefon: {numriTelefonit} | IP: {clientIp} | UserAgent: {userAgent}",
-                numriTelefonit ?? "N/A", clientIp, userAgent);
+            _logger.LogInformation("Phone search - Telefon: {numriTelefonit} | Page: {pageNumber} | PageSize: {pageSize} | IP: {clientIp} | UserAgent: {userAgent}",
+                numriTelefonit ?? "N/A", pageNumber, pageSize, clientIp, userAgent);
 
-            var result = await _searchService.TelefonAsync(numriTelefonit);
+            var result = await _searchService.TelefonAsync(numriTelefonit, pageNumber, pageSize);
             return Ok(result);
         }
         catch (ArgumentException ex)

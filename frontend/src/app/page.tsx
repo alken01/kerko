@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResultsTabs } from "@/components/SearchResultsTabs";
 import { GlobalStyles } from "@/components/GlobalStyles";
-import { SearchResponse } from "@/types/kerko";
+import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
 import { useSearchParams } from "next/navigation";
@@ -13,7 +13,7 @@ type TabType = "person" | "rrogat" | "targat" | "patronazhist";
 
 function SearchContent() {
   const searchParams = useSearchParams();
-  const [searchResults, setSearchResults] = useState<SearchResponse | null>(
+  const [searchResults, setSearchResults] = useState<SearchResponse | TargatSearchResponse | PatronazhistSearchResponse | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +24,10 @@ function SearchContent() {
   const [searchFormData, setSearchFormData] = useState<{
     emri: string;
     mbiemri: string;
+  } | null>(null);
+  const [currentSearchTerms, setCurrentSearchTerms] = useState<{
+    type: 'person' | 'targa' | 'telefon';
+    terms: string[];
   } | null>(null);
 
   // Handle URL parameters on initial load
@@ -43,16 +47,17 @@ function SearchContent() {
     }
   }, [searchParams]);
 
-  const handleSearch = async (emri: string, mbiemri: string) => {
+  const handleSearch = async (emri: string, mbiemri: string, page: number = 1) => {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
     setIsTargaSearch(false);
     setIsTelefonSearch(false);
     setActiveTab("person");
+    setCurrentSearchTerms({ type: 'person', terms: [emri, mbiemri] });
 
     try {
-      const data = await ApiService.searchPerson(emri, mbiemri);
+      const data = await ApiService.searchPerson(emri, mbiemri, page);
       setSearchResults(data);
     } catch (err) {
       console.error("Search error:", err);
@@ -64,16 +69,17 @@ function SearchContent() {
     }
   };
 
-  const handleSearchTarga = async (numriTarges: string) => {
+  const handleSearchTarga = async (numriTarges: string, page: number = 1) => {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
     setActiveTab("targat");
     setIsTargaSearch(true);
     setIsTelefonSearch(false);
+    setCurrentSearchTerms({ type: 'targa', terms: [numriTarges] });
 
     try {
-      const data = await ApiService.searchTarga(numriTarges);
+      const data = await ApiService.searchTarga(numriTarges, page);
       setSearchResults(data);
     } catch (err) {
       console.error("Search error:", err);
@@ -83,16 +89,17 @@ function SearchContent() {
     }
   };
 
-  const handleSearchTelefon = async (numriTelefonit: string) => {
+  const handleSearchTelefon = async (numriTelefonit: string, page: number = 1) => {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
     setActiveTab("patronazhist");
     setIsTargaSearch(false);
     setIsTelefonSearch(true);
+    setCurrentSearchTerms({ type: 'telefon', terms: [numriTelefonit] });
 
     try {
-      const data = await ApiService.searchTelefon(numriTelefonit);
+      const data = await ApiService.searchTelefon(numriTelefonit, page);
       setSearchResults(data);
     } catch (err) {
       console.error("Search error:", err);
@@ -112,6 +119,22 @@ function SearchContent() {
     setError(null);
     setIsTargaSearch(false);
     setIsTelefonSearch(false);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (!currentSearchTerms) return;
+
+    switch (currentSearchTerms.type) {
+      case 'person':
+        handleSearch(currentSearchTerms.terms[0], currentSearchTerms.terms[1], page);
+        break;
+      case 'targa':
+        handleSearchTarga(currentSearchTerms.terms[0], page);
+        break;
+      case 'telefon':
+        handleSearchTelefon(currentSearchTerms.terms[0], page);
+        break;
+    }
   };
 
   return (
@@ -142,6 +165,7 @@ function SearchContent() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onNameClick={handleNameClick}
+          onPageChange={handlePageChange}
           isTargaSearch={isTargaSearch}
           isTelefonSearch={isTelefonSearch}
         />
