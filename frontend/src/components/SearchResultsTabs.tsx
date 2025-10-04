@@ -1,14 +1,21 @@
-import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
+import {
+  PatronazhistSearchResponse,
+  SearchResponse,
+  TargatSearchResponse,
+} from "@/types/kerko";
+import { Pagination } from "./Pagination";
+import { PatronazhistCard } from "./PatronazhistCard";
 import { PersonCard } from "./PersonCard";
 import { RrogatCard } from "./RrogatCard";
 import { TargatCard } from "./TargatCard";
-import { PatronazhistCard } from "./PatronazhistCard";
-import { Pagination } from "./Pagination";
 
 type TabType = "person" | "rrogat" | "targat" | "patronazhist";
 
 interface SearchResultsTabsProps {
-  searchResults: SearchResponse | TargatSearchResponse | PatronazhistSearchResponse;
+  searchResults:
+    | SearchResponse
+    | TargatSearchResponse
+    | PatronazhistSearchResponse;
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
   onNameClick: (emri: string, mbiemri: string) => void;
@@ -38,13 +45,13 @@ export function SearchResultsTabs({
       ];
 
   const getCurrentPagination = () => {
-    if (isTargaSearch && 'pagination' in searchResults) {
+    if (isTargaSearch && "pagination" in searchResults) {
       return searchResults.pagination;
     }
-    if (isTelefonSearch && 'pagination' in searchResults) {
+    if (isTelefonSearch && "pagination" in searchResults) {
       return searchResults.pagination;
     }
-    if ('person' in searchResults) {
+    if ("person" in searchResults) {
       return searchResults[activeTab as keyof SearchResponse]?.pagination;
     }
     return null;
@@ -59,7 +66,7 @@ export function SearchResultsTabs({
             onClick={() => onTabChange(tab.value as TabType)}
             className={`flex-1 px-2 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
               activeTab === tab.value
-                ? "bg-surface-tertiary text-text-primary dark:shadow-sm"
+                ? "bg-surface-tertiary text-text-primary "
                 : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
             }`}
           >
@@ -67,14 +74,17 @@ export function SearchResultsTabs({
               <span>{tab.label}</span>
               <span className="text-xs bg-surface-interactive px-1.5 py-0.5 rounded-full">
                 {(() => {
-                  if (isTargaSearch && 'pagination' in searchResults) {
+                  if (isTargaSearch && "pagination" in searchResults) {
                     return searchResults.pagination?.totalItems || 0;
                   }
-                  if (isTelefonSearch && 'pagination' in searchResults) {
+                  if (isTelefonSearch && "pagination" in searchResults) {
                     return searchResults.pagination?.totalItems || 0;
                   }
-                  if ('person' in searchResults) {
-                    return searchResults[tab.value as keyof SearchResponse]?.pagination?.totalItems || 0;
+                  if ("person" in searchResults) {
+                    return (
+                      searchResults[tab.value as keyof SearchResponse]
+                        ?.pagination?.totalItems || 0
+                    );
                   }
                   return 0;
                 })()}
@@ -88,7 +98,7 @@ export function SearchResultsTabs({
         {activeTab === "person" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
             {(() => {
-              if ('person' in searchResults) {
+              if ("person" in searchResults) {
                 return searchResults.person?.items?.map((person, index) => (
                   <PersonCard key={index} person={person} />
                 ));
@@ -100,7 +110,7 @@ export function SearchResultsTabs({
         {activeTab === "rrogat" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
             {(() => {
-              if ('rrogat' in searchResults) {
+              if ("rrogat" in searchResults) {
                 return searchResults.rrogat?.items?.map((rrogat, index) => (
                   <RrogatCard key={index} rrogat={rrogat} />
                 ));
@@ -112,16 +122,22 @@ export function SearchResultsTabs({
         {activeTab === "targat" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
             {(() => {
-              if (isTargaSearch && 'items' in searchResults && !('person' in searchResults)) {
-                return (searchResults as TargatSearchResponse).items?.map((targat, index) => (
-                  <TargatCard
-                    key={index}
-                    targat={targat}
-                    onNameClick={onNameClick}
-                  />
-                ));
+              if (
+                isTargaSearch &&
+                "items" in searchResults &&
+                !("person" in searchResults)
+              ) {
+                return (searchResults as TargatSearchResponse).items?.map(
+                  (targat, index) => (
+                    <TargatCard
+                      key={index}
+                      targat={targat}
+                      onNameClick={onNameClick}
+                    />
+                  )
+                );
               }
-              if ('targat' in searchResults) {
+              if ("targat" in searchResults) {
                 return searchResults.targat?.items?.map((targat, index) => (
                   <TargatCard
                     key={index}
@@ -137,15 +153,23 @@ export function SearchResultsTabs({
         {activeTab === "patronazhist" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
             {(() => {
-              if (isTelefonSearch && 'items' in searchResults && !('person' in searchResults)) {
-                return (searchResults as PatronazhistSearchResponse).items?.map((patronazhist, index) => (
-                  <PatronazhistCard key={index} patronazhist={patronazhist} />
-                ));
+              if (
+                isTelefonSearch &&
+                "items" in searchResults &&
+                !("person" in searchResults)
+              ) {
+                return (searchResults as PatronazhistSearchResponse).items?.map(
+                  (patronazhist, index) => (
+                    <PatronazhistCard key={index} patronazhist={patronazhist} />
+                  )
+                );
               }
-              if ('patronazhist' in searchResults) {
-                return searchResults.patronazhist?.items?.map((patronazhist, index) => (
-                  <PatronazhistCard key={index} patronazhist={patronazhist} />
-                ));
+              if ("patronazhist" in searchResults) {
+                return searchResults.patronazhist?.items?.map(
+                  (patronazhist, index) => (
+                    <PatronazhistCard key={index} patronazhist={patronazhist} />
+                  )
+                );
               }
               return null;
             })()}
@@ -155,11 +179,10 @@ export function SearchResultsTabs({
 
       {(() => {
         const pagination = getCurrentPagination();
-        return pagination && (
-          <Pagination
-            pagination={pagination}
-            onPageChange={onPageChange}
-          />
+        return (
+          pagination && (
+            <Pagination pagination={pagination} onPageChange={onPageChange} />
+          )
         );
       })()}
     </div>

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { cardStyles } from "./ui/card-styles";
+import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { PhoneInput } from "./PhoneInput";
+import { cardStyles } from "./ui/card-styles";
 
 interface SearchFormProps {
   onSearch: (emri: string, mbiemri: string) => void;
@@ -108,7 +108,7 @@ export function SearchForm({
               onClick={() => setActiveTab("name")}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "name"
-                  ? "bg-surface-tertiary text-text-primary dark:shadow-sm"
+                  ? "bg-surface-tertiary text-text-primary"
                   : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
@@ -119,7 +119,7 @@ export function SearchForm({
               onClick={() => setActiveTab("targa")}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "targa"
-                  ? "bg-surface-tertiary text-text-primary dark:shadow-sm"
+                  ? "bg-surface-tertiary text-text-primary"
                   : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
@@ -135,7 +135,7 @@ export function SearchForm({
               }}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "telefon"
-                  ? "bg-surface-tertiary text-text-primary dark:shadow-sm"
+                  ? "bg-surface-tertiary text-text-primary"
                   : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
@@ -150,7 +150,7 @@ export function SearchForm({
                 placeholder="Emri"
                 value={emri}
                 onChange={(e) => setEmri(e.target.value)}
-                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 disabled={isLoading}
               />
@@ -159,7 +159,7 @@ export function SearchForm({
                 placeholder="Mbiemri"
                 value={mbiemri}
                 onChange={(e) => setMbiemri(e.target.value)}
-                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 disabled={isLoading}
               />
@@ -171,7 +171,7 @@ export function SearchForm({
                 placeholder="Targa"
                 value={targa}
                 onChange={(e) => setTarga(e.target.value)}
-                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 disabled={isLoading}
               />
@@ -190,7 +190,7 @@ export function SearchForm({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-tertiary hover:bg-surface-tertiary hover:text-text-primary h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation"
+              className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-tertiary hover:bg-surface-tertiary hover:text-text-primary h-12 touch-manipulation"
               style={{ WebkitTapHighlightColor: "transparent" }}
               onClick={handleClear}
             >
@@ -198,7 +198,7 @@ export function SearchForm({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary hover:bg-surface-tertiary h-12 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)] touch-manipulation disabled:opacity-50"
+              className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary hover:bg-surface-tertiary h-12 touch-manipulation disabled:opacity-50"
               style={{ WebkitTapHighlightColor: "transparent" }}
               disabled={
                 isLoading || (activeTab === "telefon" && telefon.length < 10)

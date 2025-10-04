@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 
 export const cardStyles = {
-  root: "overflow-hidden border-2 border-border-semantic-secondary bg-surface-primary dark:shadow-[0_0_15px_rgba(0,0,0,0.5)]",
+  root: "overflow-hidden border-2 border-border-semantic-secondary bg-surface-primary",
   header:
     "bg-gradient-to-br from-surface-secondary to-surface-primary py-4 px-5 border-b-2 border-border-semantic-secondary relative",
   title: "text-xl font-bold tracking-tight text-text-primary uppercase",
@@ -13,10 +13,11 @@ export const cardStyles = {
   infoValue: "text-text-primary uppercase text-right flex-1",
   content: "p-0",
   section: "px-5 pb-3",
-  sectionTitle: "text-base font-bold text-text-primary mb-2 flex items-center gap-2",
+  sectionTitle:
+    "text-base font-bold text-text-primary mb-2 flex items-center gap-2",
   sectionIcon: "h-4 w-4 text-text-secondary",
   detailsContainer:
-    "bg-surface-secondary rounded-lg p-3 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.2),0_1px_1px_rgba(255,255,255,0.05)] border-2 border-border-semantic-secondary",
+    "bg-surface-secondary rounded-lg p-3 border-2 border-border-semantic-secondary",
   detailsGrid: "grid grid-cols-1 gap-3",
   detailsRow: "flex items-start justify-between gap-4",
   detailsLabel: "text-text-secondary font-normal min-w-[120px]",

@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { OTPInput, OTPInputContext } from "input-otp";
 import { MinusIcon } from "lucide-react";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -51,9 +51,9 @@ function InputOTPSlot({
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "relative flex h-12 w-7 items-center justify-center border-y-2 border-r-2 border-border-semantic-secondary bg-surface-secondary text-text-primary text-base dark:shadow-xs outline-none transition-all",
+        "relative flex h-12 w-7 items-center justify-center border-y-2 border-r-2 border-border-semantic-secondary bg-surface-secondary text-text-primary text-base outline-none transition-all",
         "first:rounded-l-md first:border-l-2 last:rounded-r-md",
-        "data-[active=true]:border-ring data-[active=true]:ring-ring/50 data-[active=true]:ring-[3px] data-[active=true]:z-10",
+        "data-[active=true]:border-ring data-[active=true]:ring-ring/50 data-[active=true]:ring-[1px] data-[active=true]:z-10",
         "aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 data-[active=true]:aria-invalid:border-destructive",
         "dark:data-[active=true]:aria-invalid:ring-destructive/40",
         className
@@ -78,4 +78,5 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator };
+export { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot };
+
