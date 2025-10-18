@@ -96,7 +96,7 @@ export function SearchResultsTabs({
 
       <div className="relative overflow-hidden">
         {activeTab === "person" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
             {(() => {
               if ("person" in searchResults) {
                 return searchResults.person?.items?.map((person, index) => (
@@ -108,7 +108,7 @@ export function SearchResultsTabs({
           </div>
         )}
         {activeTab === "rrogat" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
             {(() => {
               if ("rrogat" in searchResults) {
                 return searchResults.rrogat?.items?.map((rrogat, index) => (
@@ -120,7 +120,7 @@ export function SearchResultsTabs({
           </div>
         )}
         {activeTab === "targat" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
             {(() => {
               if (
                 isTargaSearch &&
@@ -151,7 +151,7 @@ export function SearchResultsTabs({
           </div>
         )}
         {activeTab === "patronazhist" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
             {(() => {
               if (
                 isTelefonSearch &&

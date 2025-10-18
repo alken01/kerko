@@ -1,13 +1,16 @@
-import { PersonResponse } from "@/types/kerko";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Calendar, MapPin, User, Home } from "lucide-react";
-import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
+import { cardStyles, DetailRow, InfoItem } from "@/components/ui/card-styles";
+import { PersonResponse } from "@/types/kerko";
+import { Calendar, ChevronDown, ChevronUp, Home, MapPin, User } from "lucide-react";
+import { useState } from "react";
 
 interface PersonCardProps {
   person: PersonResponse;
 }
 
 export function PersonCard({ person }: PersonCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
     try {
@@ -48,39 +51,51 @@ export function PersonCard({ person }: PersonCardProps) {
 
       <CardContent className={cardStyles.content}>
         <div className={cardStyles.section}>
-          <h3 className={cardStyles.sectionTitle}>
-            <User className={cardStyles.sectionIcon} />
-            Informacion Personal
-          </h3>
-          <div className={cardStyles.detailsContainer}>
-            <div className={cardStyles.detailsGrid}>
-              <DetailRow
-                label="Adresa"
-                value={
-                  person.adresa && person.nrBaneses
-                    ? `${person.adresa} ${person.nrBaneses}`
-                    : person.adresa || person.nrBaneses || "N/A"
-                }
-              />
-              <DetailRow label="Emri i Babait" value={person.atesi || "N/A"} />
-              <DetailRow label="Emri i Nënës" value={person.amesi || "N/A"} />
-              <DetailRow label="Kombësia" value={person.kombesia || "N/A"} />
-              <DetailRow
-                label="Gjinia"
-                value={person.seksi === "F" ? "Femër" : "Mashkull"}
-              />
-              <DetailRow
-                label="Gjendja Martesore"
-                value={person.gjendjeCivile || "N/A"}
-              />
-              {person.lidhjaMeKryefamiljarin && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-between group hover:opacity-80 transition-opacity"
+          >
+            <h3 className={cardStyles.sectionTitle}>
+              <User className={cardStyles.sectionIcon} />
+              Informacion Personal
+            </h3>
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+            )}
+          </button>
+          {isExpanded && (
+            <div className={cardStyles.detailsContainer}>
+              <div className={cardStyles.detailsGrid}>
                 <DetailRow
-                  label="Lidhja me Kryefamiljarin"
-                  value={person.lidhjaMeKryefamiljarin}
+                  label="Adresa"
+                  value={
+                    person.adresa && person.nrBaneses
+                      ? `${person.adresa} ${person.nrBaneses}`
+                      : person.adresa || person.nrBaneses || "N/A"
+                  }
                 />
-              )}
+                <DetailRow label="Emri i Babait" value={person.atesi || "N/A"} />
+                <DetailRow label="Emri i Nënës" value={person.amesi || "N/A"} />
+                <DetailRow label="Kombësia" value={person.kombesia || "N/A"} />
+                <DetailRow
+                  label="Gjinia"
+                  value={person.seksi === "F" ? "Femër" : "Mashkull"}
+                />
+                <DetailRow
+                  label="Gjendja Martesore"
+                  value={person.gjendjeCivile || "N/A"}
+                />
+                {person.lidhjaMeKryefamiljarin && (
+                  <DetailRow
+                    label="Lidhja me Kryefamiljarin"
+                    value={person.lidhjaMeKryefamiljarin}
+                  />
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>

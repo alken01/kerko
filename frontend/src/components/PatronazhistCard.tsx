@@ -4,18 +4,20 @@ import {
   MapPin,
   CircleDot,
   Calendar,
-  Building2,
-  Globe,
-  FileText,
   User,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
+import { useState } from "react";
 
 interface PatronazhistCardProps {
   patronazhist: PatronazhistResponse;
 }
 
 export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
@@ -46,106 +48,89 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
 
       <CardContent className={cardStyles.content}>
         <div className={cardStyles.section}>
-          <h3 className={cardStyles.sectionTitle}>
-            <User className={cardStyles.sectionIcon} />
-            Informacion Personal
-          </h3>
-          <div className={cardStyles.detailsContainer}>
-            <div className={cardStyles.detailsGrid}>
-              <DetailRow
-                label="Emri i Babait"
-                value={patronazhist.atesi || "N/A"}
-              />
-              <DetailRow
-                label="Kod Banese"
-                value={patronazhist.kodBanese || "N/A"}
-              />
-              <DetailRow label="Telefoni" value={patronazhist.tel || "N/A"} />
-            </div>
-          </div>
-        </div>
-        <div className={cardStyles.section}>
-          <h3 className={cardStyles.sectionTitle}>
-            <FileText className={cardStyles.sectionIcon} />
-            Preferenca Politike dhe Komente
-          </h3>
-          <div className={cardStyles.detailsContainer}>
-            <div className={cardStyles.detailsGrid}>
-              <DetailRow
-                label="Preferenca"
-                value={patronazhist.preferenca || "N/A"}
-              />
-              <DetailRow
-                label="Preferenca e Sigurte"
-                value={patronazhist.iSigurte || "N/A"}
-              />
-              <DetailRow
-                label="Preferenca Census 2013"
-                value={patronazhist.census2013Preferenca || "N/A"}
-              />
-              <DetailRow
-                label="Siguria Census 2013"
-                value={
-                  patronazhist.census2013Siguria
-                    ? `${patronazhist.census2013Siguria}/10`
-                    : "N/A"
-                }
-              />
-              {patronazhist.koment && (
-                <DetailRow
-                  label="Koment"
-                  value={patronazhist.koment || "N/A"}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-        <div className={cardStyles.section}>
-          <h3 className={cardStyles.sectionTitle}>
-            <Building2 className={cardStyles.sectionIcon} />
-            Informacion i Patronazhistit
-          </h3>
-          <div className={cardStyles.detailsContainer}>
-            <div className={cardStyles.detailsGrid}>
-              <DetailRow
-                label="Patronazhisti"
-                value={patronazhist.patronazhisti || "N/A"}
-              />
-              <DetailRow label="QV" value={patronazhist.qv || "N/A"} />
-              <DetailRow
-                label="Numri i Listës"
-                value={patronazhist.listaNr || "N/A"}
-              />
-              <DetailRow
-                label="Kompania"
-                value={patronazhist.kompania || "N/A"}
-              />
-            </div>
-          </div>
-        </div>
-
-        {patronazhist.emigrant && (
-          <div className={cardStyles.section}>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-between group hover:opacity-80 transition-opacity"
+          >
             <h3 className={cardStyles.sectionTitle}>
-              <Globe className={cardStyles.sectionIcon} />
-              Informacion i Emigrimit
+              <User className={cardStyles.sectionIcon} />
+              Informacion Personal
             </h3>
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+            )}
+          </button>
+          {isExpanded && (
             <div className={cardStyles.detailsContainer}>
               <div className={cardStyles.detailsGrid}>
                 <DetailRow
-                  label="Emigrant"
-                  value={patronazhist.emigrant || "N/A"}
+                  label="Emri i Babait"
+                  value={patronazhist.atesi || "N/A"}
                 />
-                {patronazhist.country && (
+                <DetailRow
+                  label="Kod Banese"
+                  value={patronazhist.kodBanese || "N/A"}
+                />
+                <DetailRow label="Telefoni" value={patronazhist.tel || "N/A"} />
+                <DetailRow
+                  label="Preferenca"
+                  value={patronazhist.preferenca || "N/A"}
+                />
+                <DetailRow
+                  label="Preferenca e Sigurte"
+                  value={patronazhist.iSigurte || "N/A"}
+                />
+                <DetailRow
+                  label="Preferenca Census 2013"
+                  value={patronazhist.census2013Preferenca || "N/A"}
+                />
+                <DetailRow
+                  label="Siguria Census 2013"
+                  value={
+                    patronazhist.census2013Siguria
+                      ? `${patronazhist.census2013Siguria}/10`
+                      : "N/A"
+                  }
+                />
+                {patronazhist.koment && (
                   <DetailRow
-                    label="Vendi i Emigrimit"
-                    value={patronazhist.country || "N/A"}
+                    label="Koment"
+                    value={patronazhist.koment || "N/A"}
                   />
+                )}
+                <DetailRow
+                  label="Patronazhisti"
+                  value={patronazhist.patronazhisti || "N/A"}
+                />
+                <DetailRow label="QV" value={patronazhist.qv || "N/A"} />
+                <DetailRow
+                  label="Numri i Listës"
+                  value={patronazhist.listaNr || "N/A"}
+                />
+                <DetailRow
+                  label="Kompania"
+                  value={patronazhist.kompania || "N/A"}
+                />
+                {patronazhist.emigrant && (
+                  <>
+                    <DetailRow
+                      label="Emigrant"
+                      value={patronazhist.emigrant || "N/A"}
+                    />
+                    {patronazhist.country && (
+                      <DetailRow
+                        label="Vendi i Emigrimit"
+                        value={patronazhist.country || "N/A"}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

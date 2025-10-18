@@ -17,8 +17,8 @@ export const cardStyles = {
     "text-base font-bold text-text-primary mb-2 flex items-center gap-2",
   sectionIcon: "h-4 w-4 text-text-secondary",
   detailsContainer:
-    "bg-surface-secondary rounded-lg p-3 border-2 border-border-semantic-secondary",
-  detailsGrid: "grid grid-cols-1 gap-3",
+    "bg-surface-secondary rounded-lg p-2 border-2 border-border-semantic-secondary",
+  detailsGrid: "grid grid-cols-1 gap-2",
   detailsRow: "flex items-start justify-between gap-4",
   detailsLabel: "text-text-secondary font-normal min-w-[120px]",
   detailsValue: "text-text-primary font-bold uppercase text-right flex-1",

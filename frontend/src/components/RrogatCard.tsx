@@ -1,13 +1,16 @@
 import { RrogatResponse } from "@/types/kerko";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Wallet, Briefcase, CircleDot } from "lucide-react";
+import { Wallet, Briefcase, CircleDot, ChevronDown, ChevronUp } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
+import { useState } from "react";
 
 interface RrogatCardProps {
   rrogat: RrogatResponse;
 }
 
 export function RrogatCard({ rrogat }: RrogatCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
@@ -32,30 +35,42 @@ export function RrogatCard({ rrogat }: RrogatCardProps) {
 
       <CardContent className={cardStyles.content}>
         <div className={cardStyles.section}>
-          <h3 className={cardStyles.sectionTitle}>
-            <Wallet className={cardStyles.sectionIcon} />
-            Informacion Financiar
-          </h3>
-          <div className={cardStyles.detailsContainer}>
-            <div className={cardStyles.detailsGrid}>
-              <DetailRow label="NIPT" value={rrogat.nipt || "N/A"} />
-              <DetailRow label="DRT" value={rrogat.drt || "N/A"} />
-              <DetailRow
-                label="Paga Bruto"
-                value={
-                  rrogat.pagaBruto ? (
-                    <div className="text-lg font-bold text-text-primary">
-                      {new Intl.NumberFormat("sq-AL").format(rrogat.pagaBruto)}
-                      <span className="text-text-secondary ml-1">ALL</span>
-                    </div>
-                  ) : (
-                    "N/A"
-                  )
-                }
-              />
-              <DetailRow label="Kategoria" value={rrogat.kategoria || "N/A"} />
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-between group hover:opacity-80 transition-opacity"
+          >
+            <h3 className={cardStyles.sectionTitle}>
+              <Wallet className={cardStyles.sectionIcon} />
+              Informacion Financiar
+            </h3>
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+            )}
+          </button>
+          {isExpanded && (
+            <div className={cardStyles.detailsContainer}>
+              <div className={cardStyles.detailsGrid}>
+                <DetailRow label="NIPT" value={rrogat.nipt || "N/A"} />
+                <DetailRow label="DRT" value={rrogat.drt || "N/A"} />
+                <DetailRow
+                  label="Paga Bruto"
+                  value={
+                    rrogat.pagaBruto ? (
+                      <div className="text-lg font-bold text-text-primary">
+                        {new Intl.NumberFormat("sq-AL").format(rrogat.pagaBruto)}
+                        <span className="text-text-secondary ml-1">ALL</span>
+                      </div>
+                    ) : (
+                      "N/A"
+                    )
+                  }
+                />
+                <DetailRow label="Kategoria" value={rrogat.kategoria || "N/A"} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>
