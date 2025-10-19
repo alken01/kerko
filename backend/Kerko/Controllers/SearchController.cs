@@ -23,11 +23,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            var clientIp = GetClientIpAddress();
-            var userAgent = Request.Headers["User-Agent"].ToString();
-            _logger.LogInformation("Search request - Name: {emri} {mbiemri} | Page: {pageNumber} | PageSize: {pageSize} | IP: {clientIp} | UserAgent: {userAgent}",
-                emri ?? "N/A", mbiemri ?? "N/A", pageNumber, pageSize, clientIp, userAgent);
-
+            _logger.LogInformation($"Name: {emri ?? "N/A"} {mbiemri ?? "N/A"} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
             var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize);
             return Ok(result);
         }
@@ -48,10 +44,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            var clientIp = GetClientIpAddress();
-            var userAgent = Request.Headers["User-Agent"].ToString();
-            _logger.LogInformation("License plate search - Targa: {numriTarges} | Page: {pageNumber} | PageSize: {pageSize} | IP: {clientIp} | UserAgent: {userAgent}",
-                numriTarges ?? "N/A", pageNumber, pageSize, clientIp, userAgent);
+            _logger.LogInformation($"Targa: {numriTarges} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
 
             var result = await _searchService.TargatAsync(numriTarges, pageNumber, pageSize);
             return Ok(result);
@@ -73,11 +66,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            var clientIp = GetClientIpAddress();
-            var userAgent = Request.Headers["User-Agent"].ToString();
-            _logger.LogInformation("Phone search - Telefon: {numriTelefonit} | Page: {pageNumber} | PageSize: {pageSize} | IP: {clientIp} | UserAgent: {userAgent}",
-                numriTelefonit ?? "N/A", pageNumber, pageSize, clientIp, userAgent);
-
+            _logger.LogInformation($"Telefon: {numriTelefonit ?? "N/A"} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
             var result = await _searchService.TelefonAsync(numriTelefonit, pageNumber, pageSize);
             return Ok(result);
         }
@@ -132,5 +121,44 @@ public class Controller : ControllerBase
         }
 
         return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+    }
+
+    private string SimplifyUserAgent(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent))
+        {
+            return "Unknown";
+        }
+
+        // Detect browser
+        var browser = "Unknown";
+        if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg"))
+            browser = "Chrome";
+        else if (userAgent.Contains("Edg"))
+            browser = "Edge";
+        else if (userAgent.Contains("Firefox"))
+            browser = "Firefox";
+        else if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome"))
+            browser = "Safari";
+
+        // Detect OS
+        var os = "Unknown";
+        if (userAgent.Contains("Windows"))
+            os = "Windows";
+        else if (userAgent.Contains("Mac OS X") || userAgent.Contains("Macintosh"))
+            os = "macOS";
+        else if (userAgent.Contains("Linux"))
+            os = "Linux";
+        else if (userAgent.Contains("Android"))
+            os = "Android";
+        else if (userAgent.Contains("iPhone") || userAgent.Contains("iPad"))
+            os = "iOS";
+
+        // Detect if mobile
+        var isMobile = userAgent.Contains("Mobile") || userAgent.Contains("Android") ||
+                       userAgent.Contains("iPhone") || userAgent.Contains("iPad");
+        var deviceType = isMobile ? "Mobile" : "Desktop";
+
+        return $"{browser}/{os}/{deviceType}";
     }
 }

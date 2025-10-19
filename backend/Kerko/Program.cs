@@ -4,8 +4,17 @@ using Kerko.Services;
 using Kerko.Models;
 using Kerko.Authentication;
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.Logging.Console;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole(options =>
+{
+    options.FormatterName = "customFormatter";
+});
+builder.Logging.AddConsoleFormatter<Kerko.CustomConsoleFormatter, ConsoleFormatterOptions>();
 
 if (!builder.Environment.IsDevelopment())
 {
