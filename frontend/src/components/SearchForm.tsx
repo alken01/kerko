@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PhoneInput } from "./PhoneInput";
+import { TargaInput } from "./TargaInput";
 import { cardStyles } from "./ui/card-styles";
 
 interface SearchFormProps {
@@ -63,6 +64,10 @@ export function SearchForm({
 
       onSearch(emri, mbiemri);
     } else if (activeTab === "targa") {
+      if (targa.length < 7) {
+        return;
+      }
+
       const params = new URLSearchParams(searchParams.toString());
       params.set("targa", targa);
       params.delete("emri");
@@ -165,14 +170,10 @@ export function SearchForm({
               />
             </div>
           ) : activeTab === "targa" ? (
-            <div className="space-y-2">
-              <Input
-                type="text"
-                placeholder="Targa"
+            <div className="">
+              <TargaInput
                 value={targa}
-                onChange={(e) => setTarga(e.target.value)}
-                className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
-                style={{ WebkitTapHighlightColor: "transparent" }}
+                onChange={setTarga}
                 disabled={isLoading}
               />
             </div>
@@ -201,7 +202,9 @@ export function SearchForm({
               className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary hover:bg-surface-tertiary h-12 touch-manipulation disabled:opacity-50"
               style={{ WebkitTapHighlightColor: "transparent" }}
               disabled={
-                isLoading || (activeTab === "telefon" && telefon.length < 10)
+                isLoading ||
+                (activeTab === "telefon" && telefon.length < 10) ||
+                (activeTab === "targa" && targa.length < 7)
               }
             >
               {isLoading ? "Duke kërkuar..." : "Kërko"}
