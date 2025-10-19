@@ -10,18 +10,12 @@ import { TargaInput } from "./TargaInput";
 import { cardStyles } from "./ui/card-styles";
 
 interface SearchFormProps {
-  onSearch: (emri: string, mbiemri: string) => void;
-  onSearchTarga: (numriTarges: string) => void;
-  onSearchTelefon: (numriTelefonit: string) => void;
   onClear: () => void;
   isLoading: boolean;
   defaultValues?: { emri: string; mbiemri: string } | null;
 }
 
 export function SearchForm({
-  onSearch,
-  onSearchTarga,
-  onSearchTelefon,
   onClear,
   isLoading,
   defaultValues,

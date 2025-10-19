@@ -142,9 +142,6 @@ function SearchContent() {
     <>
       <div className="max-w-md mx-auto">
         <SearchForm
-          onSearch={handleSearch}
-          onSearchTarga={handleSearchTarga}
-          onSearchTelefon={handleSearchTelefon}
           onClear={handleClear}
           isLoading={isLoading}
           defaultValues={searchFormData}
