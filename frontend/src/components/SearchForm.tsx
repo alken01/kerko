@@ -61,8 +61,6 @@ export function SearchForm({
       params.delete("targa");
       params.delete("telefon");
       router.push(`?${params.toString()}`, { scroll: false });
-
-      onSearch(emri, mbiemri);
     } else if (activeTab === "targa") {
       if (targa.length < 7) {
         return;
@@ -74,8 +72,6 @@ export function SearchForm({
       params.delete("mbiemri");
       params.delete("telefon");
       router.push(`?${params.toString()}`, { scroll: false });
-
-      onSearchTarga(targa);
     } else if (activeTab === "telefon") {
       if (telefon.length < 10) {
         return; // Don't submit if phone number is incomplete
@@ -87,8 +83,6 @@ export function SearchForm({
       params.delete("mbiemri");
       params.delete("targa");
       router.push(`?${params.toString()}`, { scroll: false });
-
-      onSearchTelefon(telefon);
     }
   };
 
