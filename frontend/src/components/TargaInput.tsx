@@ -14,6 +14,8 @@ export function TargaInput({ value, onChange, disabled }: TargaInputProps) {
         value={value}
         onChange={onChange}
         disabled={disabled}
+        inputMode="text"
+        pattern="[A-Za-z0-9]*"
         autoComplete="off"
       >
         <InputOTPGroup>
