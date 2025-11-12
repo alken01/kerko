@@ -19,9 +19,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Copy the SQLite database file
-COPY --from=build /src/Kerko/kerko.db ./kerko.db
-
 # Expose the port the app runs on
 EXPOSE 8080
 EXPOSE 8443
