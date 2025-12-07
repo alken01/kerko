@@ -7,8 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kerko", "Kerko\Kerko.csproj", "{E2E54C34-2003-43A2-AA92-7D797DFE8848}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kerko.Tests", "Kerko.Tests\Kerko.Tests.csproj", "{EED7AA30-76FB-4FA8-8B19-513F339C3FD2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
