@@ -12,9 +12,10 @@ export function GlobalStyles() {
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT"
       ) {
-        setTimeout(() => {
-          target.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 300);
+        // Use requestAnimationFrame for smoother scrolling that doesn't fight momentum
+        requestAnimationFrame(() => {
+          target.scrollIntoView({ block: "center" });
+        });
       }
     };
 

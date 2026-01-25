@@ -213,16 +213,12 @@
   * {
     @apply border-border;
   }
-  html, body {
-    /* Prevent pull-to-refresh and overscroll bounce */
-    overscroll-behavior: none;
-    overscroll-behavior-y: none;
-    -webkit-overflow-scrolling: touch;
-  }
   html {
-    /* Fixed height for PWA */
+    /* Use dynamic viewport height for mobile */
     height: 100%;
-    overflow: hidden;
+    height: 100dvh;
+    /* Prevent pull-to-refresh but allow smooth scrolling */
+    overscroll-behavior-y: none;
   }
   body {
     @apply bg-surface-primary text-text-primary;
@@ -236,11 +232,12 @@
     /* Mobile optimizations */
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    /* Fixed height for PWA */
-    height: 100%;
-    overflow: auto;
-    position: fixed;
-    width: 100%;
+    /* Full height with native scrolling */
+    min-height: 100%;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    /* Enable smooth momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
   }
   input::placeholder {
     font-family: 'Zed Sans', system-ui, sans-serif;
@@ -276,5 +273,19 @@
   * {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  /* Smooth scrolling utility for iOS */
+  .scroll-smooth-ios {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  /* GPU acceleration for scrollable containers */
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-scroll,
+  .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+    will-change: scroll-position;
   }
 }
