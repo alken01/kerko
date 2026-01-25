@@ -1,4 +1,5 @@
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
+import { RATE_LIMIT_ERROR_MESSAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -7,7 +8,7 @@ export class ApiService {
     emri: string,
     mbiemri: string,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<SearchResponse> {
     const params = new URLSearchParams({
       emri,
@@ -27,7 +28,7 @@ export class ApiService {
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error("Qetsohu cik mplak, prit pak edhe provo prap");
+        throw new Error(RATE_LIMIT_ERROR_MESSAGE);
       }
       const text = await response.text();
       throw new Error(text || "Pati një problem gjatë kërkimit të personit");
@@ -52,7 +53,7 @@ export class ApiService {
   static async searchTarga(
     numriTarges: string,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<TargatSearchResponse> {
     const params = new URLSearchParams({
       numriTarges,
@@ -71,7 +72,7 @@ export class ApiService {
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error("Qetsohu cik mplak, prit pak edhe provo prap");
+        throw new Error(RATE_LIMIT_ERROR_MESSAGE);
       }
       const text = await response.text();
       throw new Error(text || "Pati një problem gjatë kërkimit të targës");
@@ -89,7 +90,7 @@ export class ApiService {
   static async searchTelefon(
     numriTelefonit: string,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<PatronazhistSearchResponse> {
     const params = new URLSearchParams({
       numriTelefonit,
@@ -108,7 +109,7 @@ export class ApiService {
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error("Qetsohu cik mplak, prit pak edhe provo prap");
+        throw new Error(RATE_LIMIT_ERROR_MESSAGE);
       }
       const text = await response.text();
       throw new Error(text || "Pati një problem gjatë kërkimit të telefonit");

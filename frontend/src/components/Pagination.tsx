@@ -1,4 +1,5 @@
 import { PaginationInfo } from "@/types/kerko";
+import { MAX_VISIBLE_PAGES } from "@/lib/constants";
 
 interface PaginationProps {
   pagination: PaginationInfo;
@@ -14,9 +15,8 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
 
   const generatePageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisiblePages = 5;
 
-    if (totalPages <= maxVisiblePages) {
+    if (totalPages <= MAX_VISIBLE_PAGES) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }

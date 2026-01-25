@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { PhoneInput } from "./PhoneInput";
 import { TargaInput } from "./TargaInput";
 import { cardStyles } from "./ui/card-styles";
+import { PHONE_NUMBER_LENGTH, LICENSE_PLATE_LENGTH, ALBANIAN_PHONE_PREFIX } from "@/lib/constants";
 
 interface SearchFormProps {
   onClear: () => void;
@@ -28,7 +29,7 @@ export function SearchForm({
   const [emri, setEmri] = useState("");
   const [mbiemri, setMbiemri] = useState("");
   const [targa, setTarga] = useState("");
-  const [telefon, setTelefon] = useState("06");
+  const [telefon, setTelefon] = useState(ALBANIAN_PHONE_PREFIX);
 
   useEffect(() => {
     const urlTarga = searchParams.get("targa");
@@ -38,7 +39,7 @@ export function SearchForm({
       setTarga(urlTarga);
     } else if (urlTelefon) {
       setActiveTab("telefon");
-      setTelefon(urlTelefon.startsWith("06") ? urlTelefon : "06" + urlTelefon);
+      setTelefon(urlTelefon.startsWith(ALBANIAN_PHONE_PREFIX) ? urlTelefon : ALBANIAN_PHONE_PREFIX + urlTelefon);
     } else if (defaultValues) {
       setActiveTab("name");
       setEmri(defaultValues.emri);
@@ -56,7 +57,7 @@ export function SearchForm({
       params.delete("telefon");
       router.push(`?${params.toString()}`, { scroll: false });
     } else if (activeTab === "targa") {
-      if (targa.length < 7) {
+      if (targa.length < LICENSE_PLATE_LENGTH) {
         return;
       }
 
@@ -67,8 +68,8 @@ export function SearchForm({
       params.delete("telefon");
       router.push(`?${params.toString()}`, { scroll: false });
     } else if (activeTab === "telefon") {
-      if (telefon.length < 10) {
-        return; // Don't submit if phone number is incomplete
+      if (telefon.length < PHONE_NUMBER_LENGTH) {
+        return;
       }
 
       const params = new URLSearchParams(searchParams.toString());
@@ -84,7 +85,7 @@ export function SearchForm({
     setEmri("");
     setMbiemri("");
     setTarga("");
-    setTelefon("06");
+    setTelefon(ALBANIAN_PHONE_PREFIX);
     router.replace("/", { scroll: false });
     if (onClear) {
       onClear();
@@ -123,7 +124,7 @@ export function SearchForm({
               onClick={() => {
                 setActiveTab("telefon");
                 if (telefon === "") {
-                  setTelefon("06");
+                  setTelefon(ALBANIAN_PHONE_PREFIX);
                 }
               }}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
@@ -144,8 +145,7 @@ export function SearchForm({
                 value={emri}
                 onChange={(e) => setEmri(e.target.value)}
                 className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
-                style={{ WebkitTapHighlightColor: "transparent" }}
-                disabled={isLoading}
+                                disabled={isLoading}
               />
               <Input
                 type="text"
@@ -153,8 +153,7 @@ export function SearchForm({
                 value={mbiemri}
                 onChange={(e) => setMbiemri(e.target.value)}
                 className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
-                style={{ WebkitTapHighlightColor: "transparent" }}
-                disabled={isLoading}
+                                disabled={isLoading}
               />
             </div>
           ) : activeTab === "targa" ? (
@@ -180,19 +179,17 @@ export function SearchForm({
               type="button"
               variant="outline"
               className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-tertiary hover:bg-surface-tertiary hover:text-text-primary h-12 touch-manipulation"
-              style={{ WebkitTapHighlightColor: "transparent" }}
-              onClick={handleClear}
+                            onClick={handleClear}
             >
               Pastro
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary hover:bg-surface-tertiary h-12 touch-manipulation disabled:opacity-50"
-              style={{ WebkitTapHighlightColor: "transparent" }}
-              disabled={
+                            disabled={
                 isLoading ||
-                (activeTab === "telefon" && telefon.length < 10) ||
-                (activeTab === "targa" && targa.length < 7)
+                (activeTab === "telefon" && telefon.length < PHONE_NUMBER_LENGTH) ||
+                (activeTab === "targa" && targa.length < LICENSE_PLATE_LENGTH)
               }
             >
               {isLoading ? "Duke kërkuar..." : "Kërko"}

@@ -61,7 +61,6 @@ function SearchContent() {
       const data = await ApiService.searchPerson(emri, mbiemri, page);
       setSearchResults(data);
     } catch (err) {
-      console.error("Search error:", err);
       setError(
         err instanceof Error ? err.message : "Pati një problem gjatë kërkimit"
       );
@@ -83,7 +82,6 @@ function SearchContent() {
       const data = await ApiService.searchTarga(numriTarges, page);
       setSearchResults(data);
     } catch (err) {
-      console.error("Search error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
@@ -103,7 +101,6 @@ function SearchContent() {
       const data = await ApiService.searchTelefon(numriTelefonit, page);
       setSearchResults(data);
     } catch (err) {
-      console.error("Search error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);

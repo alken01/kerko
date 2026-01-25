@@ -134,9 +134,9 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.6 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -148,28 +148,28 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.6 0 0);
 
-  /* Semantic surface colors for dark mode */
-  --surface-primary: oklch(0.039 0 0); /* #0a0303 equivalent */
-  --surface-secondary: oklch(0.071 0 0); /* #120606 equivalent */
-  --surface-tertiary: oklch(0.165 0 0); /* #2a1a1a equivalent */
-  --surface-elevated: oklch(0.205 0 0);
-  --surface-interactive: oklch(0.104 0 0); /* #1a1a1a equivalent */
-  --surface-interactive-hover: oklch(0.165 0 0); /* #2a1a1a equivalent */
-  --surface-interactive-active: oklch(0.225 0 0);
+  /* Semantic surface colors for dark mode - improved contrast */
+  --surface-primary: oklch(0.08 0 0);
+  --surface-secondary: oklch(0.12 0 0);
+  --surface-tertiary: oklch(0.20 0 0);
+  --surface-elevated: oklch(0.22 0 0);
+  --surface-interactive: oklch(0.15 0 0);
+  --surface-interactive-hover: oklch(0.20 0 0);
+  --surface-interactive-active: oklch(0.25 0 0);
 
-  /* Text colors for dark mode */
-  --text-primary: oklch(0.985 0 0);
-  --text-secondary: oklch(0.708 0 0);
-  --text-tertiary: oklch(0.4 0 0); /* #666 equivalent */
+  /* Text colors for dark mode - improved readability */
+  --text-primary: oklch(0.95 0 0);
+  --text-secondary: oklch(0.75 0 0);
+  --text-tertiary: oklch(0.55 0 0);
   --text-inverted: oklch(0.145 0 0);
 
-  /* Border colors for dark mode */
-  --border-primary: oklch(1 0 0 / 10%);
-  --border-secondary: oklch(0.165 0 0); /* #2a1a1a equivalent */
-  --border-interactive: oklch(1 0 0 / 15%);
+  /* Border colors for dark mode - improved visibility */
+  --border-primary: oklch(1 0 0 / 12%);
+  --border-secondary: oklch(0.22 0 0);
+  --border-interactive: oklch(1 0 0 / 20%);
 }
 
 @tailwind base;
@@ -178,7 +178,7 @@
 
 @font-face {
   font-family: 'Zed Sans';
-  src: url('/fonts/zed-sans-regular.ttf') format('truetype');
+  src: url('/fonts/zed-sans-regular.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -186,7 +186,7 @@
 
 @font-face {
   font-family: 'Zed Sans';
-  src: url('/fonts/zed-sans-bold.ttf') format('truetype');
+  src: url('/fonts/zed-sans-bold.woff2') format('woff2');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -194,7 +194,7 @@
 
 @font-face {
   font-family: 'Zed Sans';
-  src: url('/fonts/zed-sans-italic.ttf') format('truetype');
+  src: url('/fonts/zed-sans-italic.woff2') format('woff2');
   font-weight: normal;
   font-style: italic;
   font-display: swap;
@@ -208,6 +208,11 @@
     @apply bg-surface-primary text-text-primary;
     font-family: 'Zed Sans', system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* iOS Safe Area Support */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   input::placeholder {
     font-family: 'Zed Sans', system-ui, sans-serif;
@@ -215,5 +220,19 @@
   }
   button {
     font-family: 'Zed Sans', system-ui, sans-serif;
+  }
+  /* Prevent iOS auto-zoom on input focus (requires min 16px font) */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+  /* iOS keyboard scroll handling */
+  html {
+    scroll-padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Remove tap highlight on touch devices */
+  .touch-manipulation {
+    -webkit-tap-highlight-color: transparent;
   }
 }

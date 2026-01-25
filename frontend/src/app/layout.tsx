@@ -1,8 +1,20 @@
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0303" },
+  ],
+};
 
 // Define your domain (replace with your actual domain)
 const BASE_URL = "https://kerko.vercel.app"; // Update with your production domain
@@ -56,6 +68,11 @@ export const metadata: Metadata = {
     description:
       "Kërko është një platformë për kërkimin e regjistrave publikë shqiptarë, përfshirë emrat, rrogat dhe targat.",
     images: [`${BASE_URL}/metaimage.jpg`], // Absolute URL for Twitter
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Kërko",
   },
 };
 
