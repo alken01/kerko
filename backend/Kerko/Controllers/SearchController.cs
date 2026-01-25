@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Kerko.Services;
-using Kerko.Authentication;
 
 namespace Kerko.Controllers;
 
@@ -23,7 +22,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Name: {emri ?? "N/A"} {mbiemri ?? "N/A"} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation($"Search request | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
             var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize);
             return Ok(result);
         }
@@ -44,7 +43,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Targa: {numriTarges} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation($"Targat request | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
 
             var result = await _searchService.TargatAsync(numriTarges, pageNumber, pageSize);
             return Ok(result);
@@ -66,7 +65,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Telefon: {numriTelefonit ?? "N/A"} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation($"Telefon request | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
             var result = await _searchService.TelefonAsync(numriTelefonit, pageNumber, pageSize);
             return Ok(result);
         }
@@ -85,25 +84,6 @@ public class Controller : ControllerBase
     public IActionResult Health()
     {
         return Ok("OK");
-    }
-
-    [HttpGet("search-logs")]
-    [RequireApiKey]
-    public async Task<IActionResult> GetSearchLogs(
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate)
-    {
-        try
-        {
-            _logger.LogInformation("Search logs accessed");
-            var logs = await _searchService.GetSearchLogsAsync(startDate, endDate);
-            return Ok(logs);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while retrieving search logs");
-            return StatusCode(500, "An error occurred while retrieving search logs");
-        }
     }
 
     private string GetClientIpAddress()

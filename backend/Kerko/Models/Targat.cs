@@ -6,7 +6,7 @@ public class Targat
 {
     [Key]
     public int Id { get; set; }
-    
+
     public string? NumriTarges { get; set; }
     public string? Marka { get; set; }
     public string? Modeli { get; set; }

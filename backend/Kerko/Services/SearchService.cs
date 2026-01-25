@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kerko.Infrastructure;
 using Kerko.Models;
+using System.Linq.Expressions;
 
 namespace Kerko.Services;
 
@@ -10,7 +11,6 @@ public interface ISearchService
     Task<PaginatedResult<TargatResponse>> TargatAsync(string? numriTarges, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<PatronazhistResponse>> TelefonAsync(string? numriTelefonit, int pageNumber = 1, int pageSize = 10);
     Task<List<Dictionary<string, int>>> DbStatusAsync();
-    Task<IEnumerable<SearchLog>> GetSearchLogsAsync(DateTime? startDate = null, DateTime? endDate = null);
 }
 
 public class SearchService : ISearchService
@@ -54,38 +54,97 @@ public class SearchService : ISearchService
             var normalizedMbiemri = mbiemri.ToLower().Trim();
             var normalizedEmri = emri.ToLower().Trim();
 
-            var tasks = new List<Task<PaginatedResult<IResponseModel>>>
-            {
-                GetPersonResultsPaginated(normalizedMbiemri, normalizedEmri, pageNumber, pageSize),
-                GetRrogatResultsPaginated(normalizedMbiemri, normalizedEmri, pageNumber, pageSize),
-                GetTargatResultsPaginated(normalizedMbiemri, normalizedEmri, pageNumber, pageSize),
-                GetPatronazhistResultsPaginated(normalizedMbiemri, normalizedEmri, pageNumber, pageSize)
-            };
+            var personTask = SearchByNameAsync(
+                _db.Person,
+                p => p.Emer,
+                p => p.Mbiemer,
+                p => new PersonResponse
+                {
+                    Adresa = p.Adresa,
+                    NrBaneses = p.NrBaneses,
+                    Emri = p.Emer,
+                    Mbiemri = p.Mbiemer,
+                    Atesi = p.Atesi,
+                    Amesi = p.Amesi,
+                    Datelindja = p.Datelindja,
+                    Vendlindja = p.Vendlindja,
+                    Seksi = p.Seksi,
+                    LidhjaMeKryefamiljarin = p.LidhjaMeKryefamiljarin,
+                    Qyteti = p.Qyteti,
+                    GjendjeCivile = p.GjendjeCivile,
+                    Kombesia = p.Kombesia
+                },
+                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            await Task.WhenAll(tasks);
+            var rrogatTask = SearchByNameAsync(
+                _db.Rrogat,
+                r => r.Emri,
+                r => r.Mbiemri,
+                r => new RrogatResponse
+                {
+                    NumriPersonal = r.NumriPersonal,
+                    Emri = r.Emri,
+                    Mbiemri = r.Mbiemri,
+                    NIPT = r.NIPT,
+                    DRT = r.DRT,
+                    PagaBruto = r.PagaBruto,
+                    Profesioni = r.Profesioni,
+                    Kategoria = r.Kategoria
+                },
+                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
+
+            var targatTask = SearchByNameAsync(
+                _db.Targat,
+                t => t.Emri,
+                t => t.Mbiemri,
+                t => new TargatResponse
+                {
+                    NumriTarges = t.NumriTarges,
+                    Marka = t.Marka,
+                    Modeli = t.Modeli,
+                    Ngjyra = t.Ngjyra,
+                    NumriPersonal = t.NumriPersonal,
+                    Emri = t.Emri,
+                    Mbiemri = t.Mbiemri
+                },
+                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
+
+            var patronazhistTask = SearchByNameAsync(
+                _db.Patronazhist,
+                p => p.Emri,
+                p => p.Mbiemri,
+                p => new PatronazhistResponse
+                {
+                    NumriPersonal = p.NumriPersonal,
+                    Emri = p.Emri,
+                    Mbiemri = p.Mbiemri,
+                    Atesi = p.Atesi,
+                    Datelindja = p.Datelindja,
+                    QV = p.QV,
+                    ListaNr = p.ListaNr,
+                    Tel = p.Tel,
+                    Emigrant = p.Emigrant,
+                    Country = p.Country,
+                    ISigurte = p.ISigurte,
+                    Koment = p.Koment,
+                    Patronazhisti = p.Patronazhisti,
+                    Preferenca = p.Preferenca,
+                    Census2013Preferenca = p.Census2013Preferenca,
+                    Census2013Siguria = p.Census2013Siguria,
+                    Vendlindja = p.Vendlindja,
+                    Kompania = p.Kompania,
+                    KodBanese = p.KodBanese
+                },
+                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
+
+            await Task.WhenAll(personTask, rrogatTask, targatTask, patronazhistTask);
 
             return new SearchResponse
             {
-                Person = new PaginatedResult<PersonResponse>
-                {
-                    Items = (await tasks[0]).Items.Cast<PersonResponse>().ToList(),
-                    Pagination = (await tasks[0]).Pagination
-                },
-                Rrogat = new PaginatedResult<RrogatResponse>
-                {
-                    Items = (await tasks[1]).Items.Cast<RrogatResponse>().ToList(),
-                    Pagination = (await tasks[1]).Pagination
-                },
-                Targat = new PaginatedResult<TargatResponse>
-                {
-                    Items = (await tasks[2]).Items.Cast<TargatResponse>().ToList(),
-                    Pagination = (await tasks[2]).Pagination
-                },
-                Patronazhist = new PaginatedResult<PatronazhistResponse>
-                {
-                    Items = (await tasks[3]).Items.Cast<PatronazhistResponse>().ToList(),
-                    Pagination = (await tasks[3]).Pagination
-                }
+                Person = await personTask,
+                Rrogat = await rrogatTask,
+                Targat = await targatTask,
+                Patronazhist = await patronazhistTask
             };
         }
         catch (Exception ex)
@@ -116,14 +175,13 @@ public class SearchService : ISearchService
             var query = _db.Targat
                 .AsNoTracking()
                 .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(normalizedNumriTarges))
-                // Order by relevance: exact matches first, then starts with, then contains
                 .OrderBy(t => t.NumriTarges!.ToLower() == normalizedNumriTarges ? 0 :
                              t.NumriTarges!.ToLower().StartsWith(normalizedNumriTarges) ? 1 : 2)
                 .ThenBy(t => t.NumriTarges);
 
             var totalItems = await query.CountAsync();
 
-            var targatResults = await query
+            var results = await query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .Select(t => new TargatResponse
@@ -138,11 +196,9 @@ public class SearchService : ISearchService
                 })
                 .ToListAsync();
 
-            var filteredResults = targatResults.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri)).ToList();
-
             return new PaginatedResult<TargatResponse>
             {
-                Items = filteredResults,
+                Items = results,
                 Pagination = new PaginationInfo
                 {
                     CurrentPage = pageNumber,
@@ -179,14 +235,13 @@ public class SearchService : ISearchService
             var query = _db.Patronazhist
                 .AsNoTracking()
                 .Where(p => p.Tel != null && p.Tel.Contains(normalizedNumriTelefonit))
-                // Order by relevance: exact matches first, then starts with, then contains
                 .OrderBy(p => p.Tel == normalizedNumriTelefonit ? 0 :
                              p.Tel!.StartsWith(normalizedNumriTelefonit) ? 1 : 2)
                 .ThenBy(p => p.Tel);
 
             var totalItems = await query.CountAsync();
 
-            var patronazhistResults = await query
+            var results = await query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .Select(p => new PatronazhistResponse
@@ -213,11 +268,9 @@ public class SearchService : ISearchService
                 })
                 .ToListAsync();
 
-            var filteredResults = patronazhistResults.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri)).ToList();
-
             return new PaginatedResult<PatronazhistResponse>
             {
-                Items = filteredResults,
+                Items = results,
                 Pagination = new PaginationInfo
                 {
                     CurrentPage = pageNumber,
@@ -233,25 +286,6 @@ public class SearchService : ISearchService
         }
     }
 
-    public async Task<IEnumerable<SearchLog>> GetSearchLogsAsync(DateTime? startDate = null, DateTime? endDate = null)
-    {
-        var query = _db.SearchLogs.AsNoTracking();
-
-        if (startDate.HasValue)
-        {
-            query = query.Where(l => l.Timestamp >= startDate.Value);
-        }
-
-        if (endDate.HasValue)
-        {
-            query = query.Where(l => l.Timestamp <= endDate.Value);
-        }
-
-        return await query
-            .OrderByDescending(l => l.Timestamp)
-            .ToListAsync();
-    }
-
     public async Task<List<Dictionary<string, int>>> DbStatusAsync()
     {
         return
@@ -259,198 +293,63 @@ public class SearchService : ISearchService
             new() { { "Person", await _db.Person.CountAsync() } },
             new() { { "Rrogat", await _db.Rrogat.CountAsync() } },
             new() { { "Targat", await _db.Targat.CountAsync() } },
-            new() { { "Patronazhist", await _db.Patronazhist.CountAsync() } },
-            new() { { "SearchLogs", await _db.SearchLogs.CountAsync() } }
+            new() { { "Patronazhist", await _db.Patronazhist.CountAsync() } }
         ];
     }
 
-    private bool IsNameBanned(string? emri, string? mbiemri)
+    private async Task<PaginatedResult<TResponse>> SearchByNameAsync<TEntity, TResponse>(
+        DbSet<TEntity> dbSet,
+        Expression<Func<TEntity, string?>> emriSelector,
+        Expression<Func<TEntity, string?>> mbiemriSelector,
+        Expression<Func<TEntity, TResponse>> mapToResponse,
+        string emri,
+        string mbiemri,
+        int pageNumber,
+        int pageSize)
+        where TEntity : class
     {
-        return false;
-    }
+        // Use a single parameter for both selectors
+        var param = emriSelector.Parameters[0];
 
-    private async Task<IEnumerable<IResponseModel>> GetPersonResults(string mbiemri, string emri)
-    {
-        var results = await _db.Person
-            .AsNoTracking()
-            .Where(p => p.Mbiemer != null && p.Emer != null)
-            .Where(p => EF.Functions.Like(p.Mbiemer, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emer, $"%{emri}%"))
-            // Order by relevance: exact matches first, then starts with, then contains
-            .OrderBy(p => p.Mbiemer!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemer!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emer!.ToLower() == emri ? 0 :
-                        p.Emer!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemer)
-            .ThenBy(p => p.Emer)
-            .Take(DefaultPageSize)
-            .Select(p => new PersonResponse
-            {
-                Adresa = p.Adresa,
-                NrBaneses = p.NrBaneses,
-                Emri = p.Emer,
-                Mbiemri = p.Mbiemer,
-                Atesi = p.Atesi,
-                Amesi = p.Amesi,
-                Datelindja = p.Datelindja,
-                Vendlindja = p.Vendlindja,
-                Seksi = p.Seksi,
-                LidhjaMeKryefamiljarin = p.LidhjaMeKryefamiljarin,
-                Qyteti = p.Qyteti,
-                GjendjeCivile = p.GjendjeCivile,
-                Kombesia = p.Kombesia
-            })
-            .ToListAsync();
+        // Rebind mbiemriSelector body to use the same parameter
+        var emriBody = emriSelector.Body;
+        var mbiemriBody = new ParameterReplacer(mbiemriSelector.Parameters[0], param)
+            .Visit(mbiemriSelector.Body);
 
-        return results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri));
-    }
+        var emriPattern = $"%{emri}%";
+        var mbiemriPattern = $"%{mbiemri}%";
 
-    private async Task<IEnumerable<IResponseModel>> GetRrogatResults(string mbiemri, string emri)
-    {
-        var results = await _db.Rrogat
-            .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Emri != null)
-            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emri, $"%{emri}%"))
-            // Order by relevance: exact matches first, then starts with, then contains
-            .OrderBy(p => p.Mbiemri!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemri!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emri!.ToLower() == emri ? 0 :
-                        p.Emri!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemri)
-            .ThenBy(p => p.Emri)
-            .Take(DefaultPageSize)
-            .Select(r => new RrogatResponse
-            {
-                NumriPersonal = r.NumriPersonal,
-                Emri = r.Emri,
-                Mbiemri = r.Mbiemri,
-                NIPT = r.NIPT,
-                DRT = r.DRT,
-                PagaBruto = r.PagaBruto,
-                Profesioni = r.Profesioni,
-                Kategoria = r.Kategoria
-            })
-            .ToListAsync();
+        var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
+            nameof(DbFunctionsExtensions.Like),
+            [typeof(DbFunctions), typeof(string), typeof(string)])!;
 
-        return results.Where(r => !IsNameBanned(r?.Emri, r?.Mbiemri));
-    }
+        var efFunctions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
 
-    private async Task<IEnumerable<IResponseModel>> GetTargatResults(string mbiemri, string emri)
-    {
-        var results = await _db.Targat
-            .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Emri != null)
-            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emri, $"%{emri}%"))
-            // Order by relevance: exact matches first, then starts with, then contains
-            .OrderBy(p => p.Mbiemri!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemri!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emri!.ToLower() == emri ? 0 :
-                        p.Emri!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemri)
-            .ThenBy(p => p.Emri)
-            .Take(DefaultPageSize)
-            .Select(t => new TargatResponse
-            {
-                NumriTarges = t.NumriTarges,
-                Marka = t.Marka,
-                Modeli = t.Modeli,
-                Ngjyra = t.Ngjyra,
-                NumriPersonal = t.NumriPersonal,
-                Emri = t.Emri,
-                Mbiemri = t.Mbiemri
-            })
-            .ToListAsync();
+        var emriLike = Expression.Call(likeMethod, efFunctions, emriBody, Expression.Constant(emriPattern));
+        var mbiemriLike = Expression.Call(likeMethod, efFunctions, mbiemriBody, Expression.Constant(mbiemriPattern));
 
-        return results.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri));
-    }
+        var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
+        var mbiemriNotNull = Expression.NotEqual(mbiemriBody, Expression.Constant(null, typeof(string)));
 
-    private async Task<IEnumerable<IResponseModel>> GetPatronazhistResults(string mbiemri, string emri)
-    {
-        var results = await _db.Patronazhist
-            .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Emri != null)
-            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emri, $"%{emri}%"))
-            // Order by relevance: exact matches first, then starts with, then contains
-            .OrderBy(p => p.Mbiemri!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemri!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emri!.ToLower() == emri ? 0 :
-                        p.Emri!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemri)
-            .ThenBy(p => p.Emri)
-            .Take(DefaultPageSize)
-            .Select(p => new PatronazhistResponse
-            {
-                NumriPersonal = p.NumriPersonal,
-                Emri = p.Emri,
-                Mbiemri = p.Mbiemri,
-                Atesi = p.Atesi,
-                Datelindja = p.Datelindja,
-                QV = p.QV,
-                ListaNr = p.ListaNr,
-                Tel = p.Tel,
-                Emigrant = p.Emigrant,
-                Country = p.Country,
-                ISigurte = p.ISigurte,
-                Koment = p.Koment,
-                Patronazhisti = p.Patronazhisti,
-                Preferenca = p.Preferenca,
-                Census2013Preferenca = p.Census2013Preferenca,
-                Census2013Siguria = p.Census2013Siguria,
-                Vendlindja = p.Vendlindja,
-                Kompania = p.Kompania,
-                KodBanese = p.KodBanese
-            })
-            .ToListAsync();
+        var combinedCondition = Expression.AndAlso(
+            Expression.AndAlso(emriNotNull, mbiemriNotNull),
+            Expression.AndAlso(emriLike, mbiemriLike));
 
-        return results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri));
-    }
+        var whereExpression = Expression.Lambda<Func<TEntity, bool>>(combinedCondition, param);
 
-    private async Task<PaginatedResult<IResponseModel>> GetPersonResultsPaginated(string mbiemri, string emri, int pageNumber, int pageSize)
-    {
-        var query = _db.Person
-            .AsNoTracking()
-            .Where(p => p.Mbiemer != null && p.Emer != null)
-            .Where(p => EF.Functions.Like(p.Mbiemer, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emer, $"%{emri}%"))
-            .OrderBy(p => p.Mbiemer!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemer!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emer!.ToLower() == emri ? 0 :
-                        p.Emer!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemer)
-            .ThenBy(p => p.Emer);
+        var query = dbSet.AsNoTracking().Where(whereExpression);
 
         var totalItems = await query.CountAsync();
 
         var results = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(p => new PersonResponse
-            {
-                Adresa = p.Adresa,
-                NrBaneses = p.NrBaneses,
-                Emri = p.Emer,
-                Mbiemri = p.Mbiemer,
-                Atesi = p.Atesi,
-                Amesi = p.Amesi,
-                Datelindja = p.Datelindja,
-                Vendlindja = p.Vendlindja,
-                Seksi = p.Seksi,
-                LidhjaMeKryefamiljarin = p.LidhjaMeKryefamiljarin,
-                Qyteti = p.Qyteti,
-                GjendjeCivile = p.GjendjeCivile,
-                Kombesia = p.Kombesia
-            })
+            .Select(mapToResponse)
             .ToListAsync();
 
-        var filteredResults = results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri))
-            .Cast<IResponseModel>().ToList();
-
-        return new PaginatedResult<IResponseModel>
+        return new PaginatedResult<TResponse>
         {
-            Items = filteredResults,
+            Items = results,
             Pagination = new PaginationInfo
             {
                 CurrentPage = pageNumber,
@@ -460,154 +359,10 @@ public class SearchService : ISearchService
         };
     }
 
-    private async Task<PaginatedResult<IResponseModel>> GetRrogatResultsPaginated(string mbiemri, string emri, int pageNumber, int pageSize)
+    private class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam)
+        : ExpressionVisitor
     {
-        var query = _db.Rrogat
-            .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Emri != null)
-            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emri, $"%{emri}%"))
-            .OrderBy(p => p.Mbiemri!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemri!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emri!.ToLower() == emri ? 0 :
-                        p.Emri!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemri)
-            .ThenBy(p => p.Emri);
-
-        var totalItems = await query.CountAsync();
-
-        var results = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(r => new RrogatResponse
-            {
-                NumriPersonal = r.NumriPersonal,
-                Emri = r.Emri,
-                Mbiemri = r.Mbiemri,
-                NIPT = r.NIPT,
-                DRT = r.DRT,
-                PagaBruto = r.PagaBruto,
-                Profesioni = r.Profesioni,
-                Kategoria = r.Kategoria
-            })
-            .ToListAsync();
-
-        var filteredResults = results.Where(r => !IsNameBanned(r?.Emri, r?.Mbiemri))
-            .Cast<IResponseModel>().ToList();
-
-        return new PaginatedResult<IResponseModel>
-        {
-            Items = filteredResults,
-            Pagination = new PaginationInfo
-            {
-                CurrentPage = pageNumber,
-                PageSize = pageSize,
-                TotalItems = totalItems
-            }
-        };
-    }
-
-    private async Task<PaginatedResult<IResponseModel>> GetTargatResultsPaginated(string mbiemri, string emri, int pageNumber, int pageSize)
-    {
-        var query = _db.Targat
-            .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Emri != null)
-            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emri, $"%{emri}%"))
-            .OrderBy(p => p.Mbiemri!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemri!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emri!.ToLower() == emri ? 0 :
-                        p.Emri!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemri)
-            .ThenBy(p => p.Emri);
-
-        var totalItems = await query.CountAsync();
-
-        var results = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(t => new TargatResponse
-            {
-                NumriTarges = t.NumriTarges,
-                Marka = t.Marka,
-                Modeli = t.Modeli,
-                Ngjyra = t.Ngjyra,
-                NumriPersonal = t.NumriPersonal,
-                Emri = t.Emri,
-                Mbiemri = t.Mbiemri
-            })
-            .ToListAsync();
-
-        var filteredResults = results.Where(t => !IsNameBanned(t?.Emri, t?.Mbiemri))
-            .Cast<IResponseModel>().ToList();
-
-        return new PaginatedResult<IResponseModel>
-        {
-            Items = filteredResults,
-            Pagination = new PaginationInfo
-            {
-                CurrentPage = pageNumber,
-                PageSize = pageSize,
-                TotalItems = totalItems
-            }
-        };
-    }
-
-    private async Task<PaginatedResult<IResponseModel>> GetPatronazhistResultsPaginated(string mbiemri, string emri, int pageNumber, int pageSize)
-    {
-        var query = _db.Patronazhist
-            .AsNoTracking()
-            .Where(p => p.Mbiemri != null && p.Emri != null)
-            .Where(p => EF.Functions.Like(p.Mbiemri, $"%{mbiemri}%") &&
-                       EF.Functions.Like(p.Emri, $"%{emri}%"))
-            .OrderBy(p => p.Mbiemri!.ToLower() == mbiemri ? 0 :
-                         p.Mbiemri!.ToLower().StartsWith(mbiemri) ? 1 : 2)
-            .ThenBy(p => p.Emri!.ToLower() == emri ? 0 :
-                        p.Emri!.ToLower().StartsWith(emri) ? 1 : 2)
-            .ThenBy(p => p.Mbiemri)
-            .ThenBy(p => p.Emri);
-
-        var totalItems = await query.CountAsync();
-
-        var results = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(p => new PatronazhistResponse
-            {
-                NumriPersonal = p.NumriPersonal,
-                Emri = p.Emri,
-                Mbiemri = p.Mbiemri,
-                Atesi = p.Atesi,
-                Datelindja = p.Datelindja,
-                QV = p.QV,
-                ListaNr = p.ListaNr,
-                Tel = p.Tel,
-                Emigrant = p.Emigrant,
-                Country = p.Country,
-                ISigurte = p.ISigurte,
-                Koment = p.Koment,
-                Patronazhisti = p.Patronazhisti,
-                Preferenca = p.Preferenca,
-                Census2013Preferenca = p.Census2013Preferenca,
-                Census2013Siguria = p.Census2013Siguria,
-                Vendlindja = p.Vendlindja,
-                Kompania = p.Kompania,
-                KodBanese = p.KodBanese
-            })
-            .ToListAsync();
-
-        var filteredResults = results.Where(p => !IsNameBanned(p?.Emri, p?.Mbiemri))
-            .Cast<IResponseModel>().ToList();
-
-        return new PaginatedResult<IResponseModel>
-        {
-            Items = filteredResults,
-            Pagination = new PaginationInfo
-            {
-                CurrentPage = pageNumber,
-                PageSize = pageSize,
-                TotalItems = totalItems
-            }
-        };
+        protected override Expression VisitParameter(ParameterExpression node)
+            => node == oldParam ? newParam : base.VisitParameter(node);
     }
 }

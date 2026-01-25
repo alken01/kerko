@@ -6,7 +6,7 @@ public class Person
 {
     [Key]
     public int Id { get; set; }
-    
+
     public string? Adresa { get; set; }
     public string? NrBaneses { get; set; }
     public string? Emer { get; set; }

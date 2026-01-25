@@ -70,11 +70,7 @@ yarn-error.log*
 # Database
 database/
 backend/Kerko/processed_data/
-backend/Kerko/kerko.db
-backend/Kerko/kerko.db-shm
-backend/Kerko/kerko.db-wal
-backend/Kerko/kerko_dump.sql
-
+backend/data/*
 # Certificates
 backend/Kerko/certificates
 

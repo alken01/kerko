@@ -21,11 +21,10 @@ COPY --from=build /app/publish .
 
 # Expose the port the app runs on
 EXPOSE 8080
-EXPOSE 8443
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:8080;https://+:8443
-ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_HTTP_PORTS=8080
 
 # Run the app
 ENTRYPOINT ["dotnet", "Kerko.dll"] 

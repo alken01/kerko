@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Kerko.Infrastructure;
 using Kerko.Services;
-using Kerko.Models;
 using Kerko.Authentication;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.Logging.Console;
@@ -16,23 +15,13 @@ builder.Logging.AddConsole(options =>
 });
 builder.Logging.AddConsoleFormatter<Kerko.CustomConsoleFormatter, ConsoleFormatterOptions>();
 
-if (!builder.Environment.IsDevelopment())
-{
-    builder.WebHost.ConfigureKestrel(serverOptions =>
-    {
-        var kestrelConfig = builder.Configuration.GetSection("Kestrel").Get<KestrelConfig>();
-        // Configure HTTP endpoint
-        if (kestrelConfig?.Endpoints?.Http != null)
-        {
-            var httpPort = kestrelConfig.Endpoints.Http.Url.Split(':')[2];
-            serverOptions.ListenAnyIP(int.Parse(httpPort));
-        }
-    });
-}
-
 // Add rate limiting (skip in testing environment)
 if (!builder.Environment.IsEnvironment("Testing"))
 {
+    var rateLimitConfig = builder.Configuration.GetSection("RateLimiting");
+    var permitLimit = rateLimitConfig.GetValue<int>("PermitLimit", 20);
+    var windowMinutes = rateLimitConfig.GetValue<int>("WindowMinutes", 1);
+
     builder.Services.AddRateLimiter(options =>
     {
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -41,9 +30,9 @@ if (!builder.Environment.IsEnvironment("Testing"))
                 factory: partition => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 20,
+                    PermitLimit = permitLimit,
                     QueueLimit = 0,
-                    Window = TimeSpan.FromMinutes(1)
+                    Window = TimeSpan.FromMinutes(windowMinutes)
                 }));
 
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -54,7 +43,6 @@ if (!builder.Environment.IsEnvironment("Testing"))
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -64,15 +52,22 @@ builder.Services.AddCors(options =>
         var origins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>();
         if (origins == null || origins.Length == 0)
         {
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .WithMethods("GET");
+            if (builder.Environment.IsDevelopment())
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            }
+            else
+            {
+                throw new InvalidOperationException("CORS:AllowedOrigins must be configured for production");
+            }
         }
         else
         {
             policy.WithOrigins(origins)
                   .AllowAnyHeader()
-                  .WithMethods("GET");
+                  .AllowAnyMethod();
         }
     });
 });
@@ -85,13 +80,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ISearchService, SearchService>();
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.UseCors();
@@ -112,10 +100,20 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        // Ensure the database directory exists
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            var dbPath = connectionString.Replace("Data Source=", "").Trim();
+            var directory = Path.GetDirectoryName(dbPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+        }
+
         var context = services.GetRequiredService<ApplicationDbContext>();
-        // Ensure database exists
-        context.Database.EnsureCreated();
-        // Apply migrations
+        // Apply migrations (this will create the database if it doesn't exist)
         context.Database.Migrate();
     }
     catch (Exception ex)

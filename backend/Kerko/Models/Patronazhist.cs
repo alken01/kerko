@@ -6,7 +6,7 @@ public class Patronazhist
 {
     [Key]
     public int Id { get; set; }
-    
+
     public string? NumriPersonal { get; set; }
     public string? Emri { get; set; }
     public string? Mbiemri { get; set; }
