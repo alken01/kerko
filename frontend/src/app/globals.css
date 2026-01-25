@@ -217,8 +217,6 @@
     /* Use dynamic viewport height for mobile */
     height: 100%;
     height: 100dvh;
-    /* Prevent pull-to-refresh but allow smooth scrolling */
-    overscroll-behavior-y: none;
   }
   body {
     @apply bg-surface-primary text-text-primary;
