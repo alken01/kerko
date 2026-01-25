@@ -12,7 +12,6 @@ export function GlobalStyles() {
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT"
       ) {
-        // Small delay to let keyboard appear
         setTimeout(() => {
           target.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 300);
@@ -22,11 +21,9 @@ export function GlobalStyles() {
     // Visual viewport resize handler for iOS keyboard
     const handleViewportResize = () => {
       if (window.visualViewport) {
-        const viewport = window.visualViewport;
-        // Adjust body height when keyboard is shown
         document.documentElement.style.setProperty(
           "--viewport-height",
-          `${viewport.height}px`
+          `${window.visualViewport.height}px`
         );
       }
     };
@@ -35,40 +32,16 @@ export function GlobalStyles() {
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", handleViewportResize);
-      // Initial call
       handleViewportResize();
     }
 
     return () => {
       document.removeEventListener("focusin", handleFocus);
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener(
-          "resize",
-          handleViewportResize
-        );
+        window.visualViewport.removeEventListener("resize", handleViewportResize);
       }
     };
   }, []);
 
-  return (
-    <style jsx global>{`
-      body {
-        overscroll-behavior: none;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-      }
-      @supports (-webkit-touch-callout: none) {
-        .min-h-screen {
-          min-height: -webkit-fill-available;
-        }
-      }
-      ::-webkit-scrollbar {
-        display: none;
-      }
-      * {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-    `}</style>
-  );
+  return null;
 }

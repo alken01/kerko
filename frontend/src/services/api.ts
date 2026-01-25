@@ -11,6 +11,29 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+async function fetchApi<T>(url: string, fallbackError: string): Promise<T> {
+  const response = await fetch(url, { headers: NGROK_HEADER });
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error(RATE_LIMIT_ERROR_MESSAGE);
+    }
+    const text = await response.text();
+    throw new Error(text || fallbackError);
+  }
+
+  return response.json();
+}
+
+function buildParams(params: Record<string, string | number>): URLSearchParams {
+  return new URLSearchParams(
+    Object.entries(params).reduce((acc, [key, value]) => {
+      acc[key] = String(value);
+      return acc;
+    }, {} as Record<string, string>)
+  );
+}
+
 export class ApiService {
   static async searchPerson(
     emri: string,
@@ -18,27 +41,12 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<SearchResponse> {
-    const params = new URLSearchParams({
-      emri,
-      mbiemri,
-      pageNumber: pageNumber.toString(),
-      pageSize: pageSize.toString()
-    });
-
-    const response = await fetch(
+    const params = buildParams({ emri, mbiemri, pageNumber, pageSize });
+    const data = await fetchApi<SearchResponse>(
       `${API_URL}/api/kerko?${params}`,
-      { headers: NGROK_HEADER }
+      PERSON_SEARCH_ERROR
     );
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error(RATE_LIMIT_ERROR_MESSAGE);
-      }
-      const text = await response.text();
-      throw new Error(text || PERSON_SEARCH_ERROR);
-    }
-
-    const data: SearchResponse = await response.json();
     if (
       !data ||
       Object.values(data).every(
@@ -59,26 +67,11 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<TargatSearchResponse> {
-    const params = new URLSearchParams({
-      numriTarges,
-      pageNumber: pageNumber.toString(),
-      pageSize: pageSize.toString()
-    });
-
-    const response = await fetch(
+    const params = buildParams({ numriTarges, pageNumber, pageSize });
+    const data = await fetchApi<TargatSearchResponse>(
       `${API_URL}/api/targat?${params}`,
-      { headers: NGROK_HEADER }
+      PLATE_SEARCH_ERROR
     );
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error(RATE_LIMIT_ERROR_MESSAGE);
-      }
-      const text = await response.text();
-      throw new Error(text || PLATE_SEARCH_ERROR);
-    }
-
-    const data: TargatSearchResponse = await response.json();
 
     if (!data || data.items.length === 0) {
       throw new Error(NO_RESULTS_MESSAGE);
@@ -92,26 +85,11 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<PatronazhistSearchResponse> {
-    const params = new URLSearchParams({
-      numriTelefonit,
-      pageNumber: pageNumber.toString(),
-      pageSize: pageSize.toString()
-    });
-
-    const response = await fetch(
+    const params = buildParams({ numriTelefonit, pageNumber, pageSize });
+    const data = await fetchApi<PatronazhistSearchResponse>(
       `${API_URL}/api/telefon?${params}`,
-      { headers: NGROK_HEADER }
+      PHONE_SEARCH_ERROR
     );
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error(RATE_LIMIT_ERROR_MESSAGE);
-      }
-      const text = await response.text();
-      throw new Error(text || PHONE_SEARCH_ERROR);
-    }
-
-    const data: PatronazhistSearchResponse = await response.json();
 
     if (!data || data.items.length === 0) {
       throw new Error(NO_RESULTS_MESSAGE);

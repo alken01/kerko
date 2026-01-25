@@ -87,3 +87,6 @@ export interface PatronazhistSearchResponse {
   items: PatronazhistResponse[];
   pagination: PaginationInfo;
 }
+
+// UI Types
+export type TabType = "person" | "rrogat" | "targat" | "patronazhist";

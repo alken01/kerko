@@ -2,14 +2,13 @@ import {
   PatronazhistSearchResponse,
   SearchResponse,
   TargatSearchResponse,
+  TabType,
 } from "@/types/kerko";
 import { Pagination } from "./Pagination";
 import { PatronazhistCard } from "./PatronazhistCard";
 import { PersonCard } from "./PersonCard";
 import { RrogatCard } from "./RrogatCard";
 import { TargatCard } from "./TargatCard";
-
-type TabType = "person" | "rrogat" | "targat" | "patronazhist";
 
 type SearchResultsType = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse;
 

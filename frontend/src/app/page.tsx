@@ -5,13 +5,11 @@ import { SearchForm } from "@/components/SearchForm";
 import { SearchResultsTabs } from "@/components/SearchResultsTabs";
 import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
+import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, TabType } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
 import { useSearchParams } from "next/navigation";
 import { SEARCH_ERROR_MESSAGE } from "@/lib/constants";
-
-type TabType = "person" | "rrogat" | "targat" | "patronazhist";
 
 function SearchContent() {
   const searchParams = useSearchParams();
