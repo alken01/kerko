@@ -1,4 +1,4 @@
-import { ClipboardEvent } from "react";
+import { ClipboardEvent, useEffect, useRef } from "react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
 
 interface PhoneInputProps {
@@ -53,6 +53,29 @@ function handlePhoneChange(
 
 export function PhoneInput({ value, onChange, disabled }: PhoneInputProps) {
   const displayValue = getDisplayValue(value);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle iOS/Safari autocomplete which triggers native input events
+  // instead of React's onChange
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const input = container.querySelector("input");
+    if (!input) return;
+
+    const handleInput = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const inputValue = target.value;
+      // Only process if it looks like an autocompleted phone number (more than single char input)
+      if (inputValue && inputValue.length > 1) {
+        onChange(parsePhoneNumber(inputValue));
+      }
+    };
+
+    input.addEventListener("input", handleInput);
+    return () => input.removeEventListener("input", handleInput);
+  }, [onChange]);
 
   // Intercept paste to handle full phone numbers before InputOTP truncates them
   const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
@@ -64,7 +87,7 @@ export function PhoneInput({ value, onChange, disabled }: PhoneInputProps) {
   };
 
   return (
-    <div className="relative flex justify-center items-center" onPaste={handlePaste}>
+    <div ref={containerRef} className="relative flex justify-center items-center" onPaste={handlePaste}>
       <span className="text-text-primary font-medium mr-2 select-none">+355 6</span>
       <InputOTP
         maxLength={8}

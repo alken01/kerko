@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PhoneInput } from "./PhoneInput";
 import { TargaInput } from "./TargaInput";
 import { cardStyles } from "./ui/card-styles";
@@ -28,6 +28,7 @@ export function SearchForm({
   );
   const [emri, setEmri] = useState("");
   const [mbiemri, setMbiemri] = useState("");
+  const mbiemriRef = useRef<HTMLInputElement>(null);
   const [targa, setTarga] = useState("");
   const [telefon, setTelefon] = useState(ALBANIAN_PHONE_PREFIX);
 
@@ -144,11 +145,19 @@ export function SearchForm({
                 placeholder="Emri"
                 value={emri}
                 onChange={(e) => setEmri(e.target.value)}
+                onInput={(e) => {
+                  // Detect iOS autocomplete (fills multiple chars at once) and move to mbiemri
+                  const input = e.target as HTMLInputElement;
+                  if (input.value.length > 1 && emri.length === 0) {
+                    setTimeout(() => mbiemriRef.current?.focus(), 0);
+                  }
+                }}
                 autoComplete="given-name"
                 className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
                 disabled={isLoading}
               />
               <Input
+                ref={mbiemriRef}
                 type="text"
                 placeholder="Mbiemri"
                 value={mbiemri}
