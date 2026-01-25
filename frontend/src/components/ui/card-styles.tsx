@@ -4,7 +4,7 @@ import { LucideIcon } from "lucide-react";
 export const cardStyles = {
   root: "overflow-hidden border-2 border-border-semantic-secondary bg-surface-primary",
   header:
-    "bg-gradient-to-br from-surface-secondary to-surface-primary py-4 px-5 border-b-2 border-border-semantic-secondary relative",
+    "bg-surface-secondary py-4 px-5 border-b-2 border-border-semantic-secondary relative",
   title: "text-xl font-bold tracking-tight text-text-primary uppercase",
   infoList: "mt-1.5 space-y-2",
   infoItem: "text-text-secondary flex items-start gap-2 text-sm",
