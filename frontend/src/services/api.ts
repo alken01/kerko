@@ -1,5 +1,13 @@
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
-import { RATE_LIMIT_ERROR_MESSAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
+import {
+  RATE_LIMIT_ERROR_MESSAGE,
+  NO_RESULTS_MESSAGE,
+  PERSON_SEARCH_ERROR,
+  PLATE_SEARCH_ERROR,
+  PHONE_SEARCH_ERROR,
+  NGROK_HEADER,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/constants";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -19,11 +27,7 @@ export class ApiService {
 
     const response = await fetch(
       `${API_URL}/api/kerko?${params}`,
-      {
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
-      }
+      { headers: NGROK_HEADER }
     );
 
     if (!response.ok) {
@@ -31,7 +35,7 @@ export class ApiService {
         throw new Error(RATE_LIMIT_ERROR_MESSAGE);
       }
       const text = await response.text();
-      throw new Error(text || "Pati një problem gjatë kërkimit të personit");
+      throw new Error(text || PERSON_SEARCH_ERROR);
     }
 
     const data: SearchResponse = await response.json();
@@ -44,7 +48,7 @@ export class ApiService {
           result.items.every((item: Record<string, unknown>) => !Object.values(item).some(Boolean))
       )
     ) {
-      throw new Error("Nuk u gjet asnjë rezultat");
+      throw new Error(NO_RESULTS_MESSAGE);
     }
 
     return data;
@@ -63,11 +67,7 @@ export class ApiService {
 
     const response = await fetch(
       `${API_URL}/api/targat?${params}`,
-      {
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
-      }
+      { headers: NGROK_HEADER }
     );
 
     if (!response.ok) {
@@ -75,13 +75,13 @@ export class ApiService {
         throw new Error(RATE_LIMIT_ERROR_MESSAGE);
       }
       const text = await response.text();
-      throw new Error(text || "Pati një problem gjatë kërkimit të targës");
+      throw new Error(text || PLATE_SEARCH_ERROR);
     }
 
     const data: TargatSearchResponse = await response.json();
 
     if (!data || data.items.length === 0) {
-      throw new Error("Nuk u gjet asnjë rezultat");
+      throw new Error(NO_RESULTS_MESSAGE);
     }
 
     return data;
@@ -100,11 +100,7 @@ export class ApiService {
 
     const response = await fetch(
       `${API_URL}/api/telefon?${params}`,
-      {
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
-      }
+      { headers: NGROK_HEADER }
     );
 
     if (!response.ok) {
@@ -112,13 +108,13 @@ export class ApiService {
         throw new Error(RATE_LIMIT_ERROR_MESSAGE);
       }
       const text = await response.text();
-      throw new Error(text || "Pati një problem gjatë kërkimit të telefonit");
+      throw new Error(text || PHONE_SEARCH_ERROR);
     }
 
     const data: PatronazhistSearchResponse = await response.json();
 
     if (!data || data.items.length === 0) {
-      throw new Error("Nuk u gjet asnjë rezultat");
+      throw new Error(NO_RESULTS_MESSAGE);
     }
 
     return data;

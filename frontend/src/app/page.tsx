@@ -9,6 +9,7 @@ import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
 import { useSearchParams } from "next/navigation";
+import { SEARCH_ERROR_MESSAGE } from "@/lib/constants";
 
 type TabType = "person" | "rrogat" | "targat" | "patronazhist";
 
@@ -61,9 +62,7 @@ function SearchContent() {
       const data = await ApiService.searchPerson(emri, mbiemri, page);
       setSearchResults(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Pati një problem gjatë kërkimit"
-      );
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_MESSAGE);
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +81,7 @@ function SearchContent() {
       const data = await ApiService.searchTarga(numriTarges, page);
       setSearchResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_MESSAGE);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +100,7 @@ function SearchContent() {
       const data = await ApiService.searchTelefon(numriTelefonit, page);
       setSearchResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_MESSAGE);
     } finally {
       setIsLoading(false);
     }
