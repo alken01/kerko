@@ -89,4 +89,4 @@ export interface PatronazhistSearchResponse {
 }
 
 // UI Types
-export type TabType = "person" | "rrogat" | "targat" | "patronazhist" | "saved";
+export type TabType = "person" | "rrogat" | "targat" | "patronazhist";

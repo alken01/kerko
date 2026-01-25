@@ -4,13 +4,10 @@ import {
   TargatSearchResponse,
   TabType,
 } from "@/types/kerko";
-import { useSavedItems } from "@/contexts/SavedItemsContext";
-import { Bookmark } from "lucide-react";
 import { Pagination } from "./Pagination";
 import { PatronazhistCard } from "./PatronazhistCard";
 import { PersonCard } from "./PersonCard";
 import { RrogatCard } from "./RrogatCard";
-import { SavedItemsList } from "./SavedItemsList";
 import { TargatCard } from "./TargatCard";
 
 type SearchResultsType = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse;
@@ -53,20 +50,15 @@ export function SearchResultsTabs({
   isTargaSearch,
   isTelefonSearch,
 }: SearchResultsTabsProps) {
-  const { savedCount } = useSavedItems();
-
-  const savedTab = { value: "saved", label: "Të Ruajturat", isSaved: true };
-
   const tabs = isTargaSearch
-    ? [{ value: "targat", label: "Targat" }, savedTab]
+    ? [{ value: "targat", label: "Targat" }]
     : isTelefonSearch
-    ? [{ value: "patronazhist", label: "Patronazhistë" }, savedTab]
+    ? [{ value: "patronazhist", label: "Patronazhistë" }]
     : [
         { value: "person", label: "Persona" },
         { value: "rrogat", label: "Rrogat" },
         { value: "targat", label: "Targat" },
         { value: "patronazhist", label: "Patronazhistë" },
-        savedTab,
       ];
 
   const getCurrentPagination = () => {
@@ -84,27 +76,21 @@ export function SearchResultsTabs({
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-      <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary">
+      <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.value}
             onClick={() => onTabChange(tab.value as TabType)}
-            className={`flex-1 px-2 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+            className={`flex-1 flex-shrink-0 min-w-fit px-3 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
               activeTab === tab.value
                 ? "bg-surface-tertiary text-text-primary "
                 : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
             }`}
           >
             <div className="flex items-center justify-center gap-1">
-              {"isSaved" in tab && tab.isSaved && (
-                <Bookmark className="h-3.5 w-3.5" />
-              )}
               <span>{tab.label}</span>
               <span className="text-xs bg-surface-interactive px-1.5 py-0.5 rounded-full">
                 {(() => {
-                  if ("isSaved" in tab && tab.isSaved) {
-                    return savedCount;
-                  }
                   if (isTargaSearch && hasDirectItems(searchResults)) {
                     return asTargatResponse(searchResults).pagination?.totalItems || 0;
                   }
@@ -186,12 +172,9 @@ export function SearchResultsTabs({
             })()}
           </div>
         )}
-        {activeTab === "saved" && (
-          <SavedItemsList onNameClick={onNameClick} />
-        )}
       </div>
 
-      {activeTab !== "saved" && (() => {
+      {(() => {
         const pagination = getCurrentPagination();
         return (
           pagination && (

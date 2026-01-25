@@ -144,16 +144,18 @@ export function SearchForm({
                 placeholder="Emri"
                 value={emri}
                 onChange={(e) => setEmri(e.target.value)}
+                autoComplete="given-name"
                 className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
-                                disabled={isLoading}
+                disabled={isLoading}
               />
               <Input
                 type="text"
                 placeholder="Mbiemri"
                 value={mbiemri}
                 onChange={(e) => setMbiemri(e.target.value)}
+                autoComplete="family-name"
                 className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
-                                disabled={isLoading}
+                disabled={isLoading}
               />
             </div>
           ) : activeTab === "targa" ? (
