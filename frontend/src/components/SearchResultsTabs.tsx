@@ -4,10 +4,13 @@ import {
   TargatSearchResponse,
   TabType,
 } from "@/types/kerko";
+import { useSavedItems } from "@/contexts/SavedItemsContext";
+import { Bookmark } from "lucide-react";
 import { Pagination } from "./Pagination";
 import { PatronazhistCard } from "./PatronazhistCard";
 import { PersonCard } from "./PersonCard";
 import { RrogatCard } from "./RrogatCard";
+import { SavedItemsList } from "./SavedItemsList";
 import { TargatCard } from "./TargatCard";
 
 type SearchResultsType = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse;
@@ -50,15 +53,20 @@ export function SearchResultsTabs({
   isTargaSearch,
   isTelefonSearch,
 }: SearchResultsTabsProps) {
+  const { savedCount } = useSavedItems();
+
+  const savedTab = { value: "saved", label: "Të Ruajturat", isSaved: true };
+
   const tabs = isTargaSearch
-    ? [{ value: "targat", label: "Targat" }]
+    ? [{ value: "targat", label: "Targat" }, savedTab]
     : isTelefonSearch
-    ? [{ value: "patronazhist", label: "Patronazhistë" }]
+    ? [{ value: "patronazhist", label: "Patronazhistë" }, savedTab]
     : [
         { value: "person", label: "Persona" },
         { value: "rrogat", label: "Rrogat" },
         { value: "targat", label: "Targat" },
         { value: "patronazhist", label: "Patronazhistë" },
+        savedTab,
       ];
 
   const getCurrentPagination = () => {
@@ -88,9 +96,15 @@ export function SearchResultsTabs({
             }`}
           >
             <div className="flex items-center justify-center gap-1">
+              {"isSaved" in tab && tab.isSaved && (
+                <Bookmark className="h-3.5 w-3.5" />
+              )}
               <span>{tab.label}</span>
               <span className="text-xs bg-surface-interactive px-1.5 py-0.5 rounded-full">
                 {(() => {
+                  if ("isSaved" in tab && tab.isSaved) {
+                    return savedCount;
+                  }
                   if (isTargaSearch && hasDirectItems(searchResults)) {
                     return asTargatResponse(searchResults).pagination?.totalItems || 0;
                   }
@@ -172,9 +186,12 @@ export function SearchResultsTabs({
             })()}
           </div>
         )}
+        {activeTab === "saved" && (
+          <SavedItemsList onNameClick={onNameClick} />
+        )}
       </div>
 
-      {(() => {
+      {activeTab !== "saved" && (() => {
         const pagination = getCurrentPagination();
         return (
           pagination && (

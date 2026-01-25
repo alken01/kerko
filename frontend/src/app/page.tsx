@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResultsTabs } from "@/components/SearchResultsTabs";
+import { SavedItemsPanel } from "@/components/SavedItemsPanel";
 import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, TabType } from "@/types/kerko";
@@ -162,6 +163,8 @@ function SearchContent() {
           isTelefonSearch={isTelefonSearch}
         />
       )}
+
+      <SavedItemsPanel onNameClick={handleNameClick} />
     </>
   );
 }

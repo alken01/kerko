@@ -1,4 +1,6 @@
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SavedItemsProvider } from "@/contexts/SavedItemsContext";
+import { ToastProvider } from "@/components/ui/toast";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
@@ -74,6 +76,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Kërko",
   },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -84,7 +87,11 @@ export default function RootLayout({
   return (
     <html lang="sq">
       <body className="antialiased min-h-screen bg-surface-primary text-text-primary">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <SavedItemsProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </SavedItemsProvider>
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>

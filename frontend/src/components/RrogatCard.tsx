@@ -2,6 +2,7 @@ import { RrogatResponse } from "@/types/kerko";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Wallet, Briefcase, CircleDot, ChevronDown, ChevronUp } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
+import { SaveButton } from "@/components/ui/save-button";
 import { useState } from "react";
 
 interface RrogatCardProps {
@@ -14,6 +15,9 @@ export function RrogatCard({ rrogat }: RrogatCardProps) {
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
+        <div className="absolute top-3 right-3 z-20">
+          <SaveButton type="rrogat" data={rrogat} />
+        </div>
         <div className="relative z-10">
           <h2 className={cardStyles.title}>
             {rrogat.emri} <span className="font-bold">{rrogat.mbiemri}</span>

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cardStyles, DetailRow, InfoItem } from "@/components/ui/card-styles";
+import { SaveButton } from "@/components/ui/save-button";
 import { PersonResponse } from "@/types/kerko";
 import { Calendar, ChevronDown, ChevronUp, Home, MapPin, User } from "lucide-react";
 import { useState } from "react";
@@ -25,6 +26,9 @@ export function PersonCard({ person }: PersonCardProps) {
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
+        <div className="absolute top-3 right-3 z-20">
+          <SaveButton type="person" data={person} />
+        </div>
         <div className="relative z-10">
           <h2 className={cardStyles.title}>
             {person.emri} <span className="font-bold">{person.mbiemri}</span>

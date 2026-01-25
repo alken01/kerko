@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Car, CircleDot, ChevronDown, ChevronUp } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "./ui/card-styles";
+import { SaveButton } from "@/components/ui/save-button";
 import { TargatResponse } from "@/types/kerko";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -16,6 +17,9 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
+        <div className="absolute top-3 right-3 z-20">
+          <SaveButton type="targat" data={targat} />
+        </div>
         <div className="relative z-10">
           <h2 className={cardStyles.title}>
             {targat.emri} <span className="font-bold">{targat.mbiemri}</span>
