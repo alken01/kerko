@@ -14,11 +14,19 @@ interface SavedItemsPanelProps {
 export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showPWABanner, setShowPWABanner] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const { savedCount } = useSavedItems();
 
   useEffect(() => {
+    // Check if already running as PWA
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    setIsStandalone(standalone);
+
+    // Only show PWA banner if not in standalone mode and not dismissed
     const dismissed = localStorage.getItem("pwa-banner-dismissed");
-    setShowPWABanner(dismissed !== "true");
+    setShowPWABanner(!standalone && dismissed !== "true");
   }, []);
 
   const dismissPWABanner = () => {
@@ -33,18 +41,16 @@ export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
         onClick={() => setIsOpen(true)}
         className={cn(
           "fixed bottom-5 right-5 z-40",
-          "flex items-center gap-1.5 px-3 py-2 rounded-full",
-          "bg-surface-tertiary text-text-primary",
-          "border-2 border-border-semantic-primary",
-          "shadow-lg hover:shadow-xl",
-          "transition-all duration-200 hover:scale-105",
-          "text-xs font-medium"
+          "flex items-center justify-center",
+          "w-12 h-12 rounded-xl",
+          "bg-surface-secondary border border-border-semantic-primary",
+          "transition-all duration-200 active:scale-95",
+          "hover:bg-surface-interactive"
         )}
       >
-        <Bookmark className="h-4 w-4" />
-        <span>Të Ruajturat</span>
+        <Bookmark className="h-5 w-5 text-accent-saved fill-current" />
         {savedCount > 0 && (
-          <span className="bg-amber-500 text-amber-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+          <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 flex items-center justify-center bg-accent-saved text-white text-xs font-bold rounded-full">
             {savedCount}
           </span>
         )}
@@ -52,36 +58,39 @@ export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
 
       {/* Full Screen Panel */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-surface-primary">
+        <div className="fixed inset-0 z-50 bg-surface-primary overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-surface-primary border-b-2 border-border-semantic-secondary">
+          <div className="flex-shrink-0 bg-surface-primary border-b border-border-semantic-secondary">
             <div className="container mx-auto px-4 md:px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Bookmark className="h-6 w-6 text-amber-500" />
-                  <h2 className="text-xl font-bold text-text-primary">
-                    Të Ruajturat
-                  </h2>
-                  {savedCount > 0 && (
-                    <span className="bg-amber-500 text-amber-950 text-xs font-bold px-2 py-0.5 rounded-full">
-                      {savedCount}
-                    </span>
-                  )}
+                  <Bookmark className="h-6 w-6 text-accent-saved fill-current" />
+                  <div>
+                    <h2 className="text-lg font-semibold text-text-primary">
+                      Të Ruajturat
+                    </h2>
+                    {savedCount > 0 && (
+                      <p className="text-xs text-text-secondary">
+                        {savedCount} {savedCount === 1 ? "rezultat" : "rezultate"}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-lg hover:bg-surface-interactive transition-colors"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-surface-interactive transition-colors"
                 >
-                  <X className="h-6 w-6 text-text-tertiary" />
+                  <X className="h-5 w-5 text-text-secondary" />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="container mx-auto px-4 md:px-6 py-6 pb-32 overflow-auto max-h-[calc(100vh-80px)]">
-            {/* PWA Install Guide Banner - Dismissable */}
-            {showPWABanner && (
+          <div className="flex-1 overflow-auto">
+            <div className="container mx-auto px-4 md:px-6 py-6 pb-32">
+            {/* PWA Install Guide Banner - Dismissable, hidden when already in PWA */}
+            {showPWABanner && !isStandalone && (
               <div className="mb-6 p-4 rounded-xl bg-surface-secondary border-2 border-border-semantic-secondary relative">
                 <button
                   onClick={dismissPWABanner}
@@ -90,8 +99,8 @@ export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
                   <X className="h-4 w-4 text-text-tertiary" />
                 </button>
                 <div className="flex items-start gap-3 pr-6">
-                  <div className="flex-shrink-0 w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <Smartphone className="h-4 w-4 text-amber-500" />
+                  <div className="flex-shrink-0 w-9 h-9 rounded-full bg-accent-saved/20 flex items-center justify-center">
+                    <Smartphone className="h-4 w-4 text-accent-saved" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium text-text-primary text-sm mb-1">
@@ -111,6 +120,7 @@ export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
               onNameClick(emri, mbiemri);
               setIsOpen(false);
             }} />
+            </div>
           </div>
         </div>
       )}

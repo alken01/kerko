@@ -61,6 +61,9 @@
   --color-border-semantic-primary: var(--border-primary);
   --color-border-semantic-secondary: var(--border-secondary);
   --color-border-semantic-interactive: var(--border-interactive);
+
+  /* Accent colors */
+  --color-accent-saved: var(--accent-saved);
 }
 
 :root {
@@ -116,6 +119,9 @@
   --border-primary: #e5e5e5;
   --border-secondary: #ebebeb;
   --border-interactive: #d4d4d4;
+
+  /* Accent colors */
+  --accent-saved: #d97706;
 }
 
 .dark {
@@ -170,6 +176,9 @@
   --border-primary: #303030;
   --border-secondary: #262626;
   --border-interactive: #404040;
+
+  /* Accent colors */
+  --accent-saved: #f59e0b;
 }
 
 @tailwind base;
@@ -204,6 +213,17 @@
   * {
     @apply border-border;
   }
+  html, body {
+    /* Prevent pull-to-refresh and overscroll bounce */
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  html {
+    /* Fixed height for PWA */
+    height: 100%;
+    overflow: hidden;
+  }
   body {
     @apply bg-surface-primary text-text-primary;
     font-family: 'Zed Sans', system-ui, sans-serif;
@@ -214,9 +234,13 @@
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     /* Mobile optimizations */
-    overscroll-behavior: none;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    /* Fixed height for PWA */
+    height: 100%;
+    overflow: auto;
+    position: fixed;
+    width: 100%;
   }
   input::placeholder {
     font-family: 'Zed Sans', system-ui, sans-serif;
