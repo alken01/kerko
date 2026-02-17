@@ -5,6 +5,7 @@ import { Bookmark, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSavedItems } from "@/contexts/SavedItemsContext";
 import { useToast } from "@/components/ui/toast";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { SavedItemType, generateItemKey, generateDisplayName } from "@/types/saved";
 import {
   PatronazhistResponse,
@@ -20,6 +21,7 @@ interface SaveButtonProps {
 }
 
 export function SaveButton({ type, data, className }: SaveButtonProps) {
+  const { t } = useTranslation();
   const { isItemSaved, saveItem, removeItemByKey, savedCount } = useSavedItems();
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -42,14 +44,14 @@ export function SaveButton({ type, data, className }: SaveButtonProps) {
         if (isSaved) {
           const key = generateItemKey(type, data);
           await removeItemByKey(key);
-          showToast("U hoq nga të ruajturat", "removed");
+          showToast(t("saved.removedFromSaved"), "removed");
         } else {
           const result = await saveItem(type, data);
           if (result) {
             const displayName = generateDisplayName(type, data);
             // Show PWA hint on first save or every 5th save
             const showPWAHint = !hasShownPWAHint || (savedCount + 1) % 5 === 0;
-            showToast(`${displayName} u ruajt`, "saved", showPWAHint);
+            showToast(`${displayName} ${t("saved.wasSaved")}`, "saved", showPWAHint);
 
             if (!hasShownPWAHint) {
               localStorage.setItem("pwa-hint-shown", "true");
@@ -63,7 +65,7 @@ export function SaveButton({ type, data, className }: SaveButtonProps) {
         setIsLoading(false);
       }
     },
-    [isSaved, type, data, saveItem, removeItemByKey, showToast, hasShownPWAHint, savedCount]
+    [isSaved, type, data, saveItem, removeItemByKey, showToast, hasShownPWAHint, savedCount, t]
   );
 
   return (
@@ -78,7 +80,7 @@ export function SaveButton({ type, data, className }: SaveButtonProps) {
           : "text-text-tertiary hover:text-text-secondary",
         className
       )}
-      aria-label={isSaved ? "Hiq nga të ruajturat" : "Ruaj"}
+      aria-label={isSaved ? t("saved.removeFromSaved") : t("saved.save")}
     >
       {isLoading ? (
         <Loader2 className="h-5 w-5 animate-spin" />

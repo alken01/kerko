@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Bookmark, X, Smartphone } from "lucide-react";
 import { useSavedItems } from "@/contexts/SavedItemsContext";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { SavedItemsList } from "./SavedItemsList";
 import { PWAInstallGuide } from "./PWAInstallGuide";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ interface SavedItemsPanelProps {
 }
 
 export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [showPWABanner, setShowPWABanner] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -67,11 +69,11 @@ export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
                   <Bookmark className="h-6 w-6 text-accent-saved fill-current" />
                   <div>
                     <h2 className="text-lg font-semibold text-text-primary">
-                      Të Ruajturat
+                      {t("saved.savedItems")}
                     </h2>
                     {savedCount > 0 && (
                       <p className="text-xs text-text-secondary">
-                        {savedCount} {savedCount === 1 ? "rezultat" : "rezultate"}
+                        {savedCount} {savedCount === 1 ? t("saved.result") : t("saved.results")}
                       </p>
                     )}
                   </div>
@@ -104,10 +106,10 @@ export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium text-text-primary text-sm mb-1">
-                      Akseso offline
+                      {t("saved.accessOffline")}
                     </h3>
                     <p className="text-xs text-text-secondary mb-3">
-                      Instalo si aplikacion për të parë të ruajturat pa internet.
+                      {t("saved.installForOffline")}
                     </p>
                     <PWAInstallGuide />
                   </div>

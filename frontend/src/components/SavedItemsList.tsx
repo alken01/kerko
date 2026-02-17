@@ -2,6 +2,7 @@
 
 import { Bookmark, User, Banknote, Car, Users } from "lucide-react";
 import { useSavedItems } from "@/contexts/SavedItemsContext";
+import { useTranslation } from "@/i18n/TranslationContext";
 import {
   PatronazhistResponse,
   PersonResponse,
@@ -18,27 +19,31 @@ interface SavedItemsListProps {
   onNameClick: (emri: string, mbiemri: string) => void;
 }
 
-const typeConfig: Record<SavedItemType, { label: string; icon: typeof User }> = {
-  person: { label: "Persona", icon: User },
-  rrogat: { label: "Paga", icon: Banknote },
-  targat: { label: "Targa", icon: Car },
-  patronazhist: { label: "Patronazhist", icon: Users },
-};
-
 export function SavedItemsList({ onNameClick }: SavedItemsListProps) {
+  const { t } = useTranslation();
   const { savedItems } = useSavedItems();
 
+  const typeConfig: Record<SavedItemType, { label: string; icon: typeof User }> = {
+    person: { label: t("saved.people"), icon: User },
+    rrogat: { label: t("saved.salary"), icon: Banknote },
+    targat: { label: t("saved.plate"), icon: Car },
+    patronazhist: { label: t("saved.patron"), icon: Users },
+  };
+
   if (savedItems.length === 0) {
+    const saveHintText = t("saved.saveHint");
+    const parts = saveHintText.split("{icon}");
+
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-16 h-16 rounded-xl bg-surface-secondary flex items-center justify-center mb-5">
           <Bookmark className="h-8 w-8 text-accent-saved" />
         </div>
         <h3 className="text-lg font-medium text-text-primary mb-2">
-          Asnjë e ruajtur
+          {t("saved.nothingSaved")}
         </h3>
         <p className="text-text-secondary text-sm max-w-xs leading-relaxed">
-          Shtypni ikonën <Bookmark className="inline h-4 w-4 mx-0.5 text-accent-saved" /> në rezultate për t&apos;i ruajtur këtu.
+          {parts[0]}<Bookmark className="inline h-4 w-4 mx-0.5 text-accent-saved" />{parts[1]}
         </p>
       </div>
     );

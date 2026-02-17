@@ -1,10 +1,10 @@
-// API error messages
-export const RATE_LIMIT_ERROR_MESSAGE = "Qetsohu cik mplak, prit pak edhe provo prap";
-export const NO_RESULTS_MESSAGE = "Nuk u gjet asnjë rezultat";
-export const SEARCH_ERROR_MESSAGE = "Pati një problem gjatë kërkimit";
-export const PERSON_SEARCH_ERROR = "Pati një problem gjatë kërkimit të personit";
-export const PLATE_SEARCH_ERROR = "Pati një problem gjatë kërkimit të targës";
-export const PHONE_SEARCH_ERROR = "Pati një problem gjatë kërkimit të telefonit";
+// API error translation keys (resolved via useTranslation in components)
+export const RATE_LIMIT_ERROR_KEY = "errors.rateLimit";
+export const NO_RESULTS_KEY = "errors.noResults";
+export const SEARCH_ERROR_KEY = "errors.search";
+export const PERSON_SEARCH_ERROR_KEY = "errors.personSearch";
+export const PLATE_SEARCH_ERROR_KEY = "errors.plateSearch";
+export const PHONE_SEARCH_ERROR_KEY = "errors.phoneSearch";
 
 // API headers
 export const NGROK_HEADER = { 'ngrok-skip-browser-warning': 'true' };

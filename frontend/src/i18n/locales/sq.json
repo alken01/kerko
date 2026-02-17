@@ -1,0 +1,121 @@
+{
+  "app": {
+    "title": "Kërko",
+    "loading": "Loading..."
+  },
+  "search": {
+    "nameTab": "Emri",
+    "plateTab": "Targa",
+    "phoneTab": "Telefon",
+    "firstName": "Emri",
+    "lastName": "Mbiemri",
+    "clear": "Pastro",
+    "submit": "Kërko",
+    "searching": "Duke kërkuar...",
+    "maidenNameHint": "Shënim: Rezultatet mund të mos jenë të sakta — mbiemri i vajzërisë mund të jetë i ndryshëm."
+  },
+  "results": {
+    "people": "Persona",
+    "salaries": "Rrogat",
+    "plates": "Targat",
+    "patrons": "Patronazhistë",
+    "noExactResults": "Nuk u gjet rezultat ekzakt. Rezultate te ngjashme:",
+    "similarResults": "Rezultate te ngjashme"
+  },
+  "person": {
+    "born": "Lindur",
+    "placeOfBirth": "Vendlindja",
+    "city": "Qyteti",
+    "personalInfo": "Informacion Personal",
+    "address": "Adresa",
+    "fathersName": "Emri i Babait",
+    "mothersName": "Emri i Nënës",
+    "nationality": "Kombësia",
+    "gender": "Gjinia",
+    "female": "Femër",
+    "male": "Mashkull",
+    "maritalStatus": "Gjendja Martesore",
+    "headOfHousehold": "Lidhja me Kryefamiljarin"
+  },
+  "salary": {
+    "personalNumber": "Numri Personal",
+    "profession": "Profesioni",
+    "financialInfo": "Informacion Financiar",
+    "nipt": "NIPT",
+    "drt": "DRT",
+    "grossSalary": "Paga Bruto",
+    "category": "Kategoria"
+  },
+  "plate": {
+    "personalNumber": "Numri Personal",
+    "licensePlate": "Targa",
+    "vehicleInfo": "Informacion i Automjetit",
+    "brand": "Marka",
+    "model": "Modeli",
+    "color": "Ngjyra",
+    "searchOwner": "Kërko Pronarin"
+  },
+  "patron": {
+    "personalNumber": "Numri Personal",
+    "placeOfBirth": "Vendlindja",
+    "born": "Lindur",
+    "personalInfo": "Informacion Personal",
+    "fathersName": "Emri i Babait",
+    "residenceCode": "Kod Banese",
+    "phone": "Telefoni",
+    "preference": "Preferenca",
+    "securePreference": "Preferenca e Sigurte",
+    "census2013Preference": "Preferenca Census 2013",
+    "census2013Security": "Siguria Census 2013",
+    "comment": "Koment",
+    "patronazhist": "Patronazhisti",
+    "qv": "QV",
+    "listNumber": "Numri i Listës",
+    "company": "Kompania",
+    "emigrant": "Emigrant",
+    "emigrationCountry": "Vendi i Emigrimit"
+  },
+  "saved": {
+    "savedItems": "Të Ruajturat",
+    "result": "rezultat",
+    "results": "rezultate",
+    "accessOffline": "Akseso offline",
+    "installForOffline": "Instalo si aplikacion për të parë të ruajturat pa internet.",
+    "people": "Persona",
+    "salary": "Paga",
+    "plate": "Targa",
+    "patron": "Patronazhist",
+    "nothingSaved": "Asnjë e ruajtur",
+    "saveHint": "Shtypni ikonën {icon} në rezultate për t'i ruajtur këtu.",
+    "removedFromSaved": "U hoq nga të ruajturat",
+    "wasSaved": "u ruajt",
+    "removeFromSaved": "Hiq nga të ruajturat",
+    "save": "Ruaj"
+  },
+  "pagination": {
+    "previous": "← Para",
+    "next": "Pas →"
+  },
+  "offline": {
+    "youAreOffline": "Jeni offline",
+    "showSaved": "Shfaq të ruajturat"
+  },
+  "pwa": {
+    "install": "Instalo",
+    "installApp": "Instalo aplikacionin",
+    "safariStep1": "Shtyp {icon} në Safari",
+    "safariStep2": "Zgjidh {icon} \"Add to Home Screen\"",
+    "chromeStep1": "Shtyp menunë (⋮) në Chrome",
+    "chromeStep2": "Zgjidh \"Install app\"",
+    "gotIt": "E kuptova",
+    "installForOfflineAccess": "Instalo aplikacionin për akses offline"
+  },
+  "errors": {
+    "rateLimit": "Qetsohu cik mplak, prit pak edhe provo prap",
+    "noResults": "Nuk u gjet asnjë rezultat",
+    "search": "Pati një problem gjatë kërkimit",
+    "personSearch": "Pati një problem gjatë kërkimit të personit",
+    "plateSearch": "Pati një problem gjatë kërkimit të targës",
+    "phoneSearch": "Pati një problem gjatë kërkimit të telefonit"
+  }
+}

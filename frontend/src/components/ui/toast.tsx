@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { Bookmark, X, Smartphone } from "lucide-react";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { cn } from "@/lib/utils";
 
 interface Toast {
@@ -18,6 +19,7 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback(
@@ -75,7 +77,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 {toast.showPWAHint && (
                   <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
                     <Smartphone className="h-3 w-3" />
-                    Instalo aplikacionin për akses offline
+                    {t("pwa.installForOfflineAccess")}
                   </p>
                 )}
               </div>

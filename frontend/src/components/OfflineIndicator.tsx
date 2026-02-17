@@ -1,6 +1,7 @@
 "use client";
 
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { WifiOff } from "lucide-react";
 
 interface OfflineIndicatorProps {
@@ -8,6 +9,7 @@ interface OfflineIndicatorProps {
 }
 
 export function OfflineIndicator({ onShowSaved }: OfflineIndicatorProps) {
+  const { t } = useTranslation();
   const isOnline = useOnlineStatus();
 
   if (isOnline) {
@@ -17,7 +19,7 @@ export function OfflineIndicator({ onShowSaved }: OfflineIndicatorProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-amber-500 text-amber-950 py-2 px-4 flex items-center justify-center gap-2 text-sm font-medium">
       <WifiOff className="h-4 w-4" />
-      <span>Jeni offline</span>
+      <span>{t("offline.youAreOffline")}</span>
       {onShowSaved && (
         <>
           <span>-</span>
@@ -25,7 +27,7 @@ export function OfflineIndicator({ onShowSaved }: OfflineIndicatorProps) {
             onClick={onShowSaved}
             className="underline hover:no-underline font-semibold"
           >
-            Shfaq të ruajturat
+            {t("offline.showSaved")}
           </button>
         </>
       )}

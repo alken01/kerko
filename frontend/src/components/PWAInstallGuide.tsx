@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Download, X, Smartphone, Share, Plus } from "lucide-react";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { cn } from "@/lib/utils";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -10,6 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PWAInstallGuide() {
+  const { t } = useTranslation();
   const [showGuide, setShowGuide] = useState(false);
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
@@ -54,6 +56,12 @@ export function PWAInstallGuide() {
     return null;
   }
 
+  const safariStep1Text = t("pwa.safariStep1");
+  const safariStep1Parts = safariStep1Text.split("{icon}");
+
+  const safariStep2Text = t("pwa.safariStep2");
+  const safariStep2Parts = safariStep2Text.split("{icon}");
+
   return (
     <>
       <button
@@ -66,7 +74,7 @@ export function PWAInstallGuide() {
         )}
       >
         <Download className="h-3.5 w-3.5" />
-        <span>Instalo</span>
+        <span>{t("pwa.install")}</span>
       </button>
 
       {showGuide && (
@@ -75,7 +83,7 @@ export function PWAInstallGuide() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
                 <Smartphone className="h-4 w-4" />
-                Instalo aplikacionin
+                {t("pwa.installApp")}
               </h3>
               <button
                 onClick={() => setShowGuide(false)}
@@ -93,7 +101,7 @@ export function PWAInstallGuide() {
                       1
                     </span>
                     <span>
-                      Shtyp <Share className="inline h-3.5 w-3.5 text-blue-500" /> në Safari
+                      {safariStep1Parts[0]}<Share className="inline h-3.5 w-3.5 text-blue-500" />{safariStep1Parts[1]}
                     </span>
                   </li>
                   <li className="flex items-center gap-2">
@@ -101,7 +109,7 @@ export function PWAInstallGuide() {
                       2
                     </span>
                     <span>
-                      Zgjidh <Plus className="inline h-3.5 w-3.5" /> &quot;Add to Home Screen&quot;
+                      {safariStep2Parts[0]}<Plus className="inline h-3.5 w-3.5" />{safariStep2Parts[1]}
                     </span>
                   </li>
                 </ol>
@@ -111,13 +119,13 @@ export function PWAInstallGuide() {
                     <span className="flex-shrink-0 w-5 h-5 rounded-full bg-surface-interactive flex items-center justify-center text-xs font-medium">
                       1
                     </span>
-                    <span>Shtyp menunë (⋮) në Chrome</span>
+                    <span>{t("pwa.chromeStep1")}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="flex-shrink-0 w-5 h-5 rounded-full bg-surface-interactive flex items-center justify-center text-xs font-medium">
                       2
                     </span>
-                    <span>Zgjidh &quot;Install app&quot;</span>
+                    <span>{t("pwa.chromeStep2")}</span>
                   </li>
                 </ol>
               )}
@@ -131,7 +139,7 @@ export function PWAInstallGuide() {
                 "hover:bg-surface-interactive transition-colors"
               )}
             >
-              E kuptova
+              {t("pwa.gotIt")}
             </button>
           </div>
         </div>

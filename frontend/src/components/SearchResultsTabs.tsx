@@ -4,6 +4,7 @@ import {
   TargatSearchResponse,
   TabType,
 } from "@/types/kerko";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { Pagination } from "./Pagination";
@@ -49,6 +50,7 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
   searchTerms?: { emri: string; mbiemri: string };
   renderItem: (item: T, index: number) => React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const [showSimilar, setShowSimilar] = useState(true);
 
   if (!items || items.length === 0) return null;
@@ -77,7 +79,7 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
     return (
       <div className="space-y-3 animate-in fade-in duration-200">
         <p className="text-sm text-text-tertiary text-center">
-          Nuk u gjet rezultat ekzakt. Rezultate te ngjashme:
+          {t("results.noExactResults")}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {similar.map((item, index) => renderItem(item, index))}
@@ -98,7 +100,7 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
       >
         <div className="flex-1 h-px bg-border-semantic-secondary" />
         <span className="text-sm text-text-tertiary group-hover:text-text-secondary transition-colors flex items-center gap-1">
-          Rezultate te ngjashme ({similar.length})
+          {t("results.similarResults")} ({similar.length})
           {showSimilar ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -159,15 +161,17 @@ export function SearchResultsTabs({
   isTelefonSearch,
   searchTerms,
 }: SearchResultsTabsProps) {
+  const { t } = useTranslation();
+
   const tabs = isTargaSearch
-    ? [{ value: "targat", label: "Targat" }]
+    ? [{ value: "targat", label: t("results.plates") }]
     : isTelefonSearch
-    ? [{ value: "patronazhist", label: "Patronazhistë" }]
+    ? [{ value: "patronazhist", label: t("results.patrons") }]
     : [
-        { value: "person", label: "Persona" },
-        { value: "rrogat", label: "Rrogat" },
-        { value: "targat", label: "Targat" },
-        { value: "patronazhist", label: "Patronazhistë" },
+        { value: "person", label: t("results.people") },
+        { value: "rrogat", label: t("results.salaries") },
+        { value: "targat", label: t("results.plates") },
+        { value: "patronazhist", label: t("results.patrons") },
       ];
 
   const getCurrentPagination = () => {
