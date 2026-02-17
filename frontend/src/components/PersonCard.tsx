@@ -12,6 +12,8 @@ interface PersonCardProps {
 
 export function PersonCard({ person }: PersonCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isMarriedWoman = person.seksi === "F" && person.gjendjeCivile?.toLowerCase().includes("martuar");
+  const parentLinkHint = isMarriedWoman ? "&hint=mbiemri" : "";
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
@@ -86,7 +88,7 @@ export function PersonCard({ person }: PersonCardProps) {
                   value={
                     person.atesi ? (
                       <Link
-                        href={`/?emri=${encodeURIComponent(person.atesi)}&mbiemri=${encodeURIComponent(person.mbiemri || "")}`}
+                        href={`/?emri=${encodeURIComponent(person.atesi)}&mbiemri=${encodeURIComponent(person.mbiemri || "")}${parentLinkHint}`}
                         className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
                       >
                         {person.atesi}
@@ -101,7 +103,7 @@ export function PersonCard({ person }: PersonCardProps) {
                   value={
                     person.amesi ? (
                       <Link
-                        href={`/?emri=${encodeURIComponent(person.amesi)}&mbiemri=${encodeURIComponent(person.mbiemri || "")}`}
+                        href={`/?emri=${encodeURIComponent(person.amesi)}&mbiemri=${encodeURIComponent(person.mbiemri || "")}${parentLinkHint}`}
                         className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
                       >
                         {person.amesi}

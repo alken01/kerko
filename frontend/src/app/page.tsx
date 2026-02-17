@@ -30,6 +30,7 @@ function SearchContent() {
     type: 'person' | 'targa' | 'telefon';
     terms: string[];
   } | null>(null);
+  const [maidenNameHint, setMaidenNameHint] = useState(false);
 
   // Handle URL parameters on initial load
   useEffect(() => {
@@ -37,6 +38,9 @@ function SearchContent() {
     const mbiemri = searchParams.get("mbiemri");
     const targa = searchParams.get("targa");
     const telefon = searchParams.get("telefon");
+    const hint = searchParams.get("hint");
+
+    setMaidenNameHint(hint === "mbiemri");
 
     if (targa) {
       handleSearchTarga(targa);
@@ -52,6 +56,7 @@ function SearchContent() {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
+    if (page === 1 && !searchParams.get("hint")) setMaidenNameHint(false);
     setIsTargaSearch(false);
     setIsTelefonSearch(false);
     setActiveTab("person");
@@ -150,6 +155,16 @@ function SearchContent() {
         >
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {maidenNameHint && searchResults && (
+        <div className="flex justify-center">
+          <div className="w-fit rounded-lg border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20 px-4 py-2 text-center">
+            <p className="text-yellow-800 dark:text-yellow-200 text-xs">
+              Shënim: Rezultatet mund të mos jenë të sakta — mbiemri i vajzërisë mund të jetë i ndryshëm.
+            </p>
+          </div>
+        </div>
       )}
 
       {searchResults && (
