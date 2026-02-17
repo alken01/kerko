@@ -75,7 +75,7 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
                   value={
                     patronazhist.atesi ? (
                       <Link
-                        href={`/?emri=${encodeURIComponent(patronazhist.atesi)}&mbiemri=${encodeURIComponent(patronazhist.mbiemri)}`}
+                        href={`/?emri=${encodeURIComponent(patronazhist.atesi)}&mbiemri=${encodeURIComponent(patronazhist.mbiemri || "")}`}
                         className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
                       >
                         {patronazhist.atesi}

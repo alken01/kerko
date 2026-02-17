@@ -161,6 +161,7 @@ function SearchContent() {
           onPageChange={handlePageChange}
           isTargaSearch={isTargaSearch}
           isTelefonSearch={isTelefonSearch}
+          searchTerms={currentSearchTerms?.type === 'person' ? { emri: currentSearchTerms.terms[0], mbiemri: currentSearchTerms.terms[1] } : undefined}
         />
       )}
 

@@ -341,7 +341,29 @@ public class SearchService : ISearchService
 
         var whereExpression = Expression.Lambda<Func<TEntity, bool>>(combinedCondition, param);
 
-        var query = dbSet.AsNoTracking().Where(whereExpression);
+        // Order by relevance: exact match (0) > starts with (1) > contains (2)
+        var equalsEmri = Expression.Equal(normalizedEmriBody, Expression.Constant(emri));
+        var equalsMbiemri = Expression.Equal(normalizedMbiemriBody, Expression.Constant(mbiemri));
+        var isExactMatch = Expression.AndAlso(equalsEmri, equalsMbiemri);
+
+        var startsWithEmriPattern = $"{emri}%";
+        var startsWithMbiemriPattern = $"{mbiemri}%";
+        var startsWithEmriLike = Expression.Call(likeMethod, efFunctions, normalizedEmriBody, Expression.Constant(startsWithEmriPattern));
+        var startsWithMbiemriLike = Expression.Call(likeMethod, efFunctions, normalizedMbiemriBody, Expression.Constant(startsWithMbiemriPattern));
+        var isStartsWith = Expression.AndAlso(startsWithEmriLike, startsWithMbiemriLike);
+
+        var orderExpression = Expression.Condition(
+            isExactMatch,
+            Expression.Constant(0),
+            Expression.Condition(
+                isStartsWith,
+                Expression.Constant(1),
+                Expression.Constant(2)
+            )
+        );
+        var orderLambda = Expression.Lambda<Func<TEntity, int>>(orderExpression, param);
+
+        var query = dbSet.AsNoTracking().Where(whereExpression).OrderBy(orderLambda);
 
         var totalItems = await query.CountAsync();
 

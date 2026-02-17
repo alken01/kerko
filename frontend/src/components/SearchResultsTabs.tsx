@@ -4,11 +4,118 @@ import {
   TargatSearchResponse,
   TabType,
 } from "@/types/kerko";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 import { Pagination } from "./Pagination";
 import { PatronazhistCard } from "./PatronazhistCard";
 import { PersonCard } from "./PersonCard";
 import { RrogatCard } from "./RrogatCard";
 import { TargatCard } from "./TargatCard";
+
+function normalizeAlbanian(str: string): string {
+  return str.toLowerCase().replace(/ç/g, "c").replace(/ë/g, "e");
+}
+
+function splitByRelevance<T extends { emri: string | null; mbiemri: string | null }>(
+  items: T[],
+  searchEmri: string,
+  searchMbiemri: string
+): { exact: T[]; similar: T[] } {
+  const normEmri = normalizeAlbanian(searchEmri);
+  const normMbiemri = normalizeAlbanian(searchMbiemri);
+
+  const exact: T[] = [];
+  const similar: T[] = [];
+
+  for (const item of items) {
+    const itemEmri = normalizeAlbanian(item.emri || "");
+    const itemMbiemri = normalizeAlbanian(item.mbiemri || "");
+    if (itemEmri === normEmri && itemMbiemri === normMbiemri) {
+      exact.push(item);
+    } else {
+      similar.push(item);
+    }
+  }
+
+  return { exact, similar };
+}
+
+function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | null }>({
+  items,
+  searchTerms,
+  renderItem,
+}: {
+  items: T[] | undefined;
+  searchTerms?: { emri: string; mbiemri: string };
+  renderItem: (item: T, index: number) => React.ReactNode;
+}) {
+  const [showSimilar, setShowSimilar] = useState(true);
+
+  if (!items || items.length === 0) return null;
+
+  // If no search terms (e.g. targa/telefon search), render all items flat
+  if (!searchTerms) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
+        {items.map((item, index) => renderItem(item, index))}
+      </div>
+    );
+  }
+
+  const { exact, similar } = splitByRelevance(items, searchTerms.emri, searchTerms.mbiemri);
+
+  // If all results are exact or all are similar, render flat
+  if (similar.length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
+        {exact.map((item, index) => renderItem(item, index))}
+      </div>
+    );
+  }
+
+  if (exact.length === 0) {
+    return (
+      <div className="space-y-3 animate-in fade-in duration-200">
+        <p className="text-sm text-text-tertiary text-center">
+          Nuk u gjet rezultat ekzakt. Rezultate te ngjashme:
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          {similar.map((item, index) => renderItem(item, index))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 animate-in fade-in duration-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        {exact.map((item, index) => renderItem(item, index))}
+      </div>
+
+      <button
+        onClick={() => setShowSimilar(!showSimilar)}
+        className="w-full flex items-center gap-2 py-2 group"
+      >
+        <div className="flex-1 h-px bg-border-semantic-secondary" />
+        <span className="text-sm text-text-tertiary group-hover:text-text-secondary transition-colors flex items-center gap-1">
+          Rezultate te ngjashme ({similar.length})
+          {showSimilar ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </span>
+        <div className="flex-1 h-px bg-border-semantic-secondary" />
+      </button>
+
+      {showSimilar && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
+          {similar.map((item, index) => renderItem(item, exact.length + index))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type SearchResultsType = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse;
 
@@ -39,6 +146,7 @@ interface SearchResultsTabsProps {
   onPageChange: (page: number) => void;
   isTargaSearch: boolean;
   isTelefonSearch: boolean;
+  searchTerms?: { emri: string; mbiemri: string };
 }
 
 export function SearchResultsTabs({
@@ -49,6 +157,7 @@ export function SearchResultsTabs({
   onPageChange,
   isTargaSearch,
   isTelefonSearch,
+  searchTerms,
 }: SearchResultsTabsProps) {
   const tabs = isTargaSearch
     ? [{ value: "targat", label: "Targat" }]
@@ -112,65 +221,49 @@ export function SearchResultsTabs({
       </div>
 
       <div className="relative overflow-hidden">
-        {activeTab === "person" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
-            {isSearchResponse(searchResults) &&
-              searchResults.person?.items?.map((person, index) => (
-                <PersonCard key={index} person={person} />
-              ))}
-          </div>
+        {activeTab === "person" && isSearchResponse(searchResults) && (
+          <GroupedResultsGrid
+            items={searchResults.person?.items}
+            searchTerms={searchTerms}
+            renderItem={(person, index) => <PersonCard key={index} person={person} />}
+          />
         )}
-        {activeTab === "rrogat" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
-            {isSearchResponse(searchResults) &&
-              searchResults.rrogat?.items?.map((rrogat, index) => (
-                <RrogatCard key={index} rrogat={rrogat} />
-              ))}
-          </div>
+        {activeTab === "rrogat" && isSearchResponse(searchResults) && (
+          <GroupedResultsGrid
+            items={searchResults.rrogat?.items}
+            searchTerms={searchTerms}
+            renderItem={(rrogat, index) => <RrogatCard key={index} rrogat={rrogat} />}
+          />
         )}
         {activeTab === "targat" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
-            {(() => {
-              if (isTargaSearch && hasDirectItems(searchResults)) {
-                return asTargatResponse(searchResults).items?.map((targat, index) => (
-                  <TargatCard
-                    key={index}
-                    targat={targat}
-                    onNameClick={onNameClick}
-                  />
-                ));
-              }
-              if (isSearchResponse(searchResults)) {
-                return searchResults.targat?.items?.map((targat, index) => (
-                  <TargatCard
-                    key={index}
-                    targat={targat}
-                    onNameClick={onNameClick}
-                  />
-                ));
-              }
-              return null;
-            })()}
-          </div>
+          <GroupedResultsGrid
+            items={
+              isTargaSearch && hasDirectItems(searchResults)
+                ? asTargatResponse(searchResults).items
+                : isSearchResponse(searchResults)
+                ? searchResults.targat?.items
+                : undefined
+            }
+            searchTerms={searchTerms}
+            renderItem={(targat, index) => (
+              <TargatCard key={index} targat={targat} onNameClick={onNameClick} />
+            )}
+          />
         )}
         {activeTab === "patronazhist" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
-            {(() => {
-              if (isTelefonSearch && hasDirectItems(searchResults)) {
-                return asPatronazhistResponse(searchResults).items?.map((patronazhist, index) => (
-                  <PatronazhistCard key={index} patronazhist={patronazhist} />
-                ));
-              }
-              if (isSearchResponse(searchResults)) {
-                return searchResults.patronazhist?.items?.map(
-                  (patronazhist, index) => (
-                    <PatronazhistCard key={index} patronazhist={patronazhist} />
-                  )
-                );
-              }
-              return null;
-            })()}
-          </div>
+          <GroupedResultsGrid
+            items={
+              isTelefonSearch && hasDirectItems(searchResults)
+                ? asPatronazhistResponse(searchResults).items
+                : isSearchResponse(searchResults)
+                ? searchResults.patronazhist?.items
+                : undefined
+            }
+            searchTerms={searchTerms}
+            renderItem={(patronazhist, index) => (
+              <PatronazhistCard key={index} patronazhist={patronazhist} />
+            )}
+          />
         )}
       </div>
 
