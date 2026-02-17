@@ -51,8 +51,8 @@ public class SearchService : ISearchService
 
             (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
 
-            var normalizedMbiemri = mbiemri.ToLower().Trim();
-            var normalizedEmri = emri.ToLower().Trim();
+            var normalizedMbiemri = NormalizeAlbanian(mbiemri);
+            var normalizedEmri = NormalizeAlbanian(emri);
 
             var personTask = SearchByNameAsync(
                 _db.Person,
@@ -316,6 +316,10 @@ public class SearchService : ISearchService
         var mbiemriBody = new ParameterReplacer(mbiemriSelector.Parameters[0], param)
             .Visit(mbiemriSelector.Body);
 
+        // Normalize column expressions: LOWER(REPLACE(REPLACE(col, 'ç', 'c'), 'ë', 'e'))
+        var normalizedEmriBody = NormalizeAlbanianExpression(emriBody);
+        var normalizedMbiemriBody = NormalizeAlbanianExpression(mbiemriBody);
+
         var emriPattern = $"%{emri}%";
         var mbiemriPattern = $"%{mbiemri}%";
 
@@ -325,8 +329,8 @@ public class SearchService : ISearchService
 
         var efFunctions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
 
-        var emriLike = Expression.Call(likeMethod, efFunctions, emriBody, Expression.Constant(emriPattern));
-        var mbiemriLike = Expression.Call(likeMethod, efFunctions, mbiemriBody, Expression.Constant(mbiemriPattern));
+        var emriLike = Expression.Call(likeMethod, efFunctions, normalizedEmriBody, Expression.Constant(emriPattern));
+        var mbiemriLike = Expression.Call(likeMethod, efFunctions, normalizedMbiemriBody, Expression.Constant(mbiemriPattern));
 
         var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
         var mbiemriNotNull = Expression.NotEqual(mbiemriBody, Expression.Constant(null, typeof(string)));
@@ -357,6 +361,33 @@ public class SearchService : ISearchService
                 TotalItems = totalItems
             }
         };
+    }
+
+    /// <summary>
+    /// Normalizes Albanian diacritics in a search string: ç→c, ë→e
+    /// </summary>
+    private static string NormalizeAlbanian(string input)
+    {
+        return input.ToLower().Trim()
+            .Replace("ç", "c")
+            .Replace("ë", "e");
+    }
+
+    /// <summary>
+    /// Wraps a string expression with ToLower + Replace calls for Albanian diacritics,
+    /// so the DB column values are normalized before LIKE comparison.
+    /// Translates to: LOWER(REPLACE(REPLACE(col, 'ç', 'c'), 'ë', 'e'))
+    /// </summary>
+    private static Expression NormalizeAlbanianExpression(Expression stringExpr)
+    {
+        var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes)!;
+        var replaceMethod = typeof(string).GetMethod("Replace", [typeof(string), typeof(string)])!;
+
+        var result = Expression.Call(stringExpr, toLowerMethod);
+        result = Expression.Call(result, replaceMethod, Expression.Constant("ç"), Expression.Constant("c"));
+        result = Expression.Call(result, replaceMethod, Expression.Constant("ë"), Expression.Constant("e"));
+
+        return result;
     }
 
     private class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam)
