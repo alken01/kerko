@@ -3,6 +3,7 @@ import { cardStyles, DetailRow, InfoItem } from "@/components/ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
 import { PersonResponse } from "@/types/kerko";
 import { Calendar, ChevronDown, ChevronUp, Home, MapPin, User } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 interface PersonCardProps {
@@ -80,8 +81,36 @@ export function PersonCard({ person }: PersonCardProps) {
                       : person.adresa || person.nrBaneses || "N/A"
                   }
                 />
-                <DetailRow label="Emri i Babait" value={person.atesi || "N/A"} />
-                <DetailRow label="Emri i Nënës" value={person.amesi || "N/A"} />
+                <DetailRow
+                  label="Emri i Babait"
+                  value={
+                    person.atesi ? (
+                      <Link
+                        href={`/?emri=${encodeURIComponent(person.atesi)}&mbiemri=${encodeURIComponent(person.mbiemri)}`}
+                        className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
+                      >
+                        {person.atesi}
+                      </Link>
+                    ) : (
+                      "N/A"
+                    )
+                  }
+                />
+                <DetailRow
+                  label="Emri i Nënës"
+                  value={
+                    person.amesi ? (
+                      <Link
+                        href={`/?emri=${encodeURIComponent(person.amesi)}&mbiemri=${encodeURIComponent(person.mbiemri)}`}
+                        className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
+                      >
+                        {person.amesi}
+                      </Link>
+                    ) : (
+                      "N/A"
+                    )
+                  }
+                />
                 <DetailRow label="Kombësia" value={person.kombesia || "N/A"} />
                 <DetailRow
                   label="Gjinia"

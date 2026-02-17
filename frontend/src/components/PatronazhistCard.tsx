@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
+import Link from "next/link";
 import { useState } from "react";
 
 interface PatronazhistCardProps {
@@ -71,7 +72,18 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
               <div className={cardStyles.detailsGrid}>
                 <DetailRow
                   label="Emri i Babait"
-                  value={patronazhist.atesi || "N/A"}
+                  value={
+                    patronazhist.atesi ? (
+                      <Link
+                        href={`/?emri=${encodeURIComponent(patronazhist.atesi)}&mbiemri=${encodeURIComponent(patronazhist.mbiemri)}`}
+                        className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
+                      >
+                        {patronazhist.atesi}
+                      </Link>
+                    ) : (
+                      "N/A"
+                    )
+                  }
                 />
                 <DetailRow
                   label="Kod Banese"
