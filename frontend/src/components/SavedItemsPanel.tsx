@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bookmark, X, Smartphone } from "lucide-react";
 import { useSavedItems } from "@/contexts/SavedItemsContext";
 import { useTranslation } from "@/i18n/TranslationContext";
@@ -15,6 +15,20 @@ export function SavedItemsPanel() {
   const [showPWABanner, setShowPWABanner] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const { savedCount } = useSavedItems();
+
+  const touchStartY = useRef<number | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const delta = e.changedTouches[0].clientY - touchStartY.current;
+    if (delta > 60) handleClose();
+    touchStartY.current = null;
+  };
 
   useEffect(() => {
     // Check if already running as PWA
@@ -76,7 +90,11 @@ export function SavedItemsPanel() {
           />
 
           {/* Panel — bottom sheet on mobile, side drawer on desktop */}
-          <div className={cn(
+          <div
+            ref={panelRef}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className={cn(
             "fixed z-50 bg-surface-primary flex flex-col overflow-hidden",
             "border-border-semantic-secondary",
             // Mobile: slide up from bottom
