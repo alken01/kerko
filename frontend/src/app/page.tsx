@@ -121,11 +121,6 @@ function SearchContent() {
     }
   };
 
-  const handleNameClick = (emri: string, mbiemri: string) => {
-    setSearchFormData({ emri, mbiemri });
-    handleSearch(emri, mbiemri);
-  };
-
   const handleClear = () => {
     setSearchResults(null);
     setError(null);
@@ -159,7 +154,7 @@ function SearchContent() {
         />
       </div>
 
-      {isLoading && <SkeletonGrid count={4} />}
+      {isLoading && <SkeletonGrid count={4} isTargaSearch={isTargaSearch} isTelefonSearch={isTelefonSearch} />}
 
       {error && !isLoading && (
         <Alert
@@ -185,7 +180,6 @@ function SearchContent() {
           searchResults={searchResults}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onNameClick={handleNameClick}
           onPageChange={handlePageChange}
           isTargaSearch={isTargaSearch}
           isTelefonSearch={isTelefonSearch}
@@ -193,7 +187,7 @@ function SearchContent() {
         />
       )}
 
-      <SavedItemsPanel onNameClick={handleNameClick} />
+      <SavedItemsPanel />
     </>
   );
 }

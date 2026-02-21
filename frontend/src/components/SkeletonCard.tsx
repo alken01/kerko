@@ -1,6 +1,9 @@
+"use client";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cardStyles } from "@/components/ui/card-styles";
+import { useTranslation } from "@/i18n/TranslationContext";
 
 export function SkeletonCard() {
   return (
@@ -24,13 +27,39 @@ export function SkeletonCard() {
   );
 }
 
-export function SkeletonGrid({ count = 4 }: { count?: number }) {
+export function SkeletonGrid({
+  count = 4,
+  isTargaSearch = false,
+  isTelefonSearch = false,
+}: {
+  count?: number;
+  isTargaSearch?: boolean;
+  isTelefonSearch?: boolean;
+}) {
+  const { t } = useTranslation();
+
+  const tabs = isTargaSearch
+    ? [t("results.plates")]
+    : isTelefonSearch
+    ? [t("results.patrons")]
+    : [t("results.people"), t("results.salaries"), t("results.plates"), t("results.patrons")];
+
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-      {/* Skeleton tabs */}
-      <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="flex-1 h-8 rounded-md" />
+      {/* Tabs with real labels, skeleton count badge */}
+      <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary overflow-x-auto">
+        {tabs.map((label, i) => (
+          <div
+            key={i}
+            className={`flex-1 flex-shrink-0 min-w-fit px-3 py-2 text-xs font-medium rounded-md flex items-center justify-center gap-1 ${
+              i === 0
+                ? "bg-surface-tertiary text-text-primary"
+                : "text-text-tertiary"
+            }`}
+          >
+            <span>{label}</span>
+            <Skeleton className="w-6 h-4 rounded-full" />
+          </div>
         ))}
       </div>
       {/* Skeleton cards */}

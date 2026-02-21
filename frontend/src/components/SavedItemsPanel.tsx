@@ -8,11 +8,7 @@ import { SavedItemsList } from "./SavedItemsList";
 import { PWAInstallGuide } from "./PWAInstallGuide";
 import { cn } from "@/lib/utils";
 
-interface SavedItemsPanelProps {
-  onNameClick: (emri: string, mbiemri: string) => void;
-}
-
-export function SavedItemsPanel({ onNameClick }: SavedItemsPanelProps) {
+export function SavedItemsPanel() {
   const { t, tn } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);

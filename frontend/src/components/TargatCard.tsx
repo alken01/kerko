@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Car, ChevronDown } from "lucide-react";
+import { Car, ChevronDown, CircleDot } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "./ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
 import { useTranslation } from "@/i18n/TranslationContext";

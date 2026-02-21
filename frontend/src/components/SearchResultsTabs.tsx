@@ -146,7 +146,6 @@ interface SearchResultsTabsProps {
     | PatronazhistSearchResponse;
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
-  onNameClick: (emri: string, mbiemri: string) => void;
   onPageChange: (page: number) => void;
   isTargaSearch: boolean;
   isTelefonSearch: boolean;
@@ -157,7 +156,6 @@ export function SearchResultsTabs({
   searchResults,
   activeTab,
   onTabChange,
-  onNameClick,
   onPageChange,
   isTargaSearch,
   isTelefonSearch,
