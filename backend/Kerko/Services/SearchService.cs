@@ -54,8 +54,7 @@ public class SearchService : ISearchService
             var normalizedMbiemri = NormalizeAlbanian(mbiemri);
             var normalizedEmri = NormalizeAlbanian(emri);
 
-            // Run queries sequentially — DbContext is not thread-safe
-            var person = await SearchByNameAsync(
+            var personTask = SearchByNameAsync(
                 _db.Person,
                 p => p.Emer,
                 p => p.Mbiemer,
@@ -77,7 +76,7 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var rrogat = await SearchByNameAsync(
+            var rrogatTask = SearchByNameAsync(
                 _db.Rrogat,
                 r => r.Emri,
                 r => r.Mbiemri,
@@ -94,7 +93,7 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var targat = await SearchByNameAsync(
+            var targatTask = SearchByNameAsync(
                 _db.Targat,
                 t => t.Emri,
                 t => t.Mbiemri,
@@ -110,7 +109,7 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var patronazhist = await SearchByNameAsync(
+            var patronazhistTask = SearchByNameAsync(
                 _db.Patronazhist,
                 p => p.Emri,
                 p => p.Mbiemri,
@@ -138,12 +137,14 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
+            await Task.WhenAll(personTask, rrogatTask, targatTask, patronazhistTask);
+
             return new SearchResponse
             {
-                Person = person,
-                Rrogat = rrogat,
-                Targat = targat,
-                Patronazhist = patronazhist
+                Person = await personTask,
+                Rrogat = await rrogatTask,
+                Targat = await targatTask,
+                Patronazhist = await patronazhistTask
             };
         }
         catch (Exception ex)
@@ -315,48 +316,37 @@ public class SearchService : ISearchService
         var mbiemriBody = new ParameterReplacer(mbiemriSelector.Parameters[0], param)
             .Visit(mbiemriSelector.Body);
 
-        // Use the 4-parameter Like overload to support ESCAPE clause
         var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
             nameof(DbFunctionsExtensions.Like),
-            [typeof(DbFunctions), typeof(string), typeof(string), typeof(string)])!;
+            [typeof(DbFunctions), typeof(string), typeof(string)])!;
 
         var efFunctions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
-        var escapeChar = Expression.Constant("\\");
 
-        // Normalize columns in SQL: lower → replace diacritics (both upper and lower)
-        // This replaces the old variant-explosion approach with a single normalization per column.
-        // e.g. "Çelë" → lower → "çelë" (lower doesn't handle Unicode) → replace ç→c, Ç→c, ë→e, Ë→e → "cele"
-        var normalizedEmri = BuildNormalizeExpression(emriBody);
-        var normalizedMbiemri = BuildNormalizeExpression(mbiemriBody);
+        // Generate all diacritic variants (e.g. "cela" → ["cela", "çela", "celë", "çelë"])
+        var emriVariants = GenerateAlbanianVariants(emri);
+        var mbiemriVariants = GenerateAlbanianVariants(mbiemri);
 
-        // Escape LIKE special characters in user input to prevent injection
-        var escapedEmri = EscapeLikePattern(emri);
-        var escapedMbiemri = EscapeLikePattern(mbiemri);
+        // Build OR chain: col LIKE '%var1%' OR col LIKE '%var2%' OR ...
+        var emriCondition = BuildOrLikeChain(likeMethod, efFunctions, emriBody, emriVariants, contains: true);
+        var mbiemriCondition = BuildOrLikeChain(likeMethod, efFunctions, mbiemriBody, mbiemriVariants, contains: true);
 
-        // WHERE: null checks + normalized columns contain normalized input
         var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
         var mbiemriNotNull = Expression.NotEqual(mbiemriBody, Expression.Constant(null, typeof(string)));
 
-        var emriContains = Expression.Call(likeMethod, efFunctions, normalizedEmri,
-            Expression.Constant($"%{escapedEmri}%"), escapeChar);
-        var mbiemriContains = Expression.Call(likeMethod, efFunctions, normalizedMbiemri,
-            Expression.Constant($"%{escapedMbiemri}%"), escapeChar);
-
         var combinedCondition = Expression.AndAlso(
             Expression.AndAlso(emriNotNull, mbiemriNotNull),
-            Expression.AndAlso(emriContains, mbiemriContains));
+            Expression.AndAlso(emriCondition, mbiemriCondition));
 
         var whereExpression = Expression.Lambda<Func<TEntity, bool>>(combinedCondition, param);
 
-        // ORDER BY relevance: exact match (0) > starts with (1) > contains (2)
-        var exactEmri = Expression.Equal(normalizedEmri, Expression.Constant(emri));
-        var exactMbiemri = Expression.Equal(normalizedMbiemri, Expression.Constant(mbiemri));
+        // Order by relevance: exact match (0) > starts with (1) > contains (2)
+        // Uses variant-based checks on raw columns — no per-row REPLACE
+        var exactEmri = BuildOrEqualityChain(emriBody, emriVariants);
+        var exactMbiemri = BuildOrEqualityChain(mbiemriBody, mbiemriVariants);
         var isExactMatch = Expression.AndAlso(exactEmri, exactMbiemri);
 
-        var startsWithEmri = Expression.Call(likeMethod, efFunctions, normalizedEmri,
-            Expression.Constant($"{escapedEmri}%"), escapeChar);
-        var startsWithMbiemri = Expression.Call(likeMethod, efFunctions, normalizedMbiemri,
-            Expression.Constant($"{escapedMbiemri}%"), escapeChar);
+        var startsWithEmri = BuildOrLikeChain(likeMethod, efFunctions, emriBody, emriVariants, contains: false);
+        var startsWithMbiemri = BuildOrLikeChain(likeMethod, efFunctions, mbiemriBody, mbiemriVariants, contains: false);
         var isStartsWith = Expression.AndAlso(startsWithEmri, startsWithMbiemri);
 
         var orderExpression = Expression.Condition(
@@ -393,7 +383,7 @@ public class SearchService : ISearchService
     }
 
     /// <summary>
-    /// Normalizes Albanian diacritics in a C# search string: ç→c, ë→e
+    /// Normalizes Albanian diacritics in a search string: ç→c, ë→e
     /// </summary>
     private static string NormalizeAlbanian(string input)
     {
@@ -403,33 +393,78 @@ public class SearchService : ISearchService
     }
 
     /// <summary>
-    /// Builds an expression that normalizes Albanian diacritics in a SQL column:
-    /// replace(replace(replace(replace(lower(col), 'ç', 'c'), 'Ç', 'c'), 'ë', 'e'), 'Ë', 'e')
-    /// SQLite's lower() only handles ASCII, so we replace both cases of each diacritic explicitly.
+    /// Generates all diacritic variants of a normalized search term.
+    /// e.g. "cela" → ["cela", "çela", "celë", "çelë"]
     /// </summary>
-    private static Expression BuildNormalizeExpression(Expression columnBody)
+    /// <summary>
+    /// Generates all diacritic variants of a normalized search term,
+    /// including uppercase diacritics (SQLite LIKE is only case-insensitive for ASCII).
+    /// e.g. "kuci" → ["kuci", "kuçi", "kuÇi"]
+    /// </summary>
+    private static List<string> GenerateAlbanianVariants(string input)
     {
-        var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes)!;
-        var replaceMethod = typeof(string).GetMethod("Replace", [typeof(string), typeof(string)])!;
+        var variants = new List<string> { "" };
+        foreach (var ch in input)
+        {
+            // ASCII letters are handled by SQLite's case-insensitive LIKE,
+            // but ç/Ç and ë/Ë are Unicode so we need both cases explicitly
+            char[] charVariants = ch switch
+            {
+                'c' => ['c', 'ç', 'Ç'],
+                'e' => ['e', 'ë', 'Ë'],
+                _ => [ch]
+            };
 
-        var expr = Expression.Call(columnBody, toLowerMethod);
-        expr = Expression.Call(expr, replaceMethod, Expression.Constant("ç"), Expression.Constant("c"));
-        expr = Expression.Call(expr, replaceMethod, Expression.Constant("Ç"), Expression.Constant("c"));
-        expr = Expression.Call(expr, replaceMethod, Expression.Constant("ë"), Expression.Constant("e"));
-        expr = Expression.Call(expr, replaceMethod, Expression.Constant("Ë"), Expression.Constant("e"));
-
-        return expr;
+            var newVariants = new List<string>(variants.Count * charVariants.Length);
+            foreach (var variant in variants)
+            {
+                foreach (var cv in charVariants)
+                {
+                    newVariants.Add(variant + cv);
+                }
+            }
+            variants = newVariants;
+        }
+        return variants;
     }
 
     /// <summary>
-    /// Escapes special LIKE pattern characters (%, _, \) in user input to prevent injection.
+    /// Builds: col LIKE '%var1%' OR col LIKE '%var2%' OR ...
+    /// When contains=false, builds prefix patterns: col LIKE 'var1%' OR col LIKE 'var2%' OR ...
     /// </summary>
-    private static string EscapeLikePattern(string input)
+    private static Expression BuildOrLikeChain(
+        System.Reflection.MethodInfo likeMethod,
+        Expression efFunctions,
+        Expression columnBody,
+        List<string> variants,
+        bool contains)
     {
-        return input
-            .Replace("\\", "\\\\")
-            .Replace("%", "\\%")
-            .Replace("_", "\\_");
+        Expression? result = null;
+        foreach (var variant in variants)
+        {
+            var pattern = contains ? $"%{variant}%" : $"{variant}%";
+            var like = Expression.Call(likeMethod, efFunctions, columnBody, Expression.Constant(pattern));
+            result = result == null ? like : Expression.OrElse(result, like);
+        }
+        return result!;
+    }
+
+    /// <summary>
+    /// Builds: LOWER(col) = 'var1' OR LOWER(col) = 'var2' OR ...
+    /// Used for exact match detection in ORDER BY.
+    /// </summary>
+    private static Expression BuildOrEqualityChain(Expression columnBody, List<string> variants)
+    {
+        var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes)!;
+        var loweredCol = Expression.Call(columnBody, toLowerMethod);
+
+        Expression? result = null;
+        foreach (var variant in variants)
+        {
+            var eq = Expression.Equal(loweredCol, Expression.Constant(variant));
+            result = result == null ? eq : Expression.OrElse(result, eq);
+        }
+        return result!;
     }
 
     private class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam)
