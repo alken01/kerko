@@ -24,20 +24,24 @@ function getNestedValue(obj: unknown, path: string): string {
   return typeof value === "string" ? value : path;
 }
 
+function getInitialLocale(): Locale {
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("kerko-locale") as Locale | null;
+    if (saved && messages[saved]) return saved;
+  }
+  return "sq";
+}
+
 export function TranslationProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("sq");
+  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
 
   useEffect(() => {
-    const saved = localStorage.getItem("kerko-locale") as Locale | null;
-    if (saved && messages[saved]) {
-      setLocaleState(saved);
-    }
-  }, []);
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem("kerko-locale", newLocale);
-    document.documentElement.lang = newLocale;
   }, []);
 
   const t = useCallback(

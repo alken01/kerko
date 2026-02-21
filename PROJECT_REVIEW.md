@@ -10,27 +10,18 @@ is categorized by priority and effort level.
 
 ## 1. Code Quality & Bug Fixes
 
-### 1.1 Diacritic variant explosion (Backend — SearchService.cs:404-428)
+### 1.1 ~~Diacritic variant explosion~~ (FIXED)
 
-`GenerateAlbanianVariants` produces a **combinatorial explosion**. A name like
-"ece" (3 chars each mapping to 3 variants) generates 3^3 = 27 variants. A 10-char
-name with 4 diacritic-eligible characters creates 3^4 = 81 variants, each turned
-into a `LIKE` clause. This degrades query performance and could be exploited with
-crafted inputs.
+Previously, `GenerateAlbanianVariants` produced a combinatorial explosion of LIKE
+clauses. **Fixed:** Replaced with a SQL-side normalization approach using chained
+`REPLACE()` calls that normalize diacritics (ç→c, ë→e) in the column values at
+query time, avoiding variant generation entirely.
 
-**Recommendation:** Cap the variant count (e.g., max 50) or switch to a
-collation-based approach where SQLite handles case/diacritic folding via `COLLATE NOCASE`
-with a custom collation, or pre-normalize column data with a computed/shadow column.
+### 1.2 ~~Parallel queries sharing a single DbContext~~ (FIXED)
 
-### 1.2 Parallel queries sharing a single DbContext (Backend — SearchService.cs:140)
-
-`KerkoAsync` fires 4 parallel `Task.WhenAll` queries against the same scoped
-`ApplicationDbContext`. EF Core's `DbContext` is **not thread-safe**. This works
-incidentally with SQLite's serialized mode but will break under PostgreSQL/SQL Server
-and can produce subtle data-corruption bugs.
-
-**Recommendation:** Either run queries sequentially, or inject `IDbContextFactory<ApplicationDbContext>`
-and create a separate context per task.
+Previously, `KerkoAsync` fired 4 parallel `Task.WhenAll` queries against the same
+scoped `ApplicationDbContext`. **Fixed:** Queries now run sequentially to respect
+EF Core's thread-safety requirements.
 
 ### 1.3 String interpolation in structured logging (Backend — SearchController.cs:25, 46, 68)
 
@@ -127,21 +118,18 @@ builder.Services.AddHealthChecks()
 
 ## 3. Security Improvements
 
-### 3.1 Input sanitization for LIKE patterns (Backend)
+### 3.1 ~~Input sanitization for LIKE patterns~~ (FIXED)
 
-User input is passed directly into `LIKE` patterns. Characters like `%`, `_`, and
-`[` have special meaning in SQL LIKE. A user searching for `%` would match
-everything. Escape these characters before constructing patterns.
+Previously, user input was passed directly into `LIKE` patterns. **Fixed:** Added
+`EscapeLikePattern()` that escapes `%`, `_`, and `\` characters, and all LIKE calls
+now use the 4-parameter overload with an explicit `ESCAPE '\'` clause.
 
-### 3.2 Rate limiter uses RemoteIpAddress which is unreliable behind proxies (Backend — Program.cs:29)
+### 3.2 ~~Rate limiter uses RemoteIpAddress which is unreliable behind proxies~~ (FIXED)
 
-```csharp
-partitionKey: context.Connection.RemoteIpAddress?.ToString()
-```
-
-Behind a reverse proxy (common with Docker), this will be the proxy IP, not the
-client. All users would share one rate-limit bucket. Use `X-Forwarded-For` as the
-controller already does for logging, or configure `ForwardedHeadersMiddleware`.
+Previously, `RemoteIpAddress` was used directly, which would be the proxy IP
+behind a reverse proxy. **Fixed:** `ForwardedHeadersMiddleware` is now configured
+in `Program.cs` to process `X-Forwarded-For` headers, so `RemoteIpAddress`
+reflects the real client IP.
 
 ### 3.3 CORS hardcoded origins should come from environment (Backend — appsettings.json)
 
@@ -262,13 +250,12 @@ exploration and third-party integration.
 
 **Effort:** Very Low — just configure the middleware in `Program.cs`.
 
-### 5.10 i18n / multi-language support (Frontend)
+### 5.10 ~~i18n / multi-language support~~ (IMPLEMENTED)
 
-The app is currently Albanian-only. Adding English (or other language) support
-using `next-intl` or similar would broaden the audience, especially for diaspora
-users.
-
-**Effort:** Medium.
+**Implemented:** Full Albanian/English i18n support added with a lightweight custom
+`TranslationProvider` (no external dependency). All 13 component files updated to
+use `t()` translation calls. JSON locale files at `frontend/src/i18n/locales/`.
+Language switcher in the header toggles between SQ/EN with localStorage persistence.
 
 ---
 
@@ -335,19 +322,20 @@ strategy. Add a cron-based backup script or document how to backup the volume.
 
 ## Priority Matrix
 
-| Item | Priority | Effort | Impact |
-|------|----------|--------|--------|
-| 1.2 DbContext thread safety | Critical | Low | Prevents data corruption |
-| 1.1 Variant explosion cap | High | Low | Prevents DoS |
-| 3.1 LIKE pattern sanitization | High | Low | Prevents data leak |
-| 3.2 Rate limiter IP detection | High | Low | Makes rate limiting work |
-| 3.5 Input length caps | High | Low | Prevents resource exhaustion |
-| 4.1 Add automated tests | High | Medium | Prevents regressions |
-| 1.3 Structured logging | Medium | Low | Better observability |
-| 2.3 Request cancellation | Medium | Low | Better UX |
-| 1.6 Remove userScalable:false | Medium | Trivial | Accessibility |
-| 5.1 Personal number search | Medium | Low | High-value feature |
-| 2.1 Response caching | Medium | Low | Performance |
-| 5.2 Search history | Low | Low | UX improvement |
-| 5.9 Swagger docs | Low | Trivial | Developer experience |
-| 6.1 Loading skeletons | Low | Low | UX polish |
+| Item | Priority | Effort | Impact | Status |
+|------|----------|--------|--------|--------|
+| 1.2 DbContext thread safety | Critical | Low | Prevents data corruption | **FIXED** |
+| 1.1 Variant explosion cap | High | Low | Prevents DoS | **FIXED** |
+| 3.1 LIKE pattern sanitization | High | Low | Prevents data leak | **FIXED** |
+| 3.2 Rate limiter IP detection | High | Low | Makes rate limiting work | **FIXED** |
+| 5.10 i18n support | Medium | Medium | Broadens audience | **DONE** |
+| 3.5 Input length caps | High | Low | Prevents resource exhaustion | Open |
+| 4.1 Add automated tests | High | Medium | Prevents regressions | Open |
+| 1.3 Structured logging | Medium | Low | Better observability | Open |
+| 2.3 Request cancellation | Medium | Low | Better UX | Open |
+| 1.6 Remove userScalable:false | Medium | Trivial | Accessibility | Open |
+| 5.1 Personal number search | Medium | Low | High-value feature | Open |
+| 2.1 Response caching | Medium | Low | Performance | Open |
+| 5.2 Search history | Low | Low | UX improvement | Open |
+| 5.9 Swagger docs | Low | Trivial | Developer experience | Open |
+| 6.1 Loading skeletons | Low | Low | UX polish | Open |
