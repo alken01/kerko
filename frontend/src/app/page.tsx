@@ -7,6 +7,7 @@ import { SavedItemsPanel } from "@/components/SavedItemsPanel";
 import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { SkeletonGrid } from "@/components/SkeletonCard";
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, TabType } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
@@ -34,6 +35,13 @@ function SearchContent() {
     terms: string[];
   } | null>(null);
   const [maidenNameHint, setMaidenNameHint] = useState(false);
+
+  // Auto-dismiss errors after 5 seconds
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(timer);
+  }, [error]);
 
   // Handle URL parameters on initial load
   useEffect(() => {
@@ -151,7 +159,9 @@ function SearchContent() {
         />
       </div>
 
-      {error && (
+      {isLoading && <SkeletonGrid count={4} />}
+
+      {error && !isLoading && (
         <Alert
           variant="destructive"
           className="max-w-md mx-auto"
@@ -160,7 +170,7 @@ function SearchContent() {
         </Alert>
       )}
 
-      {maidenNameHint && searchResults && (
+      {maidenNameHint && searchResults && !isLoading && (
         <div className="flex justify-center">
           <div className="w-fit rounded-lg border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20 px-4 py-2 text-center">
             <p className="text-yellow-800 dark:text-yellow-200 text-xs">
@@ -170,7 +180,7 @@ function SearchContent() {
         </div>
       )}
 
-      {searchResults && (
+      {searchResults && !isLoading && (
         <SearchResultsTabs
           searchResults={searchResults}
           activeTab={activeTab}
@@ -197,7 +207,7 @@ export default function Home() {
 
       <main className="container mx-auto py-6 space-y-4 px-4 md:px-6">
         {/* Title with language and theme toggles */}
-        <div className="flex items-center justify-center relative">
+        <div className="max-w-md mx-auto flex items-center justify-center relative">
           <h1 className="text-3xl font-bold tracking-tight text-text-primary">
             {t("app.title")}
           </h1>

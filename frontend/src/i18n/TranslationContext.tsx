@@ -12,6 +12,7 @@ interface TranslationContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: string) => string;
+  tn: (singularKey: string, pluralKey: string, count: number) => string;
 }
 
 const TranslationContext = createContext<TranslationContextType | null>(null);
@@ -49,8 +50,16 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     [locale]
   );
 
+  const tn = useCallback(
+    (singularKey: string, pluralKey: string, count: number) =>
+      count === 1
+        ? getNestedValue(messages[locale], singularKey)
+        : getNestedValue(messages[locale], pluralKey),
+    [locale]
+  );
+
   return (
-    <TranslationContext.Provider value={{ locale, setLocale, t }}>
+    <TranslationContext.Provider value={{ locale, setLocale, t, tn }}>
       {children}
     </TranslationContext.Provider>
   );

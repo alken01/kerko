@@ -12,13 +12,13 @@
     "clear": "Clear",
     "submit": "Search",
     "searching": "Searching...",
-    "maidenNameHint": "Note: Results may not be accurate — maiden surname may be different."
+    "maidenNameHint": "Note: Results may not be accurate — maiden last name may be different."
   },
   "results": {
     "people": "People",
     "salaries": "Salaries",
     "plates": "License Plates",
-    "patrons": "Patrons",
+    "patrons": "Other",
     "noExactResults": "No exact results found. Similar results:",
     "similarResults": "Similar results"
   },

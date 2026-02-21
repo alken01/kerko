@@ -22,7 +22,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Search request | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation($"Search request | emri: {emri ?? "-"} mbiemri: {mbiemri ?? "-"} page: {pageNumber}/{pageSize} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
             var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize);
             return Ok(result);
         }
@@ -43,7 +43,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Targat request | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation($"Targat request | numriTarges: {numriTarges ?? "-"} page: {pageNumber}/{pageSize} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
 
             var result = await _searchService.TargatAsync(numriTarges, pageNumber, pageSize);
             return Ok(result);
@@ -65,7 +65,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Telefon request | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation($"Telefon request | numriTelefonit: {numriTelefonit ?? "-"} page: {pageNumber}/{pageSize} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
             var result = await _searchService.TelefonAsync(numriTelefonit, pageNumber, pageSize);
             return Ok(result);
         }

@@ -1,23 +1,20 @@
 "use client";
 
 import { useTranslation } from "@/i18n/TranslationContext";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function LanguageSwitcher() {
   const { locale, setLocale } = useTranslation();
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={() => setLocale(locale === "sq" ? "en" : "sq")}
-      className={cn(
-        "px-2 py-1 rounded-md text-xs font-semibold",
-        "bg-surface-secondary border border-border-semantic-secondary",
-        "text-text-secondary hover:text-text-primary hover:bg-surface-interactive",
-        "transition-all duration-200"
-      )}
+      className="h-9 w-9 bg-surface-interactive hover:bg-surface-interactive-hover border-2 border-border-semantic-secondary transition-colors text-xs font-semibold text-text-primary"
       title={locale === "sq" ? "Switch to English" : "Shko në Shqip"}
     >
       {locale === "sq" ? "EN" : "SQ"}
-    </button>
+    </Button>
   );
 }

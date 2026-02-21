@@ -1,20 +1,21 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Car, CircleDot, ChevronDown, ChevronUp } from "lucide-react";
+import { Car, ChevronDown } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "./ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
 import { useTranslation } from "@/i18n/TranslationContext";
 import { TargatResponse } from "@/types/kerko";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import Link from "next/link";
 
 interface TargatCardProps {
   targat: TargatResponse;
-  onNameClick: (emri: string, mbiemri: string) => void;
+  defaultExpanded?: boolean;
 }
 
-export function TargatCard({ targat, onNameClick }: TargatCardProps) {
+export function TargatCard({ targat, defaultExpanded }: TargatCardProps) {
   const { t } = useTranslation();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded ?? false);
 
   return (
     <Card className={cardStyles.root}>
@@ -23,9 +24,12 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
           <SaveButton type="targat" data={targat} />
         </div>
         <div className="relative z-10">
-          <h2 className={cardStyles.title}>
+          <Link
+            href={`/?emri=${encodeURIComponent(targat.emri || "")}&mbiemri=${encodeURIComponent(targat.mbiemri || "")}`}
+            className={cn(cardStyles.title, "underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors")}
+          >
             {targat.emri} <span className="font-bold">{targat.mbiemri}</span>
-          </h2>
+          </Link>
           <div className={cardStyles.infoList}>
             <InfoItem
               icon={CircleDot}
@@ -51,38 +55,25 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
               <Car className={cardStyles.sectionIcon} />
               {t("plate.vehicleInfo")}
             </h3>
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
-            )}
+            <ChevronDown className={cn(
+              "h-5 w-5 text-text-tertiary transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+              isExpanded && "rotate-180"
+            )} />
           </button>
-          {isExpanded && (
-            <div className={cardStyles.detailsContainer}>
-              <div className={cardStyles.detailsGrid}>
-                <DetailRow label={t("plate.brand")} value={targat.marka || "N/A"} />
-                <DetailRow label={t("plate.model")} value={targat.modeli || "N/A"} />
-                <DetailRow label={t("plate.color")} value={targat.ngjyra || "N/A"} />
-                <div className="col-span-full mt-4">
-                  <button
-                    onClick={() =>
-                      onNameClick(targat.emri || "", targat.mbiemri || "")
-                    }
-                    className={cn(
-                      "w-full py-2 px-4 rounded-lg font-medium",
-                      "bg-surface-interactive text-text-tertiary hover:bg-surface-interactive-hover hover:text-text-primary",
-                      "border-2 border-border-semantic-secondary",
-                      "transition-all duration-200",
-                      "flex items-center justify-center gap-2"
-                    )}
-                  >
-                    <CircleDot className="h-4 w-4" />
-                    {t("plate.searchOwner")}
-                  </button>
+          <div className={cn(
+            "grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          )}>
+            <div className="overflow-hidden">
+              <div className={cn(cardStyles.detailsContainer, "mt-2")}>
+                <div className={cardStyles.detailsGrid}>
+                  <DetailRow label={t("plate.brand")} value={targat.marka || "N/A"} />
+                  <DetailRow label={t("plate.model")} value={targat.modeli || "N/A"} />
+                  <DetailRow label={t("plate.color")} value={targat.ngjyra || "N/A"} />
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>

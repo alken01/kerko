@@ -15,11 +15,7 @@ import { TargatCard } from "./TargatCard";
 import { PatronazhistCard } from "./PatronazhistCard";
 import { SavedItem, SavedItemType } from "@/types/saved";
 
-interface SavedItemsListProps {
-  onNameClick: (emri: string, mbiemri: string) => void;
-}
-
-export function SavedItemsList({ onNameClick }: SavedItemsListProps) {
+export function SavedItemsList() {
   const { t } = useTranslation();
   const { savedItems } = useSavedItems();
 
@@ -78,7 +74,7 @@ export function SavedItemsList({ onNameClick }: SavedItemsListProps) {
                 ({items.length})
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               {items.map((item) => {
                 switch (item.type) {
                   case "person":
@@ -100,7 +96,6 @@ export function SavedItemsList({ onNameClick }: SavedItemsListProps) {
                       <TargatCard
                         key={item.id}
                         targat={item.data as TargatResponse}
-                        onNameClick={onNameClick}
                       />
                     );
                   case "patronazhist":

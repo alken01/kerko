@@ -5,7 +5,8 @@ import {
   TabType,
 } from "@/types/kerko";
 import { useTranslation } from "@/i18n/TranslationContext";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Pagination } from "./Pagination";
 import { PatronazhistCard } from "./PatronazhistCard";
@@ -48,18 +49,20 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
 }: {
   items: T[] | undefined;
   searchTerms?: { emri: string; mbiemri: string };
-  renderItem: (item: T, index: number) => React.ReactNode;
+  renderItem: (item: T, index: number, defaultExpanded: boolean) => React.ReactNode;
 }) {
   const { t } = useTranslation();
   const [showSimilar, setShowSimilar] = useState(true);
 
   if (!items || items.length === 0) return null;
 
+  const autoExpand = items.length === 1;
+
   // If no search terms (e.g. targa/telefon search), render all items flat
   if (!searchTerms) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
-        {items.map((item, index) => renderItem(item, index))}
+        {items.map((item, index) => renderItem(item, index, autoExpand))}
       </div>
     );
   }
@@ -70,7 +73,7 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
   if (similar.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
-        {exact.map((item, index) => renderItem(item, index))}
+        {exact.map((item, index) => renderItem(item, index, autoExpand))}
       </div>
     );
   }
@@ -82,7 +85,7 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
           {t("results.noExactResults")}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          {similar.map((item, index) => renderItem(item, index))}
+          {similar.map((item, index) => renderItem(item, index, autoExpand))}
         </div>
       </div>
     );
@@ -91,7 +94,7 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        {exact.map((item, index) => renderItem(item, index))}
+        {exact.map((item, index) => renderItem(item, index, autoExpand))}
       </div>
 
       <button
@@ -101,18 +104,17 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
         <div className="flex-1 h-px bg-border-semantic-secondary" />
         <span className="text-sm text-text-tertiary group-hover:text-text-secondary transition-colors flex items-center gap-1">
           {t("results.similarResults")} ({similar.length})
-          {showSimilar ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
+          <ChevronDown className={cn(
+            "h-4 w-4 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            showSimilar && "rotate-180"
+          )} />
         </span>
         <div className="flex-1 h-px bg-border-semantic-secondary" />
       </button>
 
       {showSimilar && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in duration-200">
-          {similar.map((item, index) => renderItem(item, exact.length + index))}
+          {similar.map((item, index) => renderItem(item, exact.length + index, false))}
         </div>
       )}
     </div>
@@ -229,14 +231,14 @@ export function SearchResultsTabs({
           <GroupedResultsGrid
             items={searchResults.person?.items}
             searchTerms={searchTerms}
-            renderItem={(person, index) => <PersonCard key={index} person={person} />}
+            renderItem={(person, index, defaultExpanded) => <PersonCard key={index} person={person} defaultExpanded={defaultExpanded} />}
           />
         )}
         {activeTab === "rrogat" && isSearchResponse(searchResults) && (
           <GroupedResultsGrid
             items={searchResults.rrogat?.items}
             searchTerms={searchTerms}
-            renderItem={(rrogat, index) => <RrogatCard key={index} rrogat={rrogat} />}
+            renderItem={(rrogat, index, defaultExpanded) => <RrogatCard key={index} rrogat={rrogat} defaultExpanded={defaultExpanded} />}
           />
         )}
         {activeTab === "targat" && (
@@ -249,8 +251,8 @@ export function SearchResultsTabs({
                 : undefined
             }
             searchTerms={searchTerms}
-            renderItem={(targat, index) => (
-              <TargatCard key={index} targat={targat} onNameClick={onNameClick} />
+            renderItem={(targat, index, defaultExpanded) => (
+              <TargatCard key={index} targat={targat} defaultExpanded={defaultExpanded} />
             )}
           />
         )}
@@ -264,8 +266,8 @@ export function SearchResultsTabs({
                 : undefined
             }
             searchTerms={searchTerms}
-            renderItem={(patronazhist, index) => (
-              <PatronazhistCard key={index} patronazhist={patronazhist} />
+            renderItem={(patronazhist, index, defaultExpanded) => (
+              <PatronazhistCard key={index} patronazhist={patronazhist} defaultExpanded={defaultExpanded} />
             )}
           />
         )}
