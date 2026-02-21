@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cardStyles, DetailRow, InfoItem } from "@/components/ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { PersonResponse } from "@/types/kerko";
 import { Calendar, ChevronDown, ChevronUp, Home, MapPin, User } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +12,7 @@ interface PersonCardProps {
 }
 
 export function PersonCard({ person }: PersonCardProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const isMarriedWoman = person.seksi === "F" && person.gjendjeCivile?.toLowerCase().includes("martuar");
   const parentLinkHint = isMarriedWoman ? "&hint=mbiemri" : "";
@@ -39,17 +41,17 @@ export function PersonCard({ person }: PersonCardProps) {
           <div className={cardStyles.infoList}>
             <InfoItem
               icon={Calendar}
-              label="Lindur"
+              label={t("person.born")}
               value={formatDate(person.datelindja)}
             />
             <InfoItem
               icon={MapPin}
-              label="Vendlindja"
+              label={t("person.placeOfBirth")}
               value={person.vendlindja || "N/A"}
             />
             <InfoItem
               icon={Home}
-              label="Qyteti"
+              label={t("person.city")}
               value={person.qyteti || "N/A"}
             />
           </div>
@@ -64,7 +66,7 @@ export function PersonCard({ person }: PersonCardProps) {
           >
             <h3 className={cardStyles.sectionTitle}>
               <User className={cardStyles.sectionIcon} />
-              Informacion Personal
+              {t("person.personalInfo")}
             </h3>
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -76,7 +78,7 @@ export function PersonCard({ person }: PersonCardProps) {
             <div className={cardStyles.detailsContainer}>
               <div className={cardStyles.detailsGrid}>
                 <DetailRow
-                  label="Adresa"
+                  label={t("person.address")}
                   value={
                     person.adresa && person.nrBaneses
                       ? `${person.adresa} ${person.nrBaneses}`
@@ -84,7 +86,7 @@ export function PersonCard({ person }: PersonCardProps) {
                   }
                 />
                 <DetailRow
-                  label="Emri i Babait"
+                  label={t("person.fathersName")}
                   value={
                     person.atesi ? (
                       <Link
@@ -99,7 +101,7 @@ export function PersonCard({ person }: PersonCardProps) {
                   }
                 />
                 <DetailRow
-                  label="Emri i Nënës"
+                  label={t("person.mothersName")}
                   value={
                     person.amesi ? (
                       <Link
@@ -113,18 +115,18 @@ export function PersonCard({ person }: PersonCardProps) {
                     )
                   }
                 />
-                <DetailRow label="Kombësia" value={person.kombesia || "N/A"} />
+                <DetailRow label={t("person.nationality")} value={person.kombesia || "N/A"} />
                 <DetailRow
-                  label="Gjinia"
-                  value={person.seksi === "F" ? "Femër" : "Mashkull"}
+                  label={t("person.gender")}
+                  value={person.seksi === "F" ? t("person.female") : t("person.male")}
                 />
                 <DetailRow
-                  label="Gjendja Martesore"
+                  label={t("person.maritalStatus")}
                   value={person.gjendjeCivile || "N/A"}
                 />
                 {person.lidhjaMeKryefamiljarin && (
                   <DetailRow
-                    label="Lidhja me Kryefamiljarin"
+                    label={t("person.headOfHousehold")}
                     value={person.lidhjaMeKryefamiljarin}
                   />
                 )}

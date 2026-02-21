@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
+import { useTranslation } from "@/i18n/TranslationContext";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -18,6 +19,7 @@ interface PatronazhistCardProps {
 }
 
 export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -34,17 +36,17 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
           <div className={cardStyles.infoList}>
             <InfoItem
               icon={CircleDot}
-              label="Numri Personal"
+              label={t("patron.personalNumber")}
               value={patronazhist.numriPersonal || "N/A"}
             />
             <InfoItem
               icon={MapPin}
-              label="Vendlindja"
+              label={t("patron.placeOfBirth")}
               value={patronazhist.vendlindja || "N/A"}
             />
             <InfoItem
               icon={Calendar}
-              label="Lindur"
+              label={t("patron.born")}
               value={patronazhist.datelindja}
             />
           </div>
@@ -59,7 +61,7 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
           >
             <h3 className={cardStyles.sectionTitle}>
               <User className={cardStyles.sectionIcon} />
-              Informacion Personal
+              {t("patron.personalInfo")}
             </h3>
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -71,7 +73,7 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
             <div className={cardStyles.detailsContainer}>
               <div className={cardStyles.detailsGrid}>
                 <DetailRow
-                  label="Emri i Babait"
+                  label={t("patron.fathersName")}
                   value={
                     patronazhist.atesi ? (
                       <Link
@@ -86,24 +88,24 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
                   }
                 />
                 <DetailRow
-                  label="Kod Banese"
+                  label={t("patron.residenceCode")}
                   value={patronazhist.kodBanese || "N/A"}
                 />
-                <DetailRow label="Telefoni" value={patronazhist.tel || "N/A"} />
+                <DetailRow label={t("patron.phone")} value={patronazhist.tel || "N/A"} />
                 <DetailRow
-                  label="Preferenca"
+                  label={t("patron.preference")}
                   value={patronazhist.preferenca || "N/A"}
                 />
                 <DetailRow
-                  label="Preferenca e Sigurte"
+                  label={t("patron.securePreference")}
                   value={patronazhist.iSigurte || "N/A"}
                 />
                 <DetailRow
-                  label="Preferenca Census 2013"
+                  label={t("patron.census2013Preference")}
                   value={patronazhist.census2013Preferenca || "N/A"}
                 />
                 <DetailRow
-                  label="Siguria Census 2013"
+                  label={t("patron.census2013Security")}
                   value={
                     patronazhist.census2013Siguria
                       ? `${patronazhist.census2013Siguria}/10`
@@ -112,32 +114,32 @@ export function PatronazhistCard({ patronazhist }: PatronazhistCardProps) {
                 />
                 {patronazhist.koment && (
                   <DetailRow
-                    label="Koment"
+                    label={t("patron.comment")}
                     value={patronazhist.koment || "N/A"}
                   />
                 )}
                 <DetailRow
-                  label="Patronazhisti"
+                  label={t("patron.patronazhist")}
                   value={patronazhist.patronazhisti || "N/A"}
                 />
-                <DetailRow label="QV" value={patronazhist.qv || "N/A"} />
+                <DetailRow label={t("patron.qv")} value={patronazhist.qv || "N/A"} />
                 <DetailRow
-                  label="Numri i Listës"
+                  label={t("patron.listNumber")}
                   value={patronazhist.listaNr || "N/A"}
                 />
                 <DetailRow
-                  label="Kompania"
+                  label={t("patron.company")}
                   value={patronazhist.kompania || "N/A"}
                 />
                 {patronazhist.emigrant && (
                   <>
                     <DetailRow
-                      label="Emigrant"
+                      label={t("patron.emigrant")}
                       value={patronazhist.emigrant || "N/A"}
                     />
                     {patronazhist.country && (
                       <DetailRow
-                        label="Vendi i Emigrimit"
+                        label={t("patron.emigrationCountry")}
                         value={patronazhist.country || "N/A"}
                       />
                     )}

@@ -1,5 +1,6 @@
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SavedItemsProvider } from "@/contexts/SavedItemsContext";
+import { TranslationProvider } from "@/i18n/TranslationContext";
 import { ToastProvider } from "@/components/ui/toast";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -87,11 +88,13 @@ export default function RootLayout({
   return (
     <html lang="sq">
       <body className="antialiased min-h-screen bg-surface-primary text-text-primary">
-        <ThemeProvider>
-          <SavedItemsProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </SavedItemsProvider>
-        </ThemeProvider>
+        <TranslationProvider>
+          <ThemeProvider>
+            <SavedItemsProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </SavedItemsProvider>
+          </ThemeProvider>
+        </TranslationProvider>
         <Analytics />
         <SpeedInsights />
       </body>

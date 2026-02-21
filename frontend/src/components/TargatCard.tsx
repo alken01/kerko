@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Car, CircleDot, ChevronDown, ChevronUp } from "lucide-react";
 import { cardStyles, InfoItem, DetailRow } from "./ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { TargatResponse } from "@/types/kerko";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -12,6 +13,7 @@ interface TargatCardProps {
 }
 
 export function TargatCard({ targat, onNameClick }: TargatCardProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -27,12 +29,12 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
           <div className={cardStyles.infoList}>
             <InfoItem
               icon={CircleDot}
-              label="Numri Personal"
+              label={t("plate.personalNumber")}
               value={targat.numriPersonal || "N/A"}
             />
             <InfoItem
               icon={Car}
-              label="Targa"
+              label={t("plate.licensePlate")}
               value={targat.numriTarges || "N/A"}
             />
           </div>
@@ -47,7 +49,7 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
           >
             <h3 className={cardStyles.sectionTitle}>
               <Car className={cardStyles.sectionIcon} />
-              Informacion i Automjetit
+              {t("plate.vehicleInfo")}
             </h3>
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -58,9 +60,9 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
           {isExpanded && (
             <div className={cardStyles.detailsContainer}>
               <div className={cardStyles.detailsGrid}>
-                <DetailRow label="Marka" value={targat.marka || "N/A"} />
-                <DetailRow label="Modeli" value={targat.modeli || "N/A"} />
-                <DetailRow label="Ngjyra" value={targat.ngjyra || "N/A"} />
+                <DetailRow label={t("plate.brand")} value={targat.marka || "N/A"} />
+                <DetailRow label={t("plate.model")} value={targat.modeli || "N/A"} />
+                <DetailRow label={t("plate.color")} value={targat.ngjyra || "N/A"} />
                 <div className="col-span-full mt-4">
                   <button
                     onClick={() =>
@@ -75,7 +77,7 @@ export function TargatCard({ targat, onNameClick }: TargatCardProps) {
                     )}
                   >
                     <CircleDot className="h-4 w-4" />
-                    Kërko Pronarin
+                    {t("plate.searchOwner")}
                   </button>
                 </div>
               </div>

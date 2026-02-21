@@ -4,6 +4,7 @@ using Kerko.Services;
 using Kerko.Authentication;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.Logging.Console;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,6 +73,14 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure forwarded headers so RemoteIpAddress reflects the real client IP behind reverse proxy/Docker
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // Configure SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -81,6 +90,7 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseCors();
 

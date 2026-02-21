@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { PhoneInput } from "./PhoneInput";
@@ -21,6 +22,7 @@ export function SearchForm({
   isLoading,
   defaultValues,
 }: SearchFormProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<"name" | "targa" | "telefon">(
@@ -107,7 +109,7 @@ export function SearchForm({
                   : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
-              Emri
+              {t("search.nameTab")}
             </button>
             <button
               type="button"
@@ -118,7 +120,7 @@ export function SearchForm({
                   : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
-              Targa
+              {t("search.plateTab")}
             </button>
             <button
               type="button"
@@ -134,7 +136,7 @@ export function SearchForm({
                   : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
               }`}
             >
-              Telefon
+              {t("search.phoneTab")}
             </button>
           </div>
 
@@ -142,7 +144,7 @@ export function SearchForm({
             <div className="space-y-2">
               <Input
                 type="text"
-                placeholder="Emri"
+                placeholder={t("search.firstName")}
                 value={emri}
                 onChange={(e) => setEmri(e.target.value)}
                 onInput={(e) => {
@@ -159,7 +161,7 @@ export function SearchForm({
               <Input
                 ref={mbiemriRef}
                 type="text"
-                placeholder="Mbiemri"
+                placeholder={t("search.lastName")}
                 value={mbiemri}
                 onChange={(e) => setMbiemri(e.target.value)}
                 autoComplete="family-name"
@@ -192,7 +194,7 @@ export function SearchForm({
               className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-tertiary hover:bg-surface-tertiary hover:text-text-primary h-12 touch-manipulation"
                             onClick={handleClear}
             >
-              Pastro
+              {t("search.clear")}
             </Button>
             <Button
               type="submit"
@@ -203,7 +205,7 @@ export function SearchForm({
                 (activeTab === "targa" && targa.length < LICENSE_PLATE_LENGTH)
               }
             >
-              {isLoading ? "Duke kërkuar..." : "Kërko"}
+              {isLoading ? t("search.searching") : t("search.submit")}
             </Button>
           </div>
         </form>

@@ -1,4 +1,5 @@
 import { PaginationInfo } from "@/types/kerko";
+import { useTranslation } from "@/i18n/TranslationContext";
 import { MAX_VISIBLE_PAGES } from "@/lib/constants";
 
 interface PaginationProps {
@@ -7,6 +8,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ pagination, onPageChange }: PaginationProps) {
+  const { t } = useTranslation();
   const { currentPage, totalPages, hasPrevious, hasNext } = pagination;
 
   if (totalPages <= 1) {
@@ -57,7 +59,7 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
             : "bg-surface-interactive text-text-tertiary cursor-not-allowed border border-border-semantic-secondary"
         }`}
       >
-        ← Para
+        {t("pagination.previous")}
       </button>
 
       <div className="flex items-center gap-1">
@@ -88,7 +90,7 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
             : "bg-surface-interactive text-text-tertiary cursor-not-allowed border border-border-semantic-secondary"
         }`}
       >
-        Pas →
+        {t("pagination.next")}
       </button>
     </div>
   );

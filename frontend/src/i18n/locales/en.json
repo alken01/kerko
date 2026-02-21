@@ -1,0 +1,121 @@
+{
+  "app": {
+    "title": "Kërko",
+    "loading": "Loading..."
+  },
+  "search": {
+    "nameTab": "Name",
+    "plateTab": "Plate",
+    "phoneTab": "Phone",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "clear": "Clear",
+    "submit": "Search",
+    "searching": "Searching...",
+    "maidenNameHint": "Note: Results may not be accurate — maiden surname may be different."
+  },
+  "results": {
+    "people": "People",
+    "salaries": "Salaries",
+    "plates": "License Plates",
+    "patrons": "Patrons",
+    "noExactResults": "No exact results found. Similar results:",
+    "similarResults": "Similar results"
+  },
+  "person": {
+    "born": "Born",
+    "placeOfBirth": "Place of Birth",
+    "city": "City",
+    "personalInfo": "Personal Information",
+    "address": "Address",
+    "fathersName": "Father's Name",
+    "mothersName": "Mother's Name",
+    "nationality": "Nationality",
+    "gender": "Gender",
+    "female": "Female",
+    "male": "Male",
+    "maritalStatus": "Marital Status",
+    "headOfHousehold": "Relationship to Head of Household"
+  },
+  "salary": {
+    "personalNumber": "Personal Number",
+    "profession": "Profession",
+    "financialInfo": "Financial Information",
+    "nipt": "NIPT",
+    "drt": "DRT",
+    "grossSalary": "Gross Salary",
+    "category": "Category"
+  },
+  "plate": {
+    "personalNumber": "Personal Number",
+    "licensePlate": "License Plate",
+    "vehicleInfo": "Vehicle Information",
+    "brand": "Brand",
+    "model": "Model",
+    "color": "Color",
+    "searchOwner": "Search Owner"
+  },
+  "patron": {
+    "personalNumber": "Personal Number",
+    "placeOfBirth": "Place of Birth",
+    "born": "Born",
+    "personalInfo": "Personal Information",
+    "fathersName": "Father's Name",
+    "residenceCode": "Residence Code",
+    "phone": "Phone",
+    "preference": "Preference",
+    "securePreference": "Secure Preference",
+    "census2013Preference": "Census 2013 Preference",
+    "census2013Security": "Census 2013 Security",
+    "comment": "Comment",
+    "patronazhist": "Patronazhist",
+    "qv": "QV",
+    "listNumber": "List Number",
+    "company": "Company",
+    "emigrant": "Emigrant",
+    "emigrationCountry": "Country of Emigration"
+  },
+  "saved": {
+    "savedItems": "Saved Items",
+    "result": "result",
+    "results": "results",
+    "accessOffline": "Access Offline",
+    "installForOffline": "Install as an app to view saved items without internet.",
+    "people": "People",
+    "salary": "Salary",
+    "plate": "License Plate",
+    "patron": "Patron",
+    "nothingSaved": "Nothing Saved",
+    "saveHint": "Press the {icon} icon in results to save them here.",
+    "removedFromSaved": "Removed from saved",
+    "wasSaved": "was saved",
+    "removeFromSaved": "Remove from saved",
+    "save": "Save"
+  },
+  "pagination": {
+    "previous": "← Prev",
+    "next": "Next →"
+  },
+  "offline": {
+    "youAreOffline": "You are offline",
+    "showSaved": "Show Saved"
+  },
+  "pwa": {
+    "install": "Install",
+    "installApp": "Install the App",
+    "safariStep1": "Press {icon} in Safari",
+    "safariStep2": "Select {icon} \"Add to Home Screen\"",
+    "chromeStep1": "Press menu (⋮) in Chrome",
+    "chromeStep2": "Select \"Install app\"",
+    "gotIt": "Got it",
+    "installForOfflineAccess": "Install the app for offline access"
+  },
+  "errors": {
+    "rateLimit": "Please slow down, wait a bit and try again",
+    "noResults": "No results found",
+    "search": "There was a problem during the search",
+    "personSearch": "There was a problem searching for the person",
+    "plateSearch": "There was a problem searching for the license plate",
+    "phoneSearch": "There was a problem searching for the phone number"
+  }
+}

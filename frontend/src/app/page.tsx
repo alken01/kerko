@@ -6,14 +6,17 @@ import { SearchResultsTabs } from "@/components/SearchResultsTabs";
 import { SavedItemsPanel } from "@/components/SavedItemsPanel";
 import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, TabType } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
 import { useSearchParams } from "next/navigation";
-import { SEARCH_ERROR_MESSAGE } from "@/lib/constants";
+import { useTranslation } from "@/i18n/TranslationContext";
+import { SEARCH_ERROR_KEY } from "@/lib/constants";
 
 function SearchContent() {
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const [searchResults, setSearchResults] = useState<SearchResponse | TargatSearchResponse | PatronazhistSearchResponse | null>(
     null
   );
@@ -66,7 +69,7 @@ function SearchContent() {
       const data = await ApiService.searchPerson(emri, mbiemri, page);
       setSearchResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : SEARCH_ERROR_MESSAGE);
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +88,7 @@ function SearchContent() {
       const data = await ApiService.searchTarga(numriTarges, page);
       setSearchResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : SEARCH_ERROR_MESSAGE);
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +107,7 @@ function SearchContent() {
       const data = await ApiService.searchTelefon(numriTelefonit, page);
       setSearchResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : SEARCH_ERROR_MESSAGE);
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
     } finally {
       setIsLoading(false);
     }
@@ -153,7 +156,7 @@ function SearchContent() {
           variant="destructive"
           className="max-w-md mx-auto"
         >
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       )}
 
@@ -161,7 +164,7 @@ function SearchContent() {
         <div className="flex justify-center">
           <div className="w-fit rounded-lg border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20 px-4 py-2 text-center">
             <p className="text-yellow-800 dark:text-yellow-200 text-xs">
-              Shënim: Rezultatet mund të mos jenë të sakta — mbiemri i vajzërisë mund të jetë i ndryshëm.
+              {t("search.maidenNameHint")}
             </p>
           </div>
         </div>
@@ -186,23 +189,26 @@ function SearchContent() {
 }
 
 export default function Home() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-surface-primary overflow-x-hidden touch-manipulation">
       <GlobalStyles />
 
       <main className="container mx-auto py-6 space-y-4 px-4 md:px-6">
-        {/* Title with theme toggle on same line */}
+        {/* Title with language and theme toggles */}
         <div className="flex items-center justify-center relative">
           <h1 className="text-3xl font-bold tracking-tight text-text-primary">
-            Kërko
+            {t("app.title")}
           </h1>
-          <div className="absolute right-0">
+          <div className="absolute right-0 flex items-center gap-2">
+            <LanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>
 
         <Suspense
-          fallback={<div className="text-text-primary text-center">Loading...</div>}
+          fallback={<div className="text-text-primary text-center">{t("app.loading")}</div>}
         >
           <SearchContent />
         </Suspense>
