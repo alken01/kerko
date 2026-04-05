@@ -181,11 +181,12 @@ export function SearchForm({
     return "";
   };
 
-  const typeIcon: Record<SearchHistoryItem["type"], string> = {
-    person: t("search.nameTab"),
-    targa: t("search.plateTab"),
-    telefon: t("search.phoneTab"),
+  const tabToHistoryType: Record<string, SearchHistoryItem["type"]> = {
+    name: "person",
+    targa: "targa",
+    telefon: "telefon",
   };
+  const filteredHistory = history.filter((h) => h.type === tabToHistoryType[activeTab]);
 
   return (
     <div ref={formRef} className="relative">
@@ -195,7 +196,7 @@ export function SearchForm({
             <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary">
               <button
                 type="button"
-                onClick={() => setActiveTab("name")}
+                onClick={() => { setActiveTab("name"); setShowHistory(false); }}
                 className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                   activeTab === "name"
                     ? "bg-surface-tertiary text-text-primary"
@@ -206,7 +207,7 @@ export function SearchForm({
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab("targa")}
+                onClick={() => { setActiveTab("targa"); setShowHistory(false); }}
                 className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                   activeTab === "targa"
                     ? "bg-surface-tertiary text-text-primary"
@@ -219,6 +220,7 @@ export function SearchForm({
                 type="button"
                 onClick={() => {
                   setActiveTab("telefon");
+                  setShowHistory(false);
                   if (telefon === "") {
                     setTelefon(ALBANIAN_PHONE_PREFIX);
                   }
@@ -240,7 +242,7 @@ export function SearchForm({
                   placeholder={t("search.firstName")}
                   value={emri}
                   onChange={(e) => setEmri(e.target.value)}
-                  onFocus={() => history.length > 0 && setShowHistory(true)}
+                  onFocus={() => filteredHistory.length > 0 && setShowHistory(true)}
                   onInput={(e) => {
                     // Detect iOS autocomplete (fills multiple chars at once) and move to mbiemri
                     const input = e.target as HTMLInputElement;
@@ -258,14 +260,14 @@ export function SearchForm({
                   placeholder={t("search.lastName")}
                   value={mbiemri}
                   onChange={(e) => setMbiemri(e.target.value)}
-                  onFocus={() => history.length > 0 && setShowHistory(true)}
+                  onFocus={() => filteredHistory.length > 0 && setShowHistory(true)}
                   autoComplete="family-name"
                   className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
                   disabled={isLoading}
                 />
               </div>
             ) : activeTab === "targa" ? (
-              <div className="" onFocus={() => history.length > 0 && setShowHistory(true)}>
+              <div className="" onFocus={() => filteredHistory.length > 0 && setShowHistory(true)}>
                 <TargaInput
                   value={targa}
                   onChange={setTarga}
@@ -273,7 +275,7 @@ export function SearchForm({
                 />
               </div>
             ) : (
-              <div className="" onFocus={() => history.length > 0 && setShowHistory(true)}>
+              <div className="" onFocus={() => filteredHistory.length > 0 && setShowHistory(true)}>
                 <PhoneInput
                   value={telefon}
                   onChange={setTelefon}
@@ -307,7 +309,7 @@ export function SearchForm({
         </CardContent>
       </Card>
 
-      {showHistory && history.length > 0 && (
+      {showHistory && filteredHistory.length > 0 && (
         <div className="absolute left-0 right-0 z-50 mt-1 rounded-lg border-2 border-border-semantic-secondary bg-surface-primary shadow-lg overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2 border-b border-border-semantic-secondary">
             <span className="text-xs font-medium text-text-tertiary">
@@ -322,16 +324,13 @@ export function SearchForm({
             </button>
           </div>
           <ul className="max-h-60 overflow-y-auto">
-            {history.map((item) => (
+            {filteredHistory.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
                   onClick={() => handleSelectHistory(item)}
-                  className="w-full text-left px-3 py-2.5 hover:bg-surface-secondary transition-colors flex items-center gap-2"
+                  className="w-full text-left px-3 py-2.5 hover:bg-surface-secondary transition-colors"
                 >
-                  <span className="text-[10px] font-medium text-text-tertiary bg-surface-secondary rounded px-1.5 py-0.5 shrink-0">
-                    {typeIcon[item.type]}
-                  </span>
                   <span className="text-sm text-text-primary truncate">
                     {formatHistoryLabel(item)}
                   </span>
