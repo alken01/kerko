@@ -88,11 +88,5 @@ export interface PatronazhistSearchResponse {
   pagination: PaginationInfo;
 }
 
-export interface NumriPersonalSearchResponse {
-  rrogat: PaginatedResult<RrogatResponse>;
-  targat: PaginatedResult<TargatResponse>;
-  patronazhist: PaginatedResult<PatronazhistResponse>;
-}
-
 // UI Types
 export type TabType = "person" | "rrogat" | "targat" | "patronazhist";

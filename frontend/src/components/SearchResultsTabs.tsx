@@ -1,5 +1,4 @@
 import {
-  NumriPersonalSearchResponse,
   PatronazhistSearchResponse,
   SearchResponse,
   TargatSearchResponse,
@@ -122,14 +121,10 @@ function GroupedResultsGrid<T extends { emri: string | null; mbiemri: string | n
   );
 }
 
-type SearchResultsType = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse | NumriPersonalSearchResponse;
+type SearchResultsType = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse;
 
 function isSearchResponse(response: SearchResultsType): response is SearchResponse {
   return "person" in response;
-}
-
-function isNpResponse(response: SearchResultsType): response is NumriPersonalSearchResponse {
-  return "rrogat" in response && !("person" in response) && !("items" in response);
 }
 
 function hasDirectItems(response: SearchResultsType): boolean {
@@ -151,7 +146,6 @@ interface SearchResultsTabsProps {
   onPageChange: (page: number) => void;
   isTargaSearch: boolean;
   isTelefonSearch: boolean;
-  isNpSearch?: boolean;
   searchTerms?: { emri: string; mbiemri: string };
 }
 
@@ -162,7 +156,6 @@ export function SearchResultsTabs({
   onPageChange,
   isTargaSearch,
   isTelefonSearch,
-  isNpSearch,
   searchTerms,
 }: SearchResultsTabsProps) {
   const { t } = useTranslation();
@@ -182,12 +175,6 @@ export function SearchResultsTabs({
     ? [{ value: "targat", label: t("results.plates") }]
     : isTelefonSearch
     ? [{ value: "patronazhist", label: t("results.patrons") }]
-    : isNpSearch
-    ? [
-        { value: "rrogat", label: t("results.salaries") },
-        { value: "targat", label: t("results.plates") },
-        { value: "patronazhist", label: t("results.patrons") },
-      ]
     : [
         { value: "person", label: t("results.people") },
         { value: "rrogat", label: t("results.salaries") },
@@ -202,12 +189,6 @@ export function SearchResultsTabs({
     if (isTelefonSearch && hasDirectItems(searchResults)) {
       return asPatronazhistResponse(searchResults).pagination;
     }
-    if (isNpSearch && isNpResponse(searchResults)) {
-      const npResponse = searchResults;
-      if (activeTab === "rrogat") return npResponse.rrogat?.pagination;
-      if (activeTab === "targat") return npResponse.targat?.pagination;
-      if (activeTab === "patronazhist") return npResponse.patronazhist?.pagination;
-    }
     if (isSearchResponse(searchResults)) {
       return searchResults[activeTab as keyof SearchResponse]?.pagination;
     }
@@ -220,12 +201,6 @@ export function SearchResultsTabs({
     }
     if (isTelefonSearch && hasDirectItems(searchResults)) {
       return asPatronazhistResponse(searchResults).pagination?.totalItems || 0;
-    }
-    if (isNpSearch && isNpResponse(searchResults)) {
-      const npResponse = searchResults;
-      if (tabValue === "rrogat") return npResponse.rrogat?.pagination?.totalItems || 0;
-      if (tabValue === "targat") return npResponse.targat?.pagination?.totalItems || 0;
-      if (tabValue === "patronazhist") return npResponse.patronazhist?.pagination?.totalItems || 0;
     }
     if (isSearchResponse(searchResults)) {
       return searchResults[tabValue as keyof SearchResponse]?.pagination?.totalItems || 0;
@@ -280,15 +255,9 @@ export function SearchResultsTabs({
             renderItem={(person, index, defaultExpanded) => <PersonCard key={`person:${person.emri}:${person.mbiemri}:${person.datelindja}:${index}`} person={person} defaultExpanded={defaultExpanded} />}
           />
         )}
-        {activeTab === "rrogat" && (
+        {activeTab === "rrogat" && isSearchResponse(searchResults) && (
           <GroupedResultsGrid
-            items={
-              isNpSearch && isNpResponse(searchResults)
-                ? searchResults.rrogat?.items
-                : isSearchResponse(searchResults)
-                ? searchResults.rrogat?.items
-                : undefined
-            }
+            items={searchResults.rrogat?.items}
             searchTerms={searchTerms}
             renderItem={(rrogat, index, defaultExpanded) => <RrogatCard key={`rrogat:${rrogat.numriPersonal}:${rrogat.nipt}:${index}`} rrogat={rrogat} defaultExpanded={defaultExpanded} />}
           />
@@ -298,8 +267,6 @@ export function SearchResultsTabs({
             items={
               isTargaSearch && hasDirectItems(searchResults)
                 ? asTargatResponse(searchResults).items
-                : isNpSearch && isNpResponse(searchResults)
-                ? searchResults.targat?.items
                 : isSearchResponse(searchResults)
                 ? searchResults.targat?.items
                 : undefined
@@ -315,8 +282,6 @@ export function SearchResultsTabs({
             items={
               isTelefonSearch && hasDirectItems(searchResults)
                 ? asPatronazhistResponse(searchResults).items
-                : isNpSearch && isNpResponse(searchResults)
-                ? searchResults.patronazhist?.items
                 : isSearchResponse(searchResults)
                 ? searchResults.patronazhist?.items
                 : undefined

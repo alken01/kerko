@@ -31,7 +31,7 @@ export function SearchForm({
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"name" | "targa" | "telefon" | "np">(
+  const [activeTab, setActiveTab] = useState<"name" | "targa" | "telefon">(
     "name"
   );
   const [emri, setEmri] = useState("");
@@ -39,7 +39,6 @@ export function SearchForm({
   const mbiemriRef = useRef<HTMLInputElement>(null);
   const [targa, setTarga] = useState("");
   const [telefon, setTelefon] = useState(ALBANIAN_PHONE_PREFIX);
-  const [numriPersonal, setNumriPersonal] = useState("");
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
@@ -71,16 +70,12 @@ export function SearchForm({
   useEffect(() => {
     const urlTarga = searchParams.get("targa");
     const urlTelefon = searchParams.get("telefon");
-    const urlNp = searchParams.get("np");
     if (urlTarga) {
       setActiveTab("targa");
       setTarga(urlTarga);
     } else if (urlTelefon) {
       setActiveTab("telefon");
       setTelefon(urlTelefon.startsWith(ALBANIAN_PHONE_PREFIX) ? urlTelefon : ALBANIAN_PHONE_PREFIX + urlTelefon);
-    } else if (urlNp) {
-      setActiveTab("np");
-      setNumriPersonal(urlNp);
     } else if (defaultValues) {
       setActiveTab("name");
       setEmri(defaultValues.emri);
@@ -97,7 +92,7 @@ export function SearchForm({
       params.set("mbiemri", mbiemri);
       params.delete("targa");
       params.delete("telefon");
-      params.delete("np");
+
       router.push(`?${params.toString()}`, { scroll: false });
       saveSearchToHistory("person", { emri, mbiemri }).then(loadHistory);
     } else if (activeTab === "targa") {
@@ -110,7 +105,7 @@ export function SearchForm({
       params.delete("emri");
       params.delete("mbiemri");
       params.delete("telefon");
-      params.delete("np");
+
       router.push(`?${params.toString()}`, { scroll: false });
       saveSearchToHistory("targa", { targa }).then(loadHistory);
     } else if (activeTab === "telefon") {
@@ -123,22 +118,9 @@ export function SearchForm({
       params.delete("emri");
       params.delete("mbiemri");
       params.delete("targa");
-      params.delete("np");
+
       router.push(`?${params.toString()}`, { scroll: false });
       saveSearchToHistory("telefon", { telefon }).then(loadHistory);
-    } else if (activeTab === "np") {
-      if (numriPersonal.length < 2) {
-        return;
-      }
-
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("np", numriPersonal);
-      params.delete("emri");
-      params.delete("mbiemri");
-      params.delete("targa");
-      params.delete("telefon");
-      router.push(`?${params.toString()}`, { scroll: false });
-      saveSearchToHistory("np", { np: numriPersonal }).then(loadHistory);
     }
   };
 
@@ -147,7 +129,6 @@ export function SearchForm({
     setMbiemri("");
     setTarga("");
     setTelefon(ALBANIAN_PHONE_PREFIX);
-    setNumriPersonal("");
     router.replace("/", { scroll: false });
     if (onClear) {
       onClear();
@@ -156,11 +137,10 @@ export function SearchForm({
 
   const handleSelectHistory = (item: SearchHistoryItem) => {
     setShowHistory(false);
-    const tabMap: Record<SearchHistoryItem["type"], "name" | "targa" | "telefon" | "np"> = {
+    const tabMap: Record<SearchHistoryItem["type"], "name" | "targa" | "telefon"> = {
       person: "name",
       targa: "targa",
       telefon: "telefon",
-      np: "np",
     };
     setActiveTab(tabMap[item.type]);
 
@@ -171,8 +151,6 @@ export function SearchForm({
       setTarga(item.terms.targa || "");
     } else if (item.type === "telefon") {
       setTelefon(item.terms.telefon || ALBANIAN_PHONE_PREFIX);
-    } else if (item.type === "np") {
-      setNumriPersonal(item.terms.np || "");
     }
 
     // Build URL params and navigate
@@ -184,8 +162,6 @@ export function SearchForm({
       params.set("targa", item.terms.targa || "");
     } else if (item.type === "telefon") {
       params.set("telefon", item.terms.telefon || "");
-    } else if (item.type === "np") {
-      params.set("np", item.terms.np || "");
     }
     router.push(`?${params.toString()}`, { scroll: false });
   };
@@ -202,7 +178,6 @@ export function SearchForm({
     }
     if (item.type === "targa") return item.terms.targa || "";
     if (item.type === "telefon") return item.terms.telefon || "";
-    if (item.type === "np") return item.terms.np || "";
     return "";
   };
 
@@ -210,7 +185,6 @@ export function SearchForm({
     person: t("search.nameTab"),
     targa: t("search.plateTab"),
     telefon: t("search.phoneTab"),
-    np: t("search.personalNumberTab"),
   };
 
   return (
@@ -257,17 +231,6 @@ export function SearchForm({
               >
                 {t("search.phoneTab")}
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("np")}
-                className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === "np"
-                    ? "bg-surface-tertiary text-text-primary"
-                    : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
-                }`}
-              >
-                {t("search.personalNumberTab")}
-              </button>
             </div>
 
             {activeTab === "name" ? (
@@ -309,23 +272,11 @@ export function SearchForm({
                   disabled={isLoading}
                 />
               </div>
-            ) : activeTab === "telefon" ? (
+            ) : (
               <div className="" onFocus={() => history.length > 0 && setShowHistory(true)}>
                 <PhoneInput
                   value={telefon}
                   onChange={setTelefon}
-                  disabled={isLoading}
-                />
-              </div>
-            ) : (
-              <div className="">
-                <Input
-                  type="text"
-                  placeholder={t("search.personalNumber")}
-                  value={numriPersonal}
-                  onChange={(e) => setNumriPersonal(e.target.value.toUpperCase())}
-                  onFocus={() => history.length > 0 && setShowHistory(true)}
-                  className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation tracking-widest font-mono"
                   disabled={isLoading}
                 />
               </div>
@@ -346,8 +297,7 @@ export function SearchForm({
                 disabled={
                   isLoading ||
                   (activeTab === "telefon" && telefon.length < PHONE_NUMBER_LENGTH) ||
-                  (activeTab === "targa" && targa.length < LICENSE_PLATE_LENGTH) ||
-                  (activeTab === "np" && numriPersonal.length < 2)
+                  (activeTab === "targa" && targa.length < LICENSE_PLATE_LENGTH)
                 }
               >
                 {isLoading ? t("search.searching") : t("search.submit")}

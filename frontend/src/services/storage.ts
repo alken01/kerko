@@ -14,7 +14,7 @@ import {
 
 export interface SearchHistoryItem {
   id: string;
-  type: "person" | "targa" | "telefon" | "np";
+  type: "person" | "targa" | "telefon";
   terms: Record<string, string>;
   timestamp: number;
 }

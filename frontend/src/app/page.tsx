@@ -8,14 +8,14 @@ import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SkeletonGrid } from "@/components/SkeletonCard";
-import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, NumriPersonalSearchResponse, TabType } from "@/types/kerko";
+import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, TabType } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/i18n/TranslationContext";
 import { SEARCH_ERROR_KEY } from "@/lib/constants";
 
-type AllSearchResults = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse | NumriPersonalSearchResponse;
+type AllSearchResults = SearchResponse | TargatSearchResponse | PatronazhistSearchResponse;
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -26,13 +26,12 @@ function SearchContent() {
   const [activeTab, setActiveTab] = useState<TabType>("person");
   const [isTargaSearch, setIsTargaSearch] = useState(false);
   const [isTelefonSearch, setIsTelefonSearch] = useState(false);
-  const [isNpSearch, setIsNpSearch] = useState(false);
   const [searchFormData, setSearchFormData] = useState<{
     emri: string;
     mbiemri: string;
   } | null>(null);
   const [currentSearchTerms, setCurrentSearchTerms] = useState<{
-    type: 'person' | 'targa' | 'telefon' | 'np';
+    type: 'person' | 'targa' | 'telefon';
     terms: string[];
   } | null>(null);
   const [maidenNameHint, setMaidenNameHint] = useState(false);
@@ -50,7 +49,6 @@ function SearchContent() {
     setError(null);
     setIsTargaSearch(false);
     setIsTelefonSearch(false);
-    setIsNpSearch(false);
   }, []);
 
   // Keyboard shortcuts (PRD 5.8)
@@ -87,7 +85,7 @@ function SearchContent() {
     if (page === 1 && !searchParams.get("hint")) setMaidenNameHint(false);
     setIsTargaSearch(false);
     setIsTelefonSearch(false);
-    setIsNpSearch(false);
+
     setActiveTab("person");
     setCurrentSearchTerms({ type: 'person', terms: [emri, mbiemri] });
 
@@ -109,7 +107,7 @@ function SearchContent() {
     setActiveTab("targat");
     setIsTargaSearch(true);
     setIsTelefonSearch(false);
-    setIsNpSearch(false);
+
     setCurrentSearchTerms({ type: 'targa', terms: [numriTarges] });
 
     try {
@@ -130,32 +128,11 @@ function SearchContent() {
     setActiveTab("patronazhist");
     setIsTargaSearch(false);
     setIsTelefonSearch(true);
-    setIsNpSearch(false);
+
     setCurrentSearchTerms({ type: 'telefon', terms: [numriTelefonit] });
 
     try {
       const data = await ApiService.searchTelefon(numriTelefonit, page);
-      setSearchResults(data);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleSearchNp = useCallback(async (numriPersonal: string, page: number = 1) => {
-    setIsLoading(true);
-    setError(null);
-    setSearchResults(null);
-    setActiveTab("rrogat");
-    setIsTargaSearch(false);
-    setIsTelefonSearch(false);
-    setIsNpSearch(true);
-    setCurrentSearchTerms({ type: 'np', terms: [numriPersonal] });
-
-    try {
-      const data = await ApiService.searchNumriPersonal(numriPersonal, page);
       setSearchResults(data);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -171,7 +148,6 @@ function SearchContent() {
     const mbiemri = searchParams.get("mbiemri");
     const targa = searchParams.get("targa");
     const telefon = searchParams.get("telefon");
-    const np = searchParams.get("np");
     const hint = searchParams.get("hint");
 
     setMaidenNameHint(hint === "mbiemri");
@@ -180,13 +156,11 @@ function SearchContent() {
       handleSearchTarga(targa);
     } else if (telefon) {
       handleSearchTelefon(telefon);
-    } else if (np) {
-      handleSearchNp(np);
     } else if (emri && mbiemri) {
       setSearchFormData({ emri, mbiemri });
       handleSearch(emri, mbiemri);
     }
-  }, [searchParams, handleSearch, handleSearchTarga, handleSearchTelefon, handleSearchNp]);
+  }, [searchParams, handleSearch, handleSearchTarga, handleSearchTelefon]);
 
   // Auto-scroll to results on mobile (PRD 6.1)
   useEffect(() => {
@@ -210,9 +184,6 @@ function SearchContent() {
         break;
       case 'telefon':
         handleSearchTelefon(currentSearchTerms.terms[0], page);
-        break;
-      case 'np':
-        handleSearchNp(currentSearchTerms.terms[0], page);
         break;
     }
   };
@@ -265,7 +236,6 @@ function SearchContent() {
             onPageChange={handlePageChange}
             isTargaSearch={isTargaSearch}
             isTelefonSearch={isTelefonSearch}
-            isNpSearch={isNpSearch}
             searchTerms={currentSearchTerms?.type === 'person' ? { emri: currentSearchTerms.terms[0], mbiemri: currentSearchTerms.terms[1] } : undefined}
           />
         )}
