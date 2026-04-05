@@ -232,12 +232,20 @@ function SearchContent() {
         {isLoading && <SkeletonGrid count={4} isTargaSearch={isTargaSearch} isTelefonSearch={isTelefonSearch} />}
 
         {error && !isLoading && (
-          <Alert
-            variant="destructive"
-            className="max-w-md mx-auto"
-          >
-            <AlertDescription>{t(error)}</AlertDescription>
-          </Alert>
+          error === "errors.noResults" ? (
+            <div className="max-w-md mx-auto text-center py-8 space-y-3">
+              <div className="text-4xl">:/</div>
+              <p className="text-text-secondary text-sm">{t(error)}</p>
+              <p className="text-text-tertiary text-xs">{t("errors.tryDifferentSearch")}</p>
+            </div>
+          ) : (
+            <Alert
+              variant="destructive"
+              className="max-w-md mx-auto"
+            >
+              <AlertDescription>{t(error)}</AlertDescription>
+            </Alert>
+          )
         )}
 
         {maidenNameHint && searchResults && !isLoading && (

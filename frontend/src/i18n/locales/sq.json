@@ -15,7 +15,9 @@
     "clear": "Pastro",
     "submit": "Kërko",
     "searching": "Duke kërkuar...",
-    "maidenNameHint": "Shënim: Rezultatet mund të mos jenë të sakta — mbiemri i vajzërisë mund të jetë i ndryshëm."
+    "maidenNameHint": "Shënim: Rezultatet mund të mos jenë të sakta — mbiemri i vajzërisë mund të jetë i ndryshëm.",
+    "recentSearches": "Kërkimet e fundit",
+    "clearHistory": "Pastro historikun"
   },
   "results": {
     "people": "Persona",
@@ -25,7 +27,9 @@
     "noExactResults": "Nuk u gjet rezultat ekzakt. Rezultate te ngjashme:",
     "similarResults": "Rezultate te ngjashme",
     "copyLink": "Kopjo linkun",
-    "linkCopied": "U kopjua!"
+    "linkCopied": "U kopjua!",
+    "foundInDatabases": "Gjetur në {count}/{total} databaza",
+    "totalResults": "{count} rezultate gjithsej"
   },
   "person": {
     "born": "Lindur",
@@ -122,6 +126,7 @@
     "search": "Pati një problem gjatë kërkimit",
     "personSearch": "Pati një problem gjatë kërkimit të personit",
     "plateSearch": "Pati një problem gjatë kërkimit të targës",
-    "phoneSearch": "Pati një problem gjatë kërkimit të telefonit"
+    "phoneSearch": "Pati një problem gjatë kërkimit të telefonit",
+    "tryDifferentSearch": "Provo një emër tjetër ose kontrollo drejtshkrimin"
   }
 }

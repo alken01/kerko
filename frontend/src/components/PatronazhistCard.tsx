@@ -30,10 +30,13 @@ export function PatronazhistCard({ patronazhist, defaultExpanded }: Patronazhist
           <SaveButton type="patronazhist" data={patronazhist} />
         </div>
         <div className="relative z-10">
-          <h2 className={cardStyles.title}>
+          <Link
+            href={`/?emri=${encodeURIComponent(patronazhist.emri || "")}&mbiemri=${encodeURIComponent(patronazhist.mbiemri || "")}`}
+            className={cn(cardStyles.title, "underline decoration-dotted underline-offset-2 hover:text-blue-700 dark:hover:text-blue-400 transition-colors")}
+          >
             {patronazhist.emri}{" "}
             <span className="font-bold">{patronazhist.mbiemri}</span>
-          </h2>
+          </Link>
           <div className={cardStyles.infoList}>
             <InfoItem
               icon={CircleDot}

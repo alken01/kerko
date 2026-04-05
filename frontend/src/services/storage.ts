@@ -12,6 +12,13 @@ import {
   TargatResponse,
 } from "@/types/kerko";
 
+export interface SearchHistoryItem {
+  id: string;
+  type: "person" | "targa" | "telefon" | "np";
+  terms: Record<string, string>;
+  timestamp: number;
+}
+
 interface KerkoDBSchema extends DBSchema {
   savedItems: {
     key: string;
@@ -22,21 +29,36 @@ interface KerkoDBSchema extends DBSchema {
       "by-key": string;
     };
   };
+  searchHistory: {
+    key: string;
+    value: SearchHistoryItem;
+    indexes: {
+      "by-timestamp": number;
+    };
+  };
 }
 
 const DB_NAME = "kerko-db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<KerkoDBSchema>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<KerkoDBSchema>> {
   if (!dbPromise) {
     dbPromise = openDB<KerkoDBSchema>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        const store = db.createObjectStore("savedItems", { keyPath: "id" });
-        store.createIndex("by-type", "type");
-        store.createIndex("by-savedAt", "savedAt");
-        store.createIndex("by-key", "key", { unique: true });
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const store = db.createObjectStore("savedItems", { keyPath: "id" });
+          store.createIndex("by-type", "type");
+          store.createIndex("by-savedAt", "savedAt");
+          store.createIndex("by-key", "key", { unique: true });
+        }
+        if (oldVersion < 2) {
+          const historyStore = db.createObjectStore("searchHistory", {
+            keyPath: "id",
+          });
+          historyStore.createIndex("by-timestamp", "timestamp");
+        }
       },
     });
   }
@@ -110,4 +132,45 @@ export async function getAllSavedKeys(): Promise<Set<string>> {
   const db = await getDB();
   const items = await db.getAll("savedItems");
   return new Set(items.map((item) => item.key));
+}
+
+// --- Search History ---
+
+const MAX_HISTORY_ITEMS = 10;
+
+export async function saveSearchToHistory(
+  type: SearchHistoryItem["type"],
+  terms: Record<string, string>
+): Promise<void> {
+  const db = await getDB();
+  const item: SearchHistoryItem = {
+    id: crypto.randomUUID(),
+    type,
+    terms,
+    timestamp: Date.now(),
+  };
+
+  await db.add("searchHistory", item);
+
+  // Keep only the last MAX_HISTORY_ITEMS entries
+  const all = await db.getAllFromIndex("searchHistory", "by-timestamp");
+  if (all.length > MAX_HISTORY_ITEMS) {
+    const toDelete = all.slice(0, all.length - MAX_HISTORY_ITEMS);
+    const tx = db.transaction("searchHistory", "readwrite");
+    for (const old of toDelete) {
+      tx.store.delete(old.id);
+    }
+    await tx.done;
+  }
+}
+
+export async function getSearchHistory(): Promise<SearchHistoryItem[]> {
+  const db = await getDB();
+  const items = await db.getAllFromIndex("searchHistory", "by-timestamp");
+  return items.reverse(); // Most recent first
+}
+
+export async function clearSearchHistory(): Promise<void> {
+  const db = await getDB();
+  await db.clear("searchHistory");
 }

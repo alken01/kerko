@@ -19,12 +19,12 @@ public class Controller : ControllerBase
 
     [HttpGet("kerko")]
     public async Task<IActionResult> Kerko([FromQuery] string? emri, [FromQuery] string? mbiemri,
-        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? qyteti = null)
     {
         try
         {
-            _logger.LogInformation("Search request | emri: {Emri} mbiemri: {Mbiemri} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", emri ?? "-", mbiemri ?? "-", pageNumber, pageSize, GetClientIpAddress(), SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
-            var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize);
+            _logger.LogInformation("Search request | emri: {Emri} mbiemri: {Mbiemri} qyteti: {Qyteti} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", emri ?? "-", mbiemri ?? "-", qyteti ?? "-", pageNumber, pageSize, GetClientIpAddress(), SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
+            var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize, qyteti);
             return Ok(result);
         }
         catch (ArgumentException ex)

@@ -15,7 +15,9 @@
     "clear": "Clear",
     "submit": "Search",
     "searching": "Searching...",
-    "maidenNameHint": "Note: Results may not be accurate — maiden last name may be different."
+    "maidenNameHint": "Note: Results may not be accurate — maiden last name may be different.",
+    "recentSearches": "Recent searches",
+    "clearHistory": "Clear history"
   },
   "results": {
     "people": "People",
@@ -25,7 +27,9 @@
     "noExactResults": "No exact results found. Similar results:",
     "similarResults": "Similar results",
     "copyLink": "Copy link",
-    "linkCopied": "Copied!"
+    "linkCopied": "Copied!",
+    "foundInDatabases": "Found in {count}/{total} databases",
+    "totalResults": "{count} total results"
   },
   "person": {
     "born": "Born",
@@ -122,6 +126,7 @@
     "search": "There was a problem during the search",
     "personSearch": "There was a problem searching for the person",
     "plateSearch": "There was a problem searching for the license plate",
-    "phoneSearch": "There was a problem searching for the phone number"
+    "phoneSearch": "There was a problem searching for the phone number",
+    "tryDifferentSearch": "Try a different name or check the spelling"
   }
 }
