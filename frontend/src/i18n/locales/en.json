@@ -7,6 +7,8 @@
     "nameTab": "Name",
     "plateTab": "Plate",
     "phoneTab": "Phone",
+    "personalNumberTab": "ID",
+    "personalNumber": "Personal Number",
     "firstName": "First Name",
     "lastName": "Last Name",
     "clear": "Clear",

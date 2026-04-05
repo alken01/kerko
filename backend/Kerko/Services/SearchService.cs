@@ -10,6 +10,7 @@ public interface ISearchService
     Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<TargatResponse>> TargatAsync(string? numriTarges, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<PatronazhistResponse>> TelefonAsync(string? numriTelefonit, int pageNumber = 1, int pageSize = 10);
+    Task<NumriPersonalSearchResponse> NumriPersonalAsync(string? numriPersonal, int pageNumber = 1, int pageSize = 10);
     Task<List<Dictionary<string, int>>> DbStatusAsync();
 }
 
@@ -298,6 +299,112 @@ public class SearchService : ISearchService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching for telefon {numriTelefonit}", numriTelefonit);
+            throw;
+        }
+    }
+
+    public async Task<NumriPersonalSearchResponse> NumriPersonalAsync(string? numriPersonal, int pageNumber = 1, int pageSize = DefaultPageSize)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(numriPersonal))
+            {
+                throw new ArgumentException("Numri personal nuk mund te jete bosh");
+            }
+
+            if (numriPersonal.Length < 2)
+            {
+                throw new ArgumentException("Numri personal duhet te kete te pakten 2 karaktere");
+            }
+
+            if (numriPersonal.Length > MaxInputLength)
+            {
+                throw new ArgumentException($"Numri personal nuk mund te kete me shume se {MaxInputLength} karaktere");
+            }
+
+            (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
+
+            var normalizedNP = numriPersonal.ToUpper().Trim();
+
+            var rrogatQuery = _db.Rrogat
+                .AsNoTracking()
+                .Where(r => r.NumriPersonal != null && r.NumriPersonal.ToUpper().Contains(normalizedNP))
+                .OrderBy(r => r.NumriPersonal!.ToUpper() == normalizedNP ? 0 :
+                             r.NumriPersonal!.ToUpper().StartsWith(normalizedNP) ? 1 : 2)
+                .ThenBy(r => r.Mbiemri);
+
+            var targatQuery = _db.Targat
+                .AsNoTracking()
+                .Where(t => t.NumriPersonal != null && t.NumriPersonal.ToUpper().Contains(normalizedNP))
+                .OrderBy(t => t.NumriPersonal!.ToUpper() == normalizedNP ? 0 :
+                             t.NumriPersonal!.ToUpper().StartsWith(normalizedNP) ? 1 : 2)
+                .ThenBy(t => t.Mbiemri);
+
+            var patronazhistQuery = _db.Patronazhist
+                .AsNoTracking()
+                .Where(p => p.NumriPersonal != null && p.NumriPersonal.ToUpper().Contains(normalizedNP))
+                .OrderBy(p => p.NumriPersonal!.ToUpper() == normalizedNP ? 0 :
+                             p.NumriPersonal!.ToUpper().StartsWith(normalizedNP) ? 1 : 2)
+                .ThenBy(p => p.Mbiemri);
+
+            var rrogatCount = await rrogatQuery.CountAsync();
+            var targatCount = await targatQuery.CountAsync();
+            var patronazhistCount = await patronazhistQuery.CountAsync();
+
+            var rrogatResults = await rrogatQuery
+                .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+                .Select(r => new RrogatResponse
+                {
+                    NumriPersonal = r.NumriPersonal, Emri = r.Emri, Mbiemri = r.Mbiemri,
+                    NIPT = r.NIPT, DRT = r.DRT, PagaBruto = r.PagaBruto,
+                    Profesioni = r.Profesioni, Kategoria = r.Kategoria
+                }).ToListAsync();
+
+            var targatResults = await targatQuery
+                .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+                .Select(t => new TargatResponse
+                {
+                    NumriTarges = t.NumriTarges, Marka = t.Marka, Modeli = t.Modeli,
+                    Ngjyra = t.Ngjyra, NumriPersonal = t.NumriPersonal,
+                    Emri = t.Emri, Mbiemri = t.Mbiemri
+                }).ToListAsync();
+
+            var patronazhistResults = await patronazhistQuery
+                .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+                .Select(p => new PatronazhistResponse
+                {
+                    NumriPersonal = p.NumriPersonal, Emri = p.Emri, Mbiemri = p.Mbiemri,
+                    Atesi = p.Atesi, Datelindja = p.Datelindja, QV = p.QV,
+                    ListaNr = p.ListaNr, Tel = p.Tel, Emigrant = p.Emigrant,
+                    Country = p.Country, ISigurte = p.ISigurte, Koment = p.Koment,
+                    Patronazhisti = p.Patronazhisti, Preferenca = p.Preferenca,
+                    Census2013Preferenca = p.Census2013Preferenca,
+                    Census2013Siguria = p.Census2013Siguria,
+                    Vendlindja = p.Vendlindja, Kompania = p.Kompania, KodBanese = p.KodBanese
+                }).ToListAsync();
+
+            return new NumriPersonalSearchResponse
+            {
+                Rrogat = new PaginatedResult<RrogatResponse>
+                {
+                    Items = rrogatResults,
+                    Pagination = new PaginationInfo { CurrentPage = pageNumber, PageSize = pageSize, TotalItems = rrogatCount }
+                },
+                Targat = new PaginatedResult<TargatResponse>
+                {
+                    Items = targatResults,
+                    Pagination = new PaginationInfo { CurrentPage = pageNumber, PageSize = pageSize, TotalItems = targatCount }
+                },
+                Patronazhist = new PaginatedResult<PatronazhistResponse>
+                {
+                    Items = patronazhistResults,
+                    Pagination = new PaginationInfo { CurrentPage = pageNumber, PageSize = pageSize, TotalItems = patronazhistCount }
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching for numri personal {numriPersonal}", numriPersonal);
             throw;
         }
     }

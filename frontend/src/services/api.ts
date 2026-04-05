@@ -1,4 +1,4 @@
-import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse } from "@/types/kerko";
+import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, NumriPersonalSearchResponse } from "@/types/kerko";
 import {
   RATE_LIMIT_ERROR_KEY,
   NO_RESULTS_KEY,
@@ -107,6 +107,29 @@ export class ApiService {
     );
 
     if (!data || data.items.length === 0) {
+      throw new Error(NO_RESULTS_KEY);
+    }
+
+    return data;
+  }
+
+  static async searchNumriPersonal(
+    numriPersonal: string,
+    pageNumber: number = 1,
+    pageSize: number = DEFAULT_PAGE_SIZE
+  ): Promise<NumriPersonalSearchResponse> {
+    const signal = getSignal();
+    const params = buildParams({ numriPersonal, pageNumber, pageSize });
+    const data = await fetchApi<NumriPersonalSearchResponse>(
+      `${API_URL}/api/numripersonal?${params}`,
+      PERSON_SEARCH_ERROR_KEY,
+      signal
+    );
+
+    if (
+      !data ||
+      (data.rrogat.items.length === 0 && data.targat.items.length === 0 && data.patronazhist.items.length === 0)
+    ) {
       throw new Error(NO_RESULTS_KEY);
     }
 

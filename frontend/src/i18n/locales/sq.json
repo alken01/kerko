@@ -7,6 +7,8 @@
     "nameTab": "Emri",
     "plateTab": "Targa",
     "phoneTab": "Telefon",
+    "personalNumberTab": "NP",
+    "personalNumber": "Numri Personal",
     "firstName": "Emri",
     "lastName": "Mbiemri",
     "clear": "Pastro",

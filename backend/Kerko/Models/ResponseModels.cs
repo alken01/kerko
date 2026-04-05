@@ -91,3 +91,10 @@ public class SearchResponse
     public PaginatedResult<TargatResponse> Targat { get; init; } = new();
     public PaginatedResult<PatronazhistResponse> Patronazhist { get; init; } = new();
 }
+
+public class NumriPersonalSearchResponse
+{
+    public PaginatedResult<RrogatResponse> Rrogat { get; init; } = new();
+    public PaginatedResult<TargatResponse> Targat { get; init; } = new();
+    public PaginatedResult<PatronazhistResponse> Patronazhist { get; init; } = new();
+}

@@ -81,6 +81,27 @@ public class Controller : ControllerBase
         }
     }
 
+    [HttpGet("numripersonal")]
+    public async Task<IActionResult> NumriPersonal([FromQuery] string? numriPersonal,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            _logger.LogInformation("NumriPersonal request | numriPersonal: {NumriPersonal} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", numriPersonal ?? "-", pageNumber, pageSize, GetClientIpAddress(), SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
+            var result = await _searchService.NumriPersonalAsync(numriPersonal, pageNumber, pageSize);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while searching for numri personal");
+            return StatusCode(500, "An error occurred while processing your request");
+        }
+    }
+
     [HttpGet("dbstatus")]
     [ResponseCache(Duration = 300)]
     public async Task<IActionResult> DbStatus()
