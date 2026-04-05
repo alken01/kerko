@@ -7,7 +7,7 @@ namespace Kerko.Services;
 
 public interface ISearchService
 {
-    Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, int pageNumber = 1, int pageSize = 10, string? qyteti = null);
+    Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<TargatResponse>> TargatAsync(string? numriTarges, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<PatronazhistResponse>> TelefonAsync(string? numriTelefonit, int pageNumber = 1, int pageSize = 10);
     Task<List<Dictionary<string, int>>> DbStatusAsync();
@@ -36,7 +36,7 @@ public class SearchService : ISearchService
         return (pageNumber, pageSize);
     }
 
-    public async Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, int pageNumber = 1, int pageSize = DefaultPageSize, string? qyteti = null)
+    public async Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, int pageNumber = 1, int pageSize = DefaultPageSize)
     {
         try
         {
@@ -60,13 +60,6 @@ public class SearchService : ISearchService
             var normalizedMbiemri = NormalizeAlbanian(mbiemri);
             var normalizedEmri = NormalizeAlbanian(emri);
 
-            Expression<Func<Person, bool>>? cityFilter = null;
-            if (!string.IsNullOrEmpty(qyteti))
-            {
-                var normalizedCity = qyteti.Trim().ToLower();
-                cityFilter = p => p.Qyteti != null && p.Qyteti.ToLower().Contains(normalizedCity);
-            }
-
             var personTask = SearchByNameAsync(
                 _db.Person,
                 p => p.Emer,
@@ -87,7 +80,7 @@ public class SearchService : ISearchService
                     GjendjeCivile = p.GjendjeCivile,
                     Kombesia = p.Kombesia
                 },
-                normalizedEmri, normalizedMbiemri, pageNumber, pageSize, cityFilter);
+                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
             var rrogatTask = SearchByNameAsync(
                 _db.Rrogat,
@@ -328,8 +321,7 @@ public class SearchService : ISearchService
         string emri,
         string mbiemri,
         int pageNumber,
-        int pageSize,
-        Expression<Func<TEntity, bool>>? additionalFilter = null)
+        int pageSize)
         where TEntity : class
     {
         var param = emriSelector.Parameters[0];
@@ -362,13 +354,6 @@ public class SearchService : ISearchService
         Expression combinedCondition = Expression.AndAlso(
             Expression.AndAlso(emriNotNull, mbiemriNotNull),
             Expression.AndAlso(emriCondition, mbiemriCondition));
-
-        if (additionalFilter != null)
-        {
-            var rewrittenFilter = new ParameterReplacer(additionalFilter.Parameters[0], param)
-                .Visit(additionalFilter.Body);
-            combinedCondition = Expression.AndAlso(combinedCondition, rewrittenFilter);
-        }
 
         var whereExpression = Expression.Lambda<Func<TEntity, bool>>(combinedCondition, param);
 

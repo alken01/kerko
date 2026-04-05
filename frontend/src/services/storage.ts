@@ -151,11 +151,11 @@ export async function saveSearchToHistory(
 ): Promise<void> {
   const db = await getDB();
 
-  // Remove existing entry with same type+terms (dedup)
+  // Remove all existing entries with same type+terms (dedup)
   const all = await db.getAllFromIndex("searchHistory", "by-timestamp");
-  const existing = all.find((h) => h.type === type && historyTermsMatch(h.terms, terms));
-  if (existing) {
-    await db.delete("searchHistory", existing.id);
+  const duplicates = all.filter((h) => h.type === type && historyTermsMatch(h.terms, terms));
+  for (const dup of duplicates) {
+    await db.delete("searchHistory", dup.id);
   }
 
   const item: SearchHistoryItem = {
