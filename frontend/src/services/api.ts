@@ -1,4 +1,4 @@
-import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, NumriPersonalSearchResponse } from "@/types/kerko";
+import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, NumriPersonalSearchResponse, RrogatResponse, PaginatedResult } from "@/types/kerko";
 import {
   RATE_LIMIT_ERROR_KEY,
   NO_RESULTS_KEY,
@@ -130,6 +130,26 @@ export class ApiService {
       !data ||
       (data.rrogat.items.length === 0 && data.targat.items.length === 0 && data.patronazhist.items.length === 0)
     ) {
+      throw new Error(NO_RESULTS_KEY);
+    }
+
+    return data;
+  }
+
+  static async searchNipt(
+    nipt: string,
+    pageNumber: number = 1,
+    pageSize: number = DEFAULT_PAGE_SIZE
+  ): Promise<PaginatedResult<RrogatResponse>> {
+    const signal = getSignal();
+    const params = buildParams({ nipt, pageNumber, pageSize });
+    const data = await fetchApi<PaginatedResult<RrogatResponse>>(
+      `${API_URL}/api/nipt?${params}`,
+      PERSON_SEARCH_ERROR_KEY,
+      signal
+    );
+
+    if (!data || data.items.length === 0) {
       throw new Error(NO_RESULTS_KEY);
     }
 

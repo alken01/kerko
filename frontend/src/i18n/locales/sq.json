@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "Kërko",
-    "loading": "Duke ngarkuar..."
+    "loading": "Duke ngarkuar...",
+    "searchingRecords": "Duke kërkuar në {count} regjistrime"
   },
   "search": {
     "nameTab": "Emri",
@@ -22,7 +23,9 @@
     "plates": "Targat",
     "patrons": "Patronazhistë",
     "noExactResults": "Nuk u gjet rezultat ekzakt. Rezultate te ngjashme:",
-    "similarResults": "Rezultate te ngjashme"
+    "similarResults": "Rezultate te ngjashme",
+    "copyLink": "Kopjo linkun",
+    "linkCopied": "U kopjua!"
   },
   "person": {
     "born": "Lindur",
@@ -92,7 +95,8 @@
     "removedFromSaved": "U hoq nga të ruajturat",
     "wasSaved": "u ruajt",
     "removeFromSaved": "Hiq nga të ruajturat",
-    "save": "Ruaj"
+    "save": "Ruaj",
+    "export": "Eksporto"
   },
   "pagination": {
     "previous": "← Para",

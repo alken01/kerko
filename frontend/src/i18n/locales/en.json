@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "Kërko",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "searchingRecords": "Searching {count} records"
   },
   "search": {
     "nameTab": "Name",
@@ -22,7 +23,9 @@
     "plates": "License Plates",
     "patrons": "Other",
     "noExactResults": "No exact results found. Similar results:",
-    "similarResults": "Similar results"
+    "similarResults": "Similar results",
+    "copyLink": "Copy link",
+    "linkCopied": "Copied!"
   },
   "person": {
     "born": "Born",
@@ -92,7 +95,8 @@
     "removedFromSaved": "Removed from saved",
     "wasSaved": "was saved",
     "removeFromSaved": "Remove from saved",
-    "save": "Save"
+    "save": "Save",
+    "export": "Export"
   },
   "pagination": {
     "previous": "← Prev",

@@ -11,6 +11,7 @@ public interface ISearchService
     Task<PaginatedResult<TargatResponse>> TargatAsync(string? numriTarges, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<PatronazhistResponse>> TelefonAsync(string? numriTelefonit, int pageNumber = 1, int pageSize = 10);
     Task<NumriPersonalSearchResponse> NumriPersonalAsync(string? numriPersonal, int pageNumber = 1, int pageSize = 10);
+    Task<PaginatedResult<RrogatResponse>> NiptAsync(string? nipt, int pageNumber = 1, int pageSize = 10);
     Task<List<Dictionary<string, int>>> DbStatusAsync();
 }
 
@@ -405,6 +406,67 @@ public class SearchService : ISearchService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching for numri personal {numriPersonal}", numriPersonal);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResult<RrogatResponse>> NiptAsync(string? nipt, int pageNumber = 1, int pageSize = DefaultPageSize)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(nipt))
+            {
+                throw new ArgumentException("NIPT nuk mund te jete bosh");
+            }
+
+            if (nipt.Length < 2)
+            {
+                throw new ArgumentException("NIPT duhet te kete te pakten 2 karaktere");
+            }
+
+            if (nipt.Length > MaxInputLength)
+            {
+                throw new ArgumentException($"NIPT nuk mund te kete me shume se {MaxInputLength} karaktere");
+            }
+
+            (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
+
+            var normalizedNipt = nipt.ToUpper().Trim();
+
+            var query = _db.Rrogat
+                .AsNoTracking()
+                .Where(r => r.NIPT != null && r.NIPT.ToUpper().Contains(normalizedNipt))
+                .OrderBy(r => r.NIPT!.ToUpper() == normalizedNipt ? 0 :
+                             r.NIPT!.ToUpper().StartsWith(normalizedNipt) ? 1 : 2)
+                .ThenBy(r => r.Mbiemri);
+
+            var totalItems = await query.CountAsync();
+
+            var results = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new RrogatResponse
+                {
+                    NumriPersonal = r.NumriPersonal, Emri = r.Emri, Mbiemri = r.Mbiemri,
+                    NIPT = r.NIPT, DRT = r.DRT, PagaBruto = r.PagaBruto,
+                    Profesioni = r.Profesioni, Kategoria = r.Kategoria
+                })
+                .ToListAsync();
+
+            return new PaginatedResult<RrogatResponse>
+            {
+                Items = results,
+                Pagination = new PaginationInfo
+                {
+                    CurrentPage = pageNumber,
+                    PageSize = pageSize,
+                    TotalItems = totalItems
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching for NIPT {nipt}", nipt);
             throw;
         }
     }

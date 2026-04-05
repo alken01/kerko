@@ -8,6 +8,7 @@ import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SkeletonGrid } from "@/components/SkeletonCard";
+import { DbStatus } from "@/components/DbStatus";
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, NumriPersonalSearchResponse, TabType } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
@@ -44,6 +45,41 @@ function SearchContent() {
     const timer = setTimeout(() => setError(null), 5000);
     return () => clearTimeout(timer);
   }, [error]);
+
+  const handleClear = useCallback(() => {
+    setSearchResults(null);
+    setError(null);
+    setIsTargaSearch(false);
+    setIsTelefonSearch(false);
+    setIsNpSearch(false);
+  }, []);
+
+  // Keyboard shortcuts (PRD 5.8)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClear();
+        // Blur the active input so the user sees the cleared state
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        return;
+      }
+
+      if (e.key === "/") {
+        const tag = (document.activeElement as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        e.preventDefault();
+        const input = document.querySelector<HTMLInputElement>(
+          "form input:not([disabled])"
+        );
+        input?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleClear]);
 
   const handleSearch = useCallback(async (emri: string, mbiemri: string, page: number = 1) => {
     setIsLoading(true);
@@ -163,14 +199,6 @@ function SearchContent() {
     }
   }, [searchResults, isLoading]);
 
-  const handleClear = () => {
-    setSearchResults(null);
-    setError(null);
-    setIsTargaSearch(false);
-    setIsTelefonSearch(false);
-    setIsNpSearch(false);
-  };
-
   const handlePageChange = (page: number) => {
     if (!currentSearchTerms) return;
 
@@ -259,6 +287,8 @@ export default function Home() {
             <ThemeToggle />
           </div>
         </div>
+
+        <DbStatus />
 
         <Suspense
           fallback={<div className="text-text-primary text-center">{t("app.loading")}</div>}
