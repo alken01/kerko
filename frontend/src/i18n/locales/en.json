@@ -22,9 +22,7 @@
     "plates": "License Plates",
     "patrons": "Other",
     "noExactResults": "No exact results found. Similar results:",
-    "similarResults": "Similar results",
-    "copyLink": "Copy link",
-    "linkCopied": "Copied!"
+    "similarResults": "Similar results"
   },
   "person": {
     "born": "Born",

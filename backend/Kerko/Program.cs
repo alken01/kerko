@@ -138,36 +138,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/api/health");
 
-// Create database and tables
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        // Ensure the database directory exists
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        if (!string.IsNullOrEmpty(connectionString))
-        {
-            var dbPath = connectionString.Replace("Data Source=", "").Trim();
-            var directory = Path.GetDirectoryName(dbPath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-        }
-
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        // Apply migrations (this will create the database if it doesn't exist)
-        context.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while initializing the database.");
-        // Don't throw here, let the application start even if database initialization fails
-    }
-}
-
 app.Run();
 
 // Make the implicit Program class accessible to tests

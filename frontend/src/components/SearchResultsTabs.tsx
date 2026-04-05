@@ -5,7 +5,7 @@ import {
   TabType,
 } from "@/types/kerko";
 import { useTranslation } from "@/i18n/TranslationContext";
-import { Check, ChevronDown, Link } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Pagination } from "./Pagination";
@@ -159,17 +159,6 @@ export function SearchResultsTabs({
   searchTerms,
 }: SearchResultsTabsProps) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback silently if clipboard API is unavailable
-    }
-  };
 
   const tabs = isTargaSearch
     ? [{ value: "targat", label: t("results.plates") }]
@@ -210,41 +199,25 @@ export function SearchResultsTabs({
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-      <div className="flex items-center gap-2">
-        <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary overflow-x-auto flex-1 min-w-0">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => onTabChange(tab.value as TabType)}
-              className={`flex-1 flex-shrink-0 min-w-fit px-3 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
-                activeTab === tab.value
-                  ? "bg-surface-tertiary text-text-primary "
-                  : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
-              }`}
-            >
-              <div className="flex items-center justify-center gap-1">
-                <span>{tab.label}</span>
-                <span className="text-xs bg-surface-interactive px-1.5 py-0.5 rounded-full">
-                  {getTabCount(tab.value)}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={handleCopyLink}
-          title={copied ? t("results.linkCopied") : t("results.copyLink")}
-          className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium text-text-tertiary hover:text-text-primary rounded-lg border-2 border-border-semantic-secondary bg-surface-secondary hover:bg-surface-interactive transition-all duration-200"
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5 text-green-500" />
-          ) : (
-            <Link className="h-3.5 w-3.5" />
-          )}
-          <span className="hidden sm:inline">
-            {copied ? t("results.linkCopied") : t("results.copyLink")}
-          </span>
-        </button>
+      <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => onTabChange(tab.value as TabType)}
+            className={`flex-1 flex-shrink-0 min-w-fit px-3 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+              activeTab === tab.value
+                ? "bg-surface-tertiary text-text-primary "
+                : "text-text-tertiary hover:text-text-primary hover:bg-surface-interactive"
+            }`}
+          >
+            <div className="flex items-center justify-center gap-1">
+              <span>{tab.label}</span>
+              <span className="text-xs bg-surface-interactive px-1.5 py-0.5 rounded-full">
+                {getTabCount(tab.value)}
+              </span>
+            </div>
+          </button>
+        ))}
       </div>
 
       <div className="relative overflow-hidden">

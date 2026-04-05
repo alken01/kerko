@@ -138,11 +138,26 @@ export async function getAllSavedKeys(): Promise<Set<string>> {
 
 const MAX_HISTORY_ITEMS = 10;
 
+function historyTermsMatch(a: Record<string, string>, b: Record<string, string>): boolean {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((k) => a[k]?.toLowerCase() === b[k]?.toLowerCase());
+}
+
 export async function saveSearchToHistory(
   type: SearchHistoryItem["type"],
   terms: Record<string, string>
 ): Promise<void> {
   const db = await getDB();
+
+  // Remove existing entry with same type+terms (dedup)
+  const all = await db.getAllFromIndex("searchHistory", "by-timestamp");
+  const existing = all.find((h) => h.type === type && historyTermsMatch(h.terms, terms));
+  if (existing) {
+    await db.delete("searchHistory", existing.id);
+  }
+
   const item: SearchHistoryItem = {
     id: crypto.randomUUID(),
     type,
@@ -153,9 +168,9 @@ export async function saveSearchToHistory(
   await db.add("searchHistory", item);
 
   // Keep only the last MAX_HISTORY_ITEMS entries
-  const all = await db.getAllFromIndex("searchHistory", "by-timestamp");
-  if (all.length > MAX_HISTORY_ITEMS) {
-    const toDelete = all.slice(0, all.length - MAX_HISTORY_ITEMS);
+  const updated = await db.getAllFromIndex("searchHistory", "by-timestamp");
+  if (updated.length > MAX_HISTORY_ITEMS) {
+    const toDelete = updated.slice(0, updated.length - MAX_HISTORY_ITEMS);
     const tx = db.transaction("searchHistory", "readwrite");
     for (const old of toDelete) {
       tx.store.delete(old.id);
