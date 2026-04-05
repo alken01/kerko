@@ -26,7 +26,7 @@ export function TargatCard({ targat, defaultExpanded }: TargatCardProps) {
         <div className="relative z-10">
           <Link
             href={`/?emri=${encodeURIComponent(targat.emri || "")}&mbiemri=${encodeURIComponent(targat.mbiemri || "")}`}
-            className={cn(cardStyles.title, "underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors")}
+            className={cn(cardStyles.title, "underline decoration-dotted underline-offset-2 hover:text-blue-700 dark:hover:text-blue-400 transition-colors")}
           >
             {targat.emri} <span className="font-bold">{targat.mbiemri}</span>
           </Link>

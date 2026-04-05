@@ -5,6 +5,7 @@ namespace Kerko.Controllers;
 
 [ApiController]
 [Route("api")]
+[ResponseCache(Duration = 60, VaryByQueryKeys = ["*"])]
 public class Controller : ControllerBase
 {
     private readonly ISearchService _searchService;
@@ -22,7 +23,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Search request | emri: {emri ?? "-"} mbiemri: {mbiemri ?? "-"} page: {pageNumber}/{pageSize} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation("Search request | emri: {Emri} mbiemri: {Mbiemri} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", emri ?? "-", mbiemri ?? "-", pageNumber, pageSize, GetClientIpAddress(), SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
             var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize);
             return Ok(result);
         }
@@ -43,7 +44,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Targat request | numriTarges: {numriTarges ?? "-"} page: {pageNumber}/{pageSize} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation("Targat request | numriTarges: {NumriTarges} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", numriTarges ?? "-", pageNumber, pageSize, GetClientIpAddress(), SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
 
             var result = await _searchService.TargatAsync(numriTarges, pageNumber, pageSize);
             return Ok(result);
@@ -65,7 +66,7 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"Telefon request | numriTelefonit: {numriTelefonit ?? "-"} page: {pageNumber}/{pageSize} | IP: {GetClientIpAddress()} | {SimplifyUserAgent(Request.Headers["User-Agent"].ToString())}");
+            _logger.LogInformation("Telefon request | numriTelefonit: {NumriTelefonit} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", numriTelefonit ?? "-", pageNumber, pageSize, GetClientIpAddress(), SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
             var result = await _searchService.TelefonAsync(numriTelefonit, pageNumber, pageSize);
             return Ok(result);
         }
@@ -80,10 +81,20 @@ public class Controller : ControllerBase
         }
     }
 
-    [HttpGet("health")]
-    public IActionResult Health()
+    [HttpGet("dbstatus")]
+    [ResponseCache(Duration = 300)]
+    public async Task<IActionResult> DbStatus()
     {
-        return Ok("OK");
+        try
+        {
+            var status = await _searchService.DbStatusAsync();
+            return Ok(status);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting DB status");
+            return StatusCode(500, "An error occurred");
+        }
     }
 
     private string GetClientIpAddress()
@@ -103,7 +114,7 @@ public class Controller : ControllerBase
         return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
     }
 
-    private string SimplifyUserAgent(string? userAgent)
+    private static string SimplifyUserAgent(string? userAgent)
     {
         if (string.IsNullOrEmpty(userAgent))
         {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResultsTabs } from "@/components/SearchResultsTabs";
 import { SavedItemsPanel } from "@/components/SavedItemsPanel";
@@ -35,6 +35,7 @@ function SearchContent() {
     terms: string[];
   } | null>(null);
   const [maidenNameHint, setMaidenNameHint] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Auto-dismiss errors after 5 seconds
   useEffect(() => {
@@ -42,6 +43,67 @@ function SearchContent() {
     const timer = setTimeout(() => setError(null), 5000);
     return () => clearTimeout(timer);
   }, [error]);
+
+  const handleSearch = useCallback(async (emri: string, mbiemri: string, page: number = 1) => {
+    setIsLoading(true);
+    setError(null);
+    setSearchResults(null);
+    if (page === 1 && !searchParams.get("hint")) setMaidenNameHint(false);
+    setIsTargaSearch(false);
+    setIsTelefonSearch(false);
+    setActiveTab("person");
+    setCurrentSearchTerms({ type: 'person', terms: [emri, mbiemri] });
+
+    try {
+      const data = await ApiService.searchPerson(emri, mbiemri, page);
+      setSearchResults(data);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchParams]);
+
+  const handleSearchTarga = useCallback(async (numriTarges: string, page: number = 1) => {
+    setIsLoading(true);
+    setError(null);
+    setSearchResults(null);
+    setActiveTab("targat");
+    setIsTargaSearch(true);
+    setIsTelefonSearch(false);
+    setCurrentSearchTerms({ type: 'targa', terms: [numriTarges] });
+
+    try {
+      const data = await ApiService.searchTarga(numriTarges, page);
+      setSearchResults(data);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleSearchTelefon = useCallback(async (numriTelefonit: string, page: number = 1) => {
+    setIsLoading(true);
+    setError(null);
+    setSearchResults(null);
+    setActiveTab("patronazhist");
+    setIsTargaSearch(false);
+    setIsTelefonSearch(true);
+    setCurrentSearchTerms({ type: 'telefon', terms: [numriTelefonit] });
+
+    try {
+      const data = await ApiService.searchTelefon(numriTelefonit, page);
+      setSearchResults(data);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Handle URL parameters on initial load
   useEffect(() => {
@@ -61,65 +123,17 @@ function SearchContent() {
       setSearchFormData({ emri, mbiemri });
       handleSearch(emri, mbiemri);
     }
-  }, [searchParams]);
+  }, [searchParams, handleSearch, handleSearchTarga, handleSearchTelefon]);
 
-  const handleSearch = async (emri: string, mbiemri: string, page: number = 1) => {
-    setIsLoading(true);
-    setError(null);
-    setSearchResults(null);
-    if (page === 1 && !searchParams.get("hint")) setMaidenNameHint(false);
-    setIsTargaSearch(false);
-    setIsTelefonSearch(false);
-    setActiveTab("person");
-    setCurrentSearchTerms({ type: 'person', terms: [emri, mbiemri] });
-
-    try {
-      const data = await ApiService.searchPerson(emri, mbiemri, page);
-      setSearchResults(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
-    } finally {
-      setIsLoading(false);
+  // Auto-scroll to results on mobile (PRD 6.1)
+  useEffect(() => {
+    if (searchResults && !isLoading && resultsRef.current) {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
-  };
-
-  const handleSearchTarga = async (numriTarges: string, page: number = 1) => {
-    setIsLoading(true);
-    setError(null);
-    setSearchResults(null);
-    setActiveTab("targat");
-    setIsTargaSearch(true);
-    setIsTelefonSearch(false);
-    setCurrentSearchTerms({ type: 'targa', terms: [numriTarges] });
-
-    try {
-      const data = await ApiService.searchTarga(numriTarges, page);
-      setSearchResults(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSearchTelefon = async (numriTelefonit: string, page: number = 1) => {
-    setIsLoading(true);
-    setError(null);
-    setSearchResults(null);
-    setActiveTab("patronazhist");
-    setIsTargaSearch(false);
-    setIsTelefonSearch(true);
-    setCurrentSearchTerms({ type: 'telefon', terms: [numriTelefonit] });
-
-    try {
-      const data = await ApiService.searchTelefon(numriTelefonit, page);
-      setSearchResults(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [searchResults, isLoading]);
 
   const handleClear = () => {
     setSearchResults(null);
@@ -154,38 +168,40 @@ function SearchContent() {
         />
       </div>
 
-      {isLoading && <SkeletonGrid count={4} isTargaSearch={isTargaSearch} isTelefonSearch={isTelefonSearch} />}
+      <div ref={resultsRef}>
+        {isLoading && <SkeletonGrid count={4} isTargaSearch={isTargaSearch} isTelefonSearch={isTelefonSearch} />}
 
-      {error && !isLoading && (
-        <Alert
-          variant="destructive"
-          className="max-w-md mx-auto"
-        >
-          <AlertDescription>{t(error)}</AlertDescription>
-        </Alert>
-      )}
+        {error && !isLoading && (
+          <Alert
+            variant="destructive"
+            className="max-w-md mx-auto"
+          >
+            <AlertDescription>{t(error)}</AlertDescription>
+          </Alert>
+        )}
 
-      {maidenNameHint && searchResults && !isLoading && (
-        <div className="flex justify-center">
-          <div className="w-fit rounded-lg border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20 px-4 py-2 text-center">
-            <p className="text-yellow-800 dark:text-yellow-200 text-xs">
-              {t("search.maidenNameHint")}
-            </p>
+        {maidenNameHint && searchResults && !isLoading && (
+          <div className="flex justify-center">
+            <div className="w-fit rounded-lg border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20 px-4 py-2 text-center">
+              <p className="text-yellow-800 dark:text-yellow-200 text-xs">
+                {t("search.maidenNameHint")}
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {searchResults && !isLoading && (
-        <SearchResultsTabs
-          searchResults={searchResults}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onPageChange={handlePageChange}
-          isTargaSearch={isTargaSearch}
-          isTelefonSearch={isTelefonSearch}
-          searchTerms={currentSearchTerms?.type === 'person' ? { emri: currentSearchTerms.terms[0], mbiemri: currentSearchTerms.terms[1] } : undefined}
-        />
-      )}
+        {searchResults && !isLoading && (
+          <SearchResultsTabs
+            searchResults={searchResults}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onPageChange={handlePageChange}
+            isTargaSearch={isTargaSearch}
+            isTelefonSearch={isTelefonSearch}
+            searchTerms={currentSearchTerms?.type === 'person' ? { emri: currentSearchTerms.terms[0], mbiemri: currentSearchTerms.terms[1] } : undefined}
+          />
+        )}
+      </div>
 
       <SavedItemsPanel />
     </>

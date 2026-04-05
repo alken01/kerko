@@ -12,8 +12,8 @@
 - [x] **1.2 Diacritic variant explosion** — `GenerateAlbanianVariants` grows O(3^n). Replaced with SQL-side `REPLACE()` normalization.
 - [x] **1.3 LIKE pattern injection** — User input passed raw into LIKE patterns. Fixed with `EscapeLikePattern()` + `ESCAPE '\'`.
 - [x] **1.4 Rate limiter IP behind proxy** — `RemoteIpAddress` was proxy IP. Fixed with `ForwardedHeadersMiddleware`.
-- [ ] **1.5 String interpolation in logging** — `SearchController.cs:25,46,68` uses `$""` which defeats structured logging. Switch to message templates: `_logger.LogInformation("Search | emri: {Emri}", emri)`.
-- [ ] **1.6 Input max-length caps** — Min-length validated but no max. A 10KB query string causes unnecessary work. Add `[StringLength(100)]` or manual cap.
+- [x] **1.5 String interpolation in logging** — `SearchController.cs:25,46,68` uses `$""` which defeats structured logging. Switch to message templates: `_logger.LogInformation("Search | emri: {Emri}", emri)`.
+- [x] **1.6 Input max-length caps** — Min-length validated but no max. A 10KB query string causes unnecessary work. Add `[StringLength(100)]` or manual cap.
 - [ ] **1.7 Remove `userScalable: false`** — Violates WCAG 1.4.4, blocks pinch-to-zoom for low-vision users. Remove from `viewport.tsx`.
 - [ ] **1.8 `useEffect` stale closure** — `page.tsx:47-64` references handlers not in the dependency array. Wrap in `useCallback` or use refs.
 - [ ] **1.9 `key={index}` in result lists** — `SearchResultsTabs.tsx:232,239,252,269`. Use composite keys for proper React reconciliation.
@@ -37,7 +37,7 @@
 - [x] **3.2 Rate limiter real IP** — Fixed.
 - [ ] **3.3 CORS from environment variables** — Origins hardcoded in `appsettings.json`. Allow override via env vars for container deployments without config rebuild.
 - [ ] **3.4 Remove or apply API key middleware** — `RequireApiKeyAttribute` exists but is unused dead code. Either apply it to admin endpoints or remove it.
-- [ ] **3.5 Input max-length** — (Same as 1.6, listed here for security context.)
+- [x] **3.5 Input max-length** — (Same as 1.6, listed here for security context.)
 
 ---
 
@@ -96,7 +96,7 @@
 - [ ] **7.2 Full-stack Docker Compose** — Current compose only has backend. Add frontend service for local dev.
 - [ ] **7.3 Version tagging** — No git tags or semver. Add tags for release tracking and rollback.
 - [ ] **7.4 Database backup strategy** — 1.1GB SQLite in a Docker volume with no backup. Add cron backup script or document volume backup.
-- [ ] **7.5 Health check with DB ping** — `/api/health` returns "OK" without checking DB. Use `AddHealthChecks().AddDbContextCheck<>()`.
+- [x] **7.5 Health check with DB ping** — `/api/health` returns "OK" without checking DB. Use `AddHealthChecks().AddDbContextCheck<>()`.
 
 ---
 

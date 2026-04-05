@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Kerko.Infrastructure;
 using Kerko.Services;
-using Kerko.Authentication;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.AspNetCore.HttpOverrides;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,16 +42,33 @@ if (!builder.Environment.IsEnvironment("Testing"))
 }
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-// Add CORS
+// Response compression (PRD 2.3)
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+// Add CORS with env var override (PRD 3.3)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        var origins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>();
+        // Check env var first, then fall back to config
+        var envOrigins = Environment.GetEnvironmentVariable("CORS_ORIGINS");
+        var origins = !string.IsNullOrEmpty(envOrigins)
+            ? envOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            : builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>();
+
         if (origins == null || origins.Length == 0)
         {
             if (builder.Environment.IsDevelopment())
@@ -88,9 +106,21 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register services
 builder.Services.AddScoped<ISearchService, SearchService>();
 
+// Health checks with DB ping
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
+
 var app = builder.Build();
 
+// Swagger UI in development (PRD 5.11)
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.UseForwardedHeaders();
+app.UseResponseCompression();
 app.UseHttpsRedirection();
 app.UseCors();
 
@@ -101,8 +131,8 @@ if (!app.Environment.IsEnvironment("Testing"))
 }
 
 app.UseAuthorization();
-app.UseApiKeyAuth();
 app.MapControllers();
+app.MapHealthChecks("/api/health");
 
 // Create database and tables
 using (var scope = app.Services.CreateScope())

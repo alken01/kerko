@@ -96,7 +96,7 @@ export function PersonCard({ person, defaultExpanded }: PersonCardProps) {
                       person.atesi ? (
                         <Link
                           href={`/?emri=${encodeURIComponent(person.atesi)}&mbiemri=${encodeURIComponent(person.mbiemri || "")}${parentLinkHint}`}
-                          className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
+                          className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                         >
                           {person.atesi}
                         </Link>
@@ -111,7 +111,7 @@ export function PersonCard({ person, defaultExpanded }: PersonCardProps) {
                       person.amesi ? (
                         <Link
                           href={`/?emri=${encodeURIComponent(person.amesi)}&mbiemri=${encodeURIComponent(person.mbiemri || "")}${parentLinkHint}`}
-                          className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-600 transition-colors"
+                          className="text-text-primary font-bold uppercase text-right flex-1 underline decoration-dotted underline-offset-2 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                         >
                           {person.amesi}
                         </Link>

@@ -11,8 +11,10 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function fetchApi<T>(url: string, fallbackErrorKey: string): Promise<T> {
-  const response = await fetch(url, { headers: NGROK_HEADER });
+let currentController: AbortController | null = null;
+
+async function fetchApi<T>(url: string, fallbackErrorKey: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, { headers: NGROK_HEADER, signal });
 
   if (!response.ok) {
     if (response.status === 429) {
@@ -33,6 +35,14 @@ function buildParams(params: Record<string, string | number>): URLSearchParams {
   );
 }
 
+function getSignal(): AbortSignal {
+  if (currentController) {
+    currentController.abort();
+  }
+  currentController = new AbortController();
+  return currentController.signal;
+}
+
 export class ApiService {
   static async searchPerson(
     emri: string,
@@ -40,10 +50,12 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<SearchResponse> {
+    const signal = getSignal();
     const params = buildParams({ emri, mbiemri, pageNumber, pageSize });
     const data = await fetchApi<SearchResponse>(
       `${API_URL}/api/kerko?${params}`,
-      PERSON_SEARCH_ERROR_KEY
+      PERSON_SEARCH_ERROR_KEY,
+      signal
     );
 
     if (
@@ -66,10 +78,12 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<TargatSearchResponse> {
+    const signal = getSignal();
     const params = buildParams({ numriTarges, pageNumber, pageSize });
     const data = await fetchApi<TargatSearchResponse>(
       `${API_URL}/api/targat?${params}`,
-      PLATE_SEARCH_ERROR_KEY
+      PLATE_SEARCH_ERROR_KEY,
+      signal
     );
 
     if (!data || data.items.length === 0) {
@@ -84,10 +98,12 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<PatronazhistSearchResponse> {
+    const signal = getSignal();
     const params = buildParams({ numriTelefonit, pageNumber, pageSize });
     const data = await fetchApi<PatronazhistSearchResponse>(
       `${API_URL}/api/telefon?${params}`,
-      PHONE_SEARCH_ERROR_KEY
+      PHONE_SEARCH_ERROR_KEY,
+      signal
     );
 
     if (!data || data.items.length === 0) {
@@ -95,5 +111,11 @@ export class ApiService {
     }
 
     return data;
+  }
+
+  static async getDbStatus(): Promise<Record<string, number>[]> {
+    const response = await fetch(`${API_URL}/api/dbstatus`, { headers: NGROK_HEADER });
+    if (!response.ok) return [];
+    return response.json();
   }
 }

@@ -229,14 +229,14 @@ export function SearchResultsTabs({
           <GroupedResultsGrid
             items={searchResults.person?.items}
             searchTerms={searchTerms}
-            renderItem={(person, index, defaultExpanded) => <PersonCard key={index} person={person} defaultExpanded={defaultExpanded} />}
+            renderItem={(person, index, defaultExpanded) => <PersonCard key={`person:${person.emri}:${person.mbiemri}:${person.datelindja}:${index}`} person={person} defaultExpanded={defaultExpanded} />}
           />
         )}
         {activeTab === "rrogat" && isSearchResponse(searchResults) && (
           <GroupedResultsGrid
             items={searchResults.rrogat?.items}
             searchTerms={searchTerms}
-            renderItem={(rrogat, index, defaultExpanded) => <RrogatCard key={index} rrogat={rrogat} defaultExpanded={defaultExpanded} />}
+            renderItem={(rrogat, index, defaultExpanded) => <RrogatCard key={`rrogat:${rrogat.numriPersonal}:${rrogat.nipt}:${index}`} rrogat={rrogat} defaultExpanded={defaultExpanded} />}
           />
         )}
         {activeTab === "targat" && (
@@ -250,7 +250,7 @@ export function SearchResultsTabs({
             }
             searchTerms={searchTerms}
             renderItem={(targat, index, defaultExpanded) => (
-              <TargatCard key={index} targat={targat} defaultExpanded={defaultExpanded} />
+              <TargatCard key={`targat:${targat.numriTarges}:${index}`} targat={targat} defaultExpanded={defaultExpanded} />
             )}
           />
         )}
@@ -265,7 +265,7 @@ export function SearchResultsTabs({
             }
             searchTerms={searchTerms}
             renderItem={(patronazhist, index, defaultExpanded) => (
-              <PatronazhistCard key={index} patronazhist={patronazhist} defaultExpanded={defaultExpanded} />
+              <PatronazhistCard key={`patron:${patronazhist.numriPersonal}:${patronazhist.tel}:${index}`} patronazhist={patronazhist} defaultExpanded={defaultExpanded} />
             )}
           />
         )}

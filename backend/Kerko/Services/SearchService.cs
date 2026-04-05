@@ -21,6 +21,7 @@ public class SearchService : ISearchService
     private const int MaxPageSize = 100;
     private const int MinTargesLength = 6;
     private const int MinNameLength = 2;
+    private const int MaxInputLength = 100;
 
     public SearchService(ApplicationDbContext db, ILogger<SearchService> logger)
     {
@@ -47,6 +48,11 @@ public class SearchService : ISearchService
             if (mbiemri.Length < MinNameLength || emri.Length < MinNameLength)
             {
                 throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
+            }
+
+            if (mbiemri.Length > MaxInputLength || emri.Length > MaxInputLength)
+            {
+                throw new ArgumentException($"Emri dhe mbiemri nuk mund te kete me shume se {MaxInputLength} karaktere");
             }
 
             (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
@@ -168,6 +174,11 @@ public class SearchService : ISearchService
                 throw new ArgumentException($"Numri i targes duhet te kete te pakten {MinTargesLength} karaktere");
             }
 
+            if (numriTarges.Length > MaxInputLength)
+            {
+                throw new ArgumentException($"Numri i targes nuk mund te kete me shume se {MaxInputLength} karaktere");
+            }
+
             (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
 
             var normalizedNumriTarges = numriTarges.ToLower().Trim();
@@ -226,6 +237,11 @@ public class SearchService : ISearchService
             if (numriTelefonit.Length < 10)
             {
                 throw new ArgumentException("Numri i telefonit duhet te kete te pakten 10 karaktere");
+            }
+
+            if (numriTelefonit.Length > MaxInputLength)
+            {
+                throw new ArgumentException($"Numri i telefonit nuk mund te kete me shume se {MaxInputLength} karaktere");
             }
 
             (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
