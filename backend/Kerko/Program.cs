@@ -43,8 +43,6 @@ if (!builder.Environment.IsEnvironment("Testing"))
 
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 // Response compression (PRD 2.3)
 builder.Services.AddResponseCompression(options =>
@@ -114,13 +112,6 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
 
 var app = builder.Build();
-
-// Swagger UI in development (PRD 5.11)
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseForwardedHeaders();
 app.UseResponseCompression();

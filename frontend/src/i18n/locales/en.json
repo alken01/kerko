@@ -92,8 +92,7 @@
     "removedFromSaved": "Removed from saved",
     "wasSaved": "was saved",
     "removeFromSaved": "Remove from saved",
-    "save": "Save",
-    "export": "Export"
+    "save": "Save"
   },
   "pagination": {
     "previous": "← Prev",

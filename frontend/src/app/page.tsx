@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResultsTabs } from "@/components/SearchResultsTabs";
 import { SavedItemsPanel } from "@/components/SavedItemsPanel";
@@ -35,7 +35,6 @@ function SearchContent() {
     terms: string[];
   } | null>(null);
   const [maidenNameHint, setMaidenNameHint] = useState(false);
-  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Auto-dismiss errors after 5 seconds
   useEffect(() => {
@@ -162,15 +161,6 @@ function SearchContent() {
     }
   }, [searchParams, handleSearch, handleSearchTarga, handleSearchTelefon]);
 
-  // Auto-scroll to results on mobile (PRD 6.1)
-  useEffect(() => {
-    if (searchResults && !isLoading && resultsRef.current) {
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  }, [searchResults, isLoading]);
 
   const handlePageChange = (page: number) => {
     if (!currentSearchTerms) return;
@@ -198,7 +188,7 @@ function SearchContent() {
         />
       </div>
 
-      <div ref={resultsRef}>
+      <div>
         {isLoading && <SkeletonGrid count={4} isTargaSearch={isTargaSearch} isTelefonSearch={isTelefonSearch} />}
 
         {error && !isLoading && (

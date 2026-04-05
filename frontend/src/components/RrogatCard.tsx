@@ -6,7 +6,6 @@ import { cardStyles, InfoItem, DetailRow } from "@/components/ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
 import { useTranslation } from "@/i18n/TranslationContext";
 import { useState } from "react";
-import Link from "next/link";
 
 interface RrogatCardProps {
   rrogat: RrogatResponse;
@@ -24,12 +23,9 @@ export function RrogatCard({ rrogat, defaultExpanded }: RrogatCardProps) {
           <SaveButton type="rrogat" data={rrogat} />
         </div>
         <div className="relative z-10">
-          <Link
-            href={`/?emri=${encodeURIComponent(rrogat.emri || "")}&mbiemri=${encodeURIComponent(rrogat.mbiemri || "")}`}
-            className={cn(cardStyles.title, "underline decoration-dotted underline-offset-2 hover:text-blue-700 dark:hover:text-blue-400 transition-colors")}
-          >
+          <h2 className={cardStyles.title}>
             {rrogat.emri} <span className="font-bold">{rrogat.mbiemri}</span>
-          </Link>
+          </h2>
           <div className={cardStyles.infoList}>
             <InfoItem
               icon={CircleDot}

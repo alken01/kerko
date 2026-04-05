@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bookmark, X, Smartphone, Download } from "lucide-react";
+import { Bookmark, X, Smartphone } from "lucide-react";
 import { useSavedItems } from "@/contexts/SavedItemsContext";
 import { useTranslation } from "@/i18n/TranslationContext";
 import { SavedItemsList } from "./SavedItemsList";
@@ -14,7 +14,7 @@ export function SavedItemsPanel() {
   const [isClosing, setIsClosing] = useState(false);
   const [showPWABanner, setShowPWABanner] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const { savedItems, savedCount } = useSavedItems();
+  const { savedCount } = useSavedItems();
 
   const touchStartY = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -53,17 +53,6 @@ export function SavedItemsPanel() {
   const dismissPWABanner = () => {
     localStorage.setItem("pwa-banner-dismissed", "true");
     setShowPWABanner(false);
-  };
-
-  const handleExport = () => {
-    const json = JSON.stringify(savedItems, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "kerko-saved-items.json";
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -139,15 +128,6 @@ export function SavedItemsPanel() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  {savedCount > 0 && (
-                    <button
-                      onClick={handleExport}
-                      title={t("saved.export")}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-surface-interactive transition-colors"
-                    >
-                      <Download className="h-5 w-5 text-text-secondary" />
-                    </button>
-                  )}
                   <button
                     onClick={handleClose}
                     className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-surface-interactive transition-colors"
