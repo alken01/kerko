@@ -1,8 +1,7 @@
 {
   "app": {
     "title": "Kërko",
-    "loading": "Duke ngarkuar...",
-    "searchingRecords": "Duke kërkuar në {count} regjistrime"
+    "loading": "Duke ngarkuar..."
   },
   "search": {
     "nameTab": "Emri",
@@ -27,9 +26,7 @@
     "noExactResults": "Nuk u gjet rezultat ekzakt. Rezultate te ngjashme:",
     "similarResults": "Rezultate te ngjashme",
     "copyLink": "Kopjo linkun",
-    "linkCopied": "U kopjua!",
-    "foundInDatabases": "Gjetur në {count}/{total} databaza",
-    "totalResults": "{count} rezultate gjithsej"
+    "linkCopied": "U kopjua!"
   },
   "person": {
     "born": "Lindur",

@@ -123,22 +123,6 @@ public class Controller : ControllerBase
         }
     }
 
-    [HttpGet("dbstatus")]
-    [ResponseCache(Duration = 300)]
-    public async Task<IActionResult> DbStatus()
-    {
-        try
-        {
-            var status = await _searchService.DbStatusAsync();
-            return Ok(status);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting DB status");
-            return StatusCode(500, "An error occurred");
-        }
-    }
-
     private string GetClientIpAddress()
     {
         var xForwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();

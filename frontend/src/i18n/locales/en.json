@@ -1,8 +1,7 @@
 {
   "app": {
     "title": "Kërko",
-    "loading": "Loading...",
-    "searchingRecords": "Searching {count} records"
+    "loading": "Loading..."
   },
   "search": {
     "nameTab": "Name",
@@ -27,9 +26,7 @@
     "noExactResults": "No exact results found. Similar results:",
     "similarResults": "Similar results",
     "copyLink": "Copy link",
-    "linkCopied": "Copied!",
-    "foundInDatabases": "Found in {count}/{total} databases",
-    "totalResults": "{count} total results"
+    "linkCopied": "Copied!"
   },
   "person": {
     "born": "Born",

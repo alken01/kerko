@@ -233,20 +233,8 @@ export function SearchResultsTabs({
     return 0;
   };
 
-  // Compute result statistics
-  const totalCount = tabs.reduce((sum, tab) => sum + getTabCount(tab.value), 0);
-  const dbsWithResults = tabs.filter((tab) => getTabCount(tab.value) > 0).length;
-  const totalDbs = tabs.length;
-
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-      <p className="text-xs text-text-tertiary text-center">
-        {t("results.foundInDatabases")
-          .replace("{count}", String(dbsWithResults))
-          .replace("{total}", String(totalDbs))}
-        {" · "}
-        {t("results.totalResults").replace("{count}", String(totalCount))}
-      </p>
       <div className="flex items-center gap-2">
         <div className="flex space-x-1 p-1 bg-surface-secondary rounded-lg border-2 border-border-semantic-secondary overflow-x-auto flex-1 min-w-0">
           {tabs.map((tab) => (

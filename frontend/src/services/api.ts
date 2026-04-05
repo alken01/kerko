@@ -156,9 +156,4 @@ export class ApiService {
     return data;
   }
 
-  static async getDbStatus(): Promise<Record<string, number>[]> {
-    const response = await fetch(`${API_URL}/api/dbstatus`, { headers: NGROK_HEADER });
-    if (!response.ok) return [];
-    return response.json();
-  }
 }

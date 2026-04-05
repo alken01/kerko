@@ -8,7 +8,6 @@ import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SkeletonGrid } from "@/components/SkeletonCard";
-import { DbStatus } from "@/components/DbStatus";
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, NumriPersonalSearchResponse, TabType } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiService } from "@/services/api";
@@ -295,8 +294,6 @@ export default function Home() {
             <ThemeToggle />
           </div>
         </div>
-
-        <DbStatus />
 
         <Suspense
           fallback={<div className="text-text-primary text-center">{t("app.loading")}</div>}
