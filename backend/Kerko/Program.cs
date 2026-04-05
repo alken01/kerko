@@ -106,6 +106,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register services
 builder.Services.AddScoped<ISearchService, SearchService>();
 
+// Response caching (required for VaryByQueryKeys)
+builder.Services.AddResponseCaching();
+
 // Health checks with DB ping
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
@@ -121,6 +124,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseForwardedHeaders();
 app.UseResponseCompression();
+app.UseResponseCaching();
 app.UseHttpsRedirection();
 app.UseCors();
 
