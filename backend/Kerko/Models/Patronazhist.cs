@@ -10,6 +10,8 @@ public class Patronazhist
     public string? NumriPersonal { get; set; }
     public string? Emri { get; set; }
     public string? Mbiemri { get; set; }
+    public string? EmriNormalized { get; set; }
+    public string? MbiemriNormalized { get; set; }
     public string? Atesi { get; set; }
     public string? Datelindja { get; set; }
     public string? QV { get; set; }
