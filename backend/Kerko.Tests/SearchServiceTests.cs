@@ -93,6 +93,57 @@ public class SearchServiceTests
         Assert.That(result.Person, Is.Not.Null);
     }
 
+    // ─── Prefix matching on the normalized indexed column ────────────
+    // The search is a B-tree range scan on (MbiemriNormalized, EmriNormalized),
+    // so every prefix of the folded, lowercased name should hit the row.
+
+    [TestCase("ku", "an", "Kuçi", Description = "2-char ASCII prefix folds ç")]
+    [TestCase("kuç", "and", "Kuçi", Description = "Prefix containing ç still folds")]
+    [TestCase("ho", "er", "Hoxha", Description = "Plain ASCII prefix")]
+    [TestCase("be", "cl", "Bërdica", Description = "ASCII prefix matches ë-folded stored name")]
+    [TestCase("bër", "çli", "Bërdica", Description = "Diacritic prefix matches diacritic stored name")]
+    [TestCase("KU", "AN", "Kuçi", Description = "Uppercase prefix is lowercased before the range query")]
+    [TestCase("ÇE", "ËNG", "Çela", Description = "Uppercase diacritic prefix")]
+    public async Task Search_PrefixMatching(string mbiemriPrefix, string emriPrefix, string expectedMbiemri)
+    {
+        var result = await _service.KerkoAsync(mbiemriPrefix, emriPrefix);
+
+        Assert.That(result.Person.Items,
+            Has.Some.Matches<PersonResponse>(p => p.Mbiemri == expectedMbiemri));
+    }
+
+    // ─── Starts-with semantics (documents the change from contains) ──
+    // Switching to a sargable range query means only prefix matches are
+    // returned. A mid-string substring that used to match under LIKE
+    // '%foo%' must no longer match.
+
+    [TestCase("oxha", "erion", Description = "'oxha' is a suffix of 'Hoxha' but not a prefix")]
+    [TestCase("uci", "andi", Description = "'uci' is inside 'Kuçi' but not a prefix")]
+    [TestCase("rdica", "clirim", Description = "'rdica' is inside 'Bërdica' but not a prefix")]
+    public async Task Search_NonPrefixSubstring_DoesNotMatch(string mbiemri, string emri)
+    {
+        var result = await _service.KerkoAsync(mbiemri, emri);
+
+        Assert.That(result.Person.Items, Is.Empty);
+    }
+
+    // ─── Computed column populated by SQLite on insert ───────────────
+    // The VIRTUAL generated column is what the index stores — if this
+    // ever comes back null or unfolded, the whole prefix search breaks
+    // and nothing else in the suite would catch it.
+
+    [Test]
+    public async Task Seed_NormalizedColumnsAreFoldedAndLowercased()
+    {
+        var row = await _db.Person.AsNoTracking().FirstAsync(p => p.Id == 1);
+        Assert.That(row.MbiemerNormalized, Is.EqualTo("kuci"));
+        Assert.That(row.EmerNormalized, Is.EqualTo("andi"));
+
+        var celaRow = await _db.Person.AsNoTracking().FirstAsync(p => p.Id == 2);
+        Assert.That(celaRow.MbiemerNormalized, Is.EqualTo("cela"));
+        Assert.That(celaRow.EmerNormalized, Is.EqualTo("engjell"));
+    }
+
     // ─── Cross-table search ──────────────────────────────────────────
 
     [Test]
