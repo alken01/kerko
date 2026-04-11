@@ -20,7 +20,7 @@ public class Controller : ControllerBase
 
     [HttpGet("version")]
     [ResponseCache(NoStore = true)]
-    public IActionResult Version() => Ok(new { version = "1.1.0", deployed = DateTime.UtcNow.ToString("o") });
+    public IActionResult Version() => Ok(new { sha = Environment.GetEnvironmentVariable("GIT_SHA") ?? "unknown" });
 
     [HttpGet("kerko")]
     public async Task<IActionResult> Kerko([FromQuery] string? emri, [FromQuery] string? mbiemri,

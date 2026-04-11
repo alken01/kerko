@@ -71,7 +71,7 @@ jobs:
             cd ~/code/kerko
             git pull origin main
             cd backend
-            docker build -t kerko-backend .
+            docker build --build-arg GIT_SHA=$(git rev-parse --short HEAD) -t kerko-backend .
             docker stop kerko-backend || true
             docker rm kerko-backend || true
             docker run -d --name kerko-backend -p 8080:8080 \
