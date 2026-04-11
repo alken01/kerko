@@ -8,6 +8,14 @@ A search platform for Albanian public record databases.
 **Data Sources:** Includes leaked datasets such as those from the [2021 data breach](https://www.tiranatimes.com/massive-data-breach-exposes-wage-and-personal-info-of-more-than-637000-residents/).
 No data is included in this repository.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/mobile-homepage.png" width="200" alt="Homepage - search form" />
+  <img src="docs/screenshots/mobile-search-results.png" width="200" alt="Search results with category tabs" />
+  <img src="docs/screenshots/mobile-dark-mode.png" width="200" alt="Dark mode" />
+</p>
+
 ## Search types
 
 | Endpoint | Description |
