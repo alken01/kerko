@@ -23,7 +23,7 @@ Albanian diacritics (c/e) are normalized so searching "kuci" finds "Kuci".
 
 ### Prerequisites
 - .NET 10 SDK
-- Node.js 20+
+- Node.js 22+
 
 ### Backend
 ```bash
@@ -46,20 +46,10 @@ Runs on `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` to point to the backe
 cd backend
 dotnet test
 ```
-43 NUnit integration tests covering diacritic normalization, pagination, input validation, LIKE escaping, and boundary clamping.
+54 NUnit integration tests covering diacritic normalization, prefix search, pagination, input validation, and boundary clamping.
 
 ## Deployment
 
-- **Frontend:** Vercel (auto-deploys from main)
-- **Backend:** Docker container on any VPS
-
-```bash
-cd backend
-docker compose up -d
-```
-
-## CI
-
-GitHub Actions runs on every PR and push to main:
-- Backend: `dotnet build` + `dotnet test`
-- Frontend: `npm ci` + `npm run build` + `npm run lint`
+- **Frontend:** Vercel (auto-deploys from main) at `kerko.vercel.app`
+- **Backend:** Docker on EC2 (t4g.micro, eu-central-1), HTTPS via API Gateway
+- **CI/CD:** GitHub Actions builds, tests, and deploys via SSH on push to main

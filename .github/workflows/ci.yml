@@ -6,9 +6,6 @@ on:
   push:
     branches: [main]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   backend:
     name: Backend
@@ -17,10 +14,10 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
 
@@ -37,10 +34,10 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: "npm"
@@ -57,7 +54,7 @@ jobs:
 
   deploy:
     name: Deploy Backend
-    needs: backend
+    needs: [backend, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -75,3 +72,6 @@ jobs:
             docker stop kerko-backend || true
             docker rm kerko-backend || true
             docker run -d --name kerko-backend -p 8080:8080 -v /home/ec2-user/code/kerko/backend/data:/app/data kerko-backend
+            sleep 5
+            curl -sf http://localhost:8080/api/health || (docker logs kerko-backend && exit 1)
+            docker image prune -f
