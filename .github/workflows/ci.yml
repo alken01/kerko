@@ -54,3 +54,24 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+  deploy:
+    name: Deploy Backend
+    needs: backend
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/code/kerko
+            git pull origin main
+            cd backend
+            docker build -t kerko-backend .
+            docker stop kerko-backend || true
+            docker rm kerko-backend || true
+            docker run -d --name kerko-backend -p 8080:8080 -v /home/ec2-user/code/kerko/backend/data:/app/data kerko-backend
