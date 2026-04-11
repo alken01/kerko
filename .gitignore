@@ -69,3 +69,4 @@ backend/data/*
 
 # Misc
 .superset/
+.playwright-mcp/*

@@ -60,10 +60,13 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          ADMIN_TOKEN: ${{ secrets.KERKO_ADMIN_TOKEN }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ADMIN_TOKEN
           script: |
             cd ~/code/kerko
             git pull origin main
@@ -71,7 +74,11 @@ jobs:
             docker build -t kerko-backend .
             docker stop kerko-backend || true
             docker rm kerko-backend || true
-            docker run -d --name kerko-backend -p 8080:8080 -v /home/ec2-user/code/kerko/backend/data:/app/data kerko-backend
+            docker run -d --name kerko-backend -p 8080:8080 \
+              -v /home/ec2-user/code/kerko/backend/data:/app/data \
+              -e KERKO_ADMIN_TOKEN="$ADMIN_TOKEN" \
+              -e ConnectionStrings__AnalyticsConnection="Data Source=/app/data/analytics.db" \
+              kerko-backend
             sleep 5
             curl -sf http://localhost:8080/api/health || (docker logs kerko-backend && exit 1)
             docker image prune -f

@@ -7,6 +7,7 @@ import { SavedItemsPanel } from "@/components/SavedItemsPanel";
 import { GlobalStyles } from "@/components/GlobalStyles";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { AdminLink } from "@/components/ui/admin-link";
 import { SkeletonGrid } from "@/components/SkeletonCard";
 import { SearchResponse, TargatSearchResponse, PatronazhistSearchResponse, TabType } from "@/types/kerko";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -250,6 +251,7 @@ export default function Home() {
             {t("app.title")}
           </h1>
           <div className="absolute right-0 flex items-center gap-2">
+            <AdminLink />
             <LanguageSwitcher />
             <ThemeToggle />
           </div>

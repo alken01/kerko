@@ -40,7 +40,7 @@
 
 ## Conventions
 
-- Commit messages: conventional commits (`feat:`, `fix:`, `perf:`, `ci:`, `chore:`)
+- Commit messages: conventional commits (`feat:`, `fix:`, `perf:`, `ci:`, `chore:`), one line max
 - Never add Co-Authored-By lines to commits
 - PRs: squash merge with branch deletion
 - DbContext is not thread-safe — never use Task.WhenAll with parallel queries on the same context

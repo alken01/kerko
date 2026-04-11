@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging.Console;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.IO.Compression;
 using Microsoft.AspNetCore.ResponseCompression;
+using System.Threading.Channels;
+using Kerko.Analytics;
+using Kerko.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,16 @@ builder.Logging.AddConsole(options =>
     options.FormatterName = "customFormatter";
 });
 builder.Logging.AddConsoleFormatter<Kerko.CustomConsoleFormatter, ConsoleFormatterOptions>();
+
+// Fail-loud: KERKO_ADMIN_TOKEN must be set in non-testing environments
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    var adminToken = builder.Configuration["KERKO_ADMIN_TOKEN"];
+    if (string.IsNullOrEmpty(adminToken))
+    {
+        throw new InvalidOperationException("KERKO_ADMIN_TOKEN environment variable must be set.");
+    }
+}
 
 // Add rate limiting (skip in testing environment)
 if (!builder.Environment.IsEnvironment("Testing"))
@@ -97,9 +110,24 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-// Configure SQLite
+// Configure SQLite (main kerko.db — ReadOnly)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure analytics SQLite (analytics.db — read-write)
+builder.Services.AddDbContext<AnalyticsDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("AnalyticsConnection")));
+
+// Register the bounded channel for analytics logs (singleton)
+builder.Services.AddSingleton(_ => Channel.CreateBounded<RequestLog>(new BoundedChannelOptions(10_000)
+{
+    FullMode = BoundedChannelFullMode.DropWrite,
+    SingleReader = true,
+    SingleWriter = false
+}));
+
+// Register analytics writer hosted service
+builder.Services.AddHostedService<RequestLogWriter>();
 
 // Register services
 builder.Services.AddScoped<ISearchService, SearchService>();
@@ -113,11 +141,28 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// Auto-create analytics.db if it doesn't exist (empty DB, no data to migrate)
+using (var scope = app.Services.CreateScope())
+{
+    var analyticsDb = scope.ServiceProvider.GetRequiredService<AnalyticsDbContext>();
+    analyticsDb.Database.EnsureCreated();
+}
+
 app.UseForwardedHeaders();
 app.UseResponseCompression();
 app.UseResponseCaching();
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseRouting();
+
+// Admin auth middleware — only runs on /api/admin paths
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/api/admin"), branch =>
+{
+    branch.UseMiddleware<AdminAuthMiddleware>();
+});
+
+// Request logging middleware — logs /api/kerko, /api/targat, /api/telefon
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Use rate limiter only in non-testing environments
 if (!app.Environment.IsEnvironment("Testing"))
