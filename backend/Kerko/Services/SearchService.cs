@@ -28,6 +28,10 @@ public class SearchService : ISearchService
     // This turns StartsWith into a pure B-tree range query that uses the index.
     private const char RangeUpperSentinel = '\uFFFF';
 
+    // EF Core translates string.Compare(col, const) op 0 to col op const in SQL.
+    private static readonly System.Reflection.MethodInfo StringCompareMethod = typeof(string).GetMethod(
+        nameof(string.Compare), [typeof(string), typeof(string)])!;
+
     public SearchService(ApplicationDbContext db, ILogger<SearchService> logger)
     {
         _db = db;
@@ -73,7 +77,9 @@ public class SearchService : ISearchService
                 return EmptySearchResponse(pageNumber, pageSize);
             }
 
-            var personTask = SearchByNameAsync(
+            // Run sequentially — DbContext is not thread-safe and SQLite
+            // serializes access anyway, so parallelism would buy nothing.
+            var person = await SearchByNameAsync(
                 _db.Person,
                 p => p.EmerNormalized,
                 p => p.MbiemerNormalized,
@@ -95,7 +101,7 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var rrogatTask = SearchByNameAsync(
+            var rrogat = await SearchByNameAsync(
                 _db.Rrogat,
                 r => r.EmriNormalized,
                 r => r.MbiemriNormalized,
@@ -112,7 +118,7 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var targatTask = SearchByNameAsync(
+            var targat = await SearchByNameAsync(
                 _db.Targat,
                 t => t.EmriNormalized,
                 t => t.MbiemriNormalized,
@@ -128,7 +134,7 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var patronazhistTask = SearchByNameAsync(
+            var patronazhist = await SearchByNameAsync(
                 _db.Patronazhist,
                 p => p.EmriNormalized,
                 p => p.MbiemriNormalized,
@@ -156,14 +162,12 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            await Task.WhenAll(personTask, rrogatTask, targatTask, patronazhistTask);
-
             return new SearchResponse
             {
-                Person = await personTask,
-                Rrogat = await rrogatTask,
-                Targat = await targatTask,
-                Patronazhist = await patronazhistTask
+                Person = person,
+                Rrogat = rrogat,
+                Targat = targat,
+                Patronazhist = patronazhist
             };
         }
         catch (Exception ex)
@@ -351,19 +355,15 @@ public class SearchService : ISearchService
         var emriUpper = emri + RangeUpperSentinel;
         var mbiemriUpper = mbiemri + RangeUpperSentinel;
 
-        // EF Core translates string.Compare(col, const) op 0 to col op const in SQL.
-        var compareMethod = typeof(string).GetMethod(
-            nameof(string.Compare),
-            [typeof(string), typeof(string)])!;
         var zero = Expression.Constant(0);
 
         Expression GeRange(Expression col, string lower) =>
             Expression.GreaterThanOrEqual(
-                Expression.Call(null, compareMethod, col, Expression.Constant(lower)),
+                Expression.Call(null, StringCompareMethod, col, Expression.Constant(lower)),
                 zero);
         Expression LeRange(Expression col, string upper) =>
             Expression.LessThanOrEqual(
-                Expression.Call(null, compareMethod, col, Expression.Constant(upper)),
+                Expression.Call(null, StringCompareMethod, col, Expression.Constant(upper)),
                 zero);
 
         var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
@@ -417,9 +417,9 @@ public class SearchService : ISearchService
 
     /// <summary>
     /// Normalizes an input search string to match the stored normalized columns:
-    /// lowercases, trims, folds Albanian diacritics (Ç/ç → c, Ë/ë → e), and
-    /// strips any SQL LIKE metacharacters or control chars that could only have
-    /// come from adversarial input (names never contain % _ \).
+    /// lowercases (C#'s ToLower handles Ç→ç and Ë→ë that SQLite's LOWER cannot),
+    /// trims, folds Albanian diacritics (ç → c, ë → e), and strips control chars
+    /// and characters that have no place in a name (%, _, \).
     /// </summary>
     private static string NormalizeAlbanian(string input)
     {

@@ -240,20 +240,18 @@ public class SearchServiceTests
         Assert.ThrowsAsync<ArgumentException>(() => _service.TelefonAsync(phone));
     }
 
-    // ─── LIKE pattern escaping (security) ────────────────────────────
+    // ─── Adversarial input sanitization ────────────────────────────
 
     [Test]
-    public async Task Search_PercentInInput_TreatedAsLiteral()
+    public async Task Search_PercentInInput_StrippedAndNoMatch()
     {
-        // "%" is a SQL wildcard — must not match everything
         var result = await _service.KerkoAsync("%%", "%%");
         Assert.That(result.Person.Items, Is.Empty);
     }
 
     [Test]
-    public async Task Search_UnderscoreInInput_TreatedAsLiteral()
+    public async Task Search_UnderscoreInInput_StrippedAndNoMatch()
     {
-        // "_" is a single-char SQL wildcard — must not act as wildcard
         var result = await _service.KerkoAsync("_oxha", "erion");
         Assert.That(result.Person.Items, Is.Empty);
     }

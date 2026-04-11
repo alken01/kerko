@@ -10,8 +10,8 @@ public class Rrogat
     public string? NumriPersonal { get; set; }
     public string? Emri { get; set; }
     public string? Mbiemri { get; set; }
-    public string? EmriNormalized { get; set; }
-    public string? MbiemriNormalized { get; set; }
+    public string? EmriNormalized { get; private set; }
+    public string? MbiemriNormalized { get; private set; }
     public string? NIPT { get; set; }
     public string? DRT { get; set; }
     public int? PagaBruto { get; set; }
