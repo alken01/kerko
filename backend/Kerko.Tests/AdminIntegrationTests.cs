@@ -436,7 +436,7 @@ public class AdminIntegrationTests
 
         Assert.That(topQueries.GetArrayLength(), Is.EqualTo(2));
         var top = topQueries[0];
-        Assert.That(top.GetProperty("term").GetString(), Does.Contain("Alice").And.Contain("Smith"));
+        Assert.That(top.GetProperty("term").GetString(), Does.Contain("alice").And.Contain("smith"));
         Assert.That(top.GetProperty("count").GetInt32(), Is.EqualTo(3));
     }
 
