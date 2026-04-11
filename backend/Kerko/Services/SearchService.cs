@@ -23,6 +23,15 @@ public class SearchService : ISearchService
     private const int MinNameLength = 2;
     private const int MaxInputLength = 100;
 
+    // Sentinel char appended to a prefix to form an inclusive upper bound for a
+    // range scan: any string starting with `prefix` is <= `prefix + \uFFFF`.
+    // This turns StartsWith into a pure B-tree range query that uses the index.
+    private const char RangeUpperSentinel = '\uFFFF';
+
+    // EF Core translates string.Compare(col, const) op 0 to col op const in SQL.
+    private static readonly System.Reflection.MethodInfo StringCompareMethod = typeof(string).GetMethod(
+        nameof(string.Compare), [typeof(string), typeof(string)])!;
+
     public SearchService(ApplicationDbContext db, ILogger<SearchService> logger)
     {
         _db = db;
@@ -60,10 +69,20 @@ public class SearchService : ISearchService
             var normalizedMbiemri = NormalizeAlbanian(mbiemri);
             var normalizedEmri = NormalizeAlbanian(emri);
 
-            var personTask = SearchByNameAsync(
+            // Reject any input that would leave us without a usable prefix. After
+            // normalization the search term must still have characters; a user
+            // typing only wildcards/whitespace should not match everything.
+            if (normalizedMbiemri.Length == 0 || normalizedEmri.Length == 0)
+            {
+                return EmptySearchResponse(pageNumber, pageSize);
+            }
+
+            // Run sequentially — DbContext is not thread-safe and SQLite
+            // serializes access anyway, so parallelism would buy nothing.
+            var person = await SearchByNameAsync(
                 _db.Person,
-                p => p.Emer,
-                p => p.Mbiemer,
+                p => p.EmerNormalized,
+                p => p.MbiemerNormalized,
                 p => new PersonResponse
                 {
                     Adresa = p.Adresa,
@@ -82,10 +101,10 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var rrogatTask = SearchByNameAsync(
+            var rrogat = await SearchByNameAsync(
                 _db.Rrogat,
-                r => r.Emri,
-                r => r.Mbiemri,
+                r => r.EmriNormalized,
+                r => r.MbiemriNormalized,
                 r => new RrogatResponse
                 {
                     NumriPersonal = r.NumriPersonal,
@@ -99,10 +118,10 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var targatTask = SearchByNameAsync(
+            var targat = await SearchByNameAsync(
                 _db.Targat,
-                t => t.Emri,
-                t => t.Mbiemri,
+                t => t.EmriNormalized,
+                t => t.MbiemriNormalized,
                 t => new TargatResponse
                 {
                     NumriTarges = t.NumriTarges,
@@ -115,10 +134,10 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            var patronazhistTask = SearchByNameAsync(
+            var patronazhist = await SearchByNameAsync(
                 _db.Patronazhist,
-                p => p.Emri,
-                p => p.Mbiemri,
+                p => p.EmriNormalized,
+                p => p.MbiemriNormalized,
                 p => new PatronazhistResponse
                 {
                     NumriPersonal = p.NumriPersonal,
@@ -143,14 +162,12 @@ public class SearchService : ISearchService
                 },
                 normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
 
-            await Task.WhenAll(personTask, rrogatTask, targatTask, patronazhistTask);
-
             return new SearchResponse
             {
-                Person = await personTask,
-                Rrogat = await rrogatTask,
-                Targat = await targatTask,
-                Patronazhist = await patronazhistTask
+                Person = person,
+                Rrogat = rrogat,
+                Targat = targat,
+                Patronazhist = patronazhist
             };
         }
         catch (Exception ex)
@@ -313,10 +330,16 @@ public class SearchService : ISearchService
         ];
     }
 
+    /// <summary>
+    /// Prefix-matches on precomputed normalized columns using a pure range query
+    /// (col >= prefix AND col <= prefix + '\uFFFF'), which is directly sargable
+    /// against the composite B-tree index on (MbiemriNormalized, EmriNormalized).
+    /// No per-row REPLACE/LOWER calls, no LIKE/ESCAPE — SQLite can seek the index.
+    /// </summary>
     private async Task<PaginatedResult<TResponse>> SearchByNameAsync<TEntity, TResponse>(
         DbSet<TEntity> dbSet,
-        Expression<Func<TEntity, string?>> emriSelector,
-        Expression<Func<TEntity, string?>> mbiemriSelector,
+        Expression<Func<TEntity, string?>> emriNormalizedSelector,
+        Expression<Func<TEntity, string?>> mbiemriNormalizedSelector,
         Expression<Func<TEntity, TResponse>> mapToResponse,
         string emri,
         string mbiemri,
@@ -324,60 +347,53 @@ public class SearchService : ISearchService
         int pageSize)
         where TEntity : class
     {
-        var param = emriSelector.Parameters[0];
+        var param = emriNormalizedSelector.Parameters[0];
+        var emriBody = emriNormalizedSelector.Body;
+        var mbiemriBody = new ParameterReplacer(mbiemriNormalizedSelector.Parameters[0], param)
+            .Visit(mbiemriNormalizedSelector.Body);
 
-        var emriBody = emriSelector.Body;
-        var mbiemriBody = new ParameterReplacer(mbiemriSelector.Parameters[0], param)
-            .Visit(mbiemriSelector.Body);
+        var emriUpper = emri + RangeUpperSentinel;
+        var mbiemriUpper = mbiemri + RangeUpperSentinel;
 
-        var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
-            nameof(DbFunctionsExtensions.Like),
-            [typeof(DbFunctions), typeof(string), typeof(string)])!;
+        var zero = Expression.Constant(0);
 
-        var efFunctions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
-
-        // Normalize columns SQL-side: REPLACE(REPLACE(LOWER(col), 'ç', 'c'), 'ë', 'e')
-        // This produces exactly 1 LIKE per column regardless of input length
-        var normalizedEmriCol = BuildSqlNormalize(emriBody);
-        var normalizedMbiemriCol = BuildSqlNormalize(mbiemriBody);
-
-        // WHERE: normalized(col) LIKE '%search%'
-        var emriPattern = $"%{EscapeLikePattern(emri)}%";
-        var mbiemriPattern = $"%{EscapeLikePattern(mbiemri)}%";
-
-        var emriCondition = Expression.Call(likeMethod, efFunctions, normalizedEmriCol, Expression.Constant(emriPattern));
-        var mbiemriCondition = Expression.Call(likeMethod, efFunctions, normalizedMbiemriCol, Expression.Constant(mbiemriPattern));
+        Expression GeRange(Expression col, string lower) =>
+            Expression.GreaterThanOrEqual(
+                Expression.Call(null, StringCompareMethod, col, Expression.Constant(lower)),
+                zero);
+        Expression LeRange(Expression col, string upper) =>
+            Expression.LessThanOrEqual(
+                Expression.Call(null, StringCompareMethod, col, Expression.Constant(upper)),
+                zero);
 
         var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
         var mbiemriNotNull = Expression.NotEqual(mbiemriBody, Expression.Constant(null, typeof(string)));
 
-        Expression combinedCondition = Expression.AndAlso(
-            Expression.AndAlso(emriNotNull, mbiemriNotNull),
-            Expression.AndAlso(emriCondition, mbiemriCondition));
+        // (MbiemriNormalized >= mbiemri AND MbiemriNormalized <= mbiemri+0xFFFF)
+        //  AND (EmriNormalized >= emri AND EmriNormalized <= emri+0xFFFF)
+        // Ordered this way so the composite index (Mbiemri_N, Emri_N) is used.
+        var condition = Expression.AndAlso(
+            Expression.AndAlso(mbiemriNotNull, emriNotNull),
+            Expression.AndAlso(
+                Expression.AndAlso(
+                    GeRange(mbiemriBody, mbiemri),
+                    LeRange(mbiemriBody, mbiemriUpper)),
+                Expression.AndAlso(
+                    GeRange(emriBody, emri),
+                    LeRange(emriBody, emriUpper))));
 
-        var whereExpression = Expression.Lambda<Func<TEntity, bool>>(combinedCondition, param);
+        var whereLambda = Expression.Lambda<Func<TEntity, bool>>(condition, param);
 
-        // ORDER BY relevance: exact match (0) > starts with (1) > contains (2)
-        var isExactMatch = Expression.AndAlso(
-            Expression.Equal(normalizedEmriCol, Expression.Constant(emri)),
-            Expression.Equal(normalizedMbiemriCol, Expression.Constant(mbiemri)));
+        // Order: exact match first, then by surname then first name.
+        var isExact = Expression.AndAlso(
+            Expression.Equal(mbiemriBody, Expression.Constant(mbiemri, typeof(string))),
+            Expression.Equal(emriBody, Expression.Constant(emri, typeof(string))));
+        var orderRank = Expression.Condition(isExact, Expression.Constant(0), Expression.Constant(1));
+        var orderRankLambda = Expression.Lambda<Func<TEntity, int>>(orderRank, param);
 
-        var emriStartsPattern = $"{EscapeLikePattern(emri)}%";
-        var mbiemriStartsPattern = $"{EscapeLikePattern(mbiemri)}%";
-        var isStartsWith = Expression.AndAlso(
-            Expression.Call(likeMethod, efFunctions, normalizedEmriCol, Expression.Constant(emriStartsPattern)),
-            Expression.Call(likeMethod, efFunctions, normalizedMbiemriCol, Expression.Constant(mbiemriStartsPattern)));
-
-        var orderExpression = Expression.Condition(
-            isExactMatch,
-            Expression.Constant(0),
-            Expression.Condition(
-                isStartsWith,
-                Expression.Constant(1),
-                Expression.Constant(2)));
-        var orderLambda = Expression.Lambda<Func<TEntity, int>>(orderExpression, param);
-
-        var query = dbSet.AsNoTracking().Where(whereExpression).OrderBy(orderLambda);
+        var query = dbSet.AsNoTracking()
+            .Where(whereLambda)
+            .OrderBy(orderRankLambda);
 
         var totalItems = await query.CountAsync();
 
@@ -400,47 +416,44 @@ public class SearchService : ISearchService
     }
 
     /// <summary>
-    /// Normalizes Albanian diacritics in a search string: ç→c, ë→e
+    /// Normalizes an input search string to match the stored normalized columns:
+    /// lowercases (C#'s ToLower handles Ç→ç and Ë→ë that SQLite's LOWER cannot),
+    /// trims, folds Albanian diacritics (ç → c, ë → e), and strips control chars
+    /// and characters that have no place in a name (%, _, \).
     /// </summary>
     private static string NormalizeAlbanian(string input)
     {
-        return input.ToLower().Trim()
+        var lowered = input.ToLower().Trim()
             .Replace("ç", "c")
             .Replace("ë", "e");
+
+        // Strip chars that have no place in a name and would otherwise pollute
+        // the range query bounds.
+        var cleaned = new System.Text.StringBuilder(lowered.Length);
+        foreach (var c in lowered)
+        {
+            if (c == '%' || c == '_' || c == '\\') continue;
+            if (char.IsControl(c)) continue;
+            cleaned.Append(c);
+        }
+        return cleaned.ToString();
     }
 
-    /// <summary>
-    /// Builds a SQL-side expression: REPLACE(REPLACE(LOWER(col), 'ç', 'c'), 'ë', 'e')
-    /// Normalizes diacritics in the database column so we only need 1 LIKE per column.
-    /// </summary>
-    private static Expression BuildSqlNormalize(Expression columnBody)
+    private static SearchResponse EmptySearchResponse(int pageNumber, int pageSize)
     {
-        var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes)!;
-        var replaceMethod = typeof(string).GetMethod("Replace", [typeof(string), typeof(string)])!;
-
-        // LOWER(col)
-        var lowered = Expression.Call(columnBody, toLowerMethod);
-        // REPLACE(LOWER(col), 'ç', 'c')
-        var replacedC = Expression.Call(lowered, replaceMethod, Expression.Constant("ç"), Expression.Constant("c"));
-        // REPLACE(..., 'Ç', 'c')
-        var replacedCUpper = Expression.Call(replacedC, replaceMethod, Expression.Constant("Ç"), Expression.Constant("c"));
-        // REPLACE(..., 'ë', 'e')
-        var replacedE = Expression.Call(replacedCUpper, replaceMethod, Expression.Constant("ë"), Expression.Constant("e"));
-        // REPLACE(..., 'Ë', 'e')
-        var replacedEUpper = Expression.Call(replacedE, replaceMethod, Expression.Constant("Ë"), Expression.Constant("e"));
-
-        return replacedEUpper;
-    }
-
-    /// <summary>
-    /// Escapes special LIKE pattern characters: %, _, \
-    /// </summary>
-    private static string EscapeLikePattern(string input)
-    {
-        return input
-            .Replace("\\", "\\\\")
-            .Replace("%", "\\%")
-            .Replace("_", "\\_");
+        var pagination = new PaginationInfo
+        {
+            CurrentPage = pageNumber,
+            PageSize = pageSize,
+            TotalItems = 0
+        };
+        return new SearchResponse
+        {
+            Person = new PaginatedResult<PersonResponse> { Items = [], Pagination = pagination },
+            Rrogat = new PaginatedResult<RrogatResponse> { Items = [], Pagination = pagination },
+            Targat = new PaginatedResult<TargatResponse> { Items = [], Pagination = pagination },
+            Patronazhist = new PaginatedResult<PatronazhistResponse> { Items = [], Pagination = pagination }
+        };
     }
 
     private class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam)

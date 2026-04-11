@@ -11,6 +11,8 @@ public class Person
     public string? NrBaneses { get; set; }
     public string? Emer { get; set; }
     public string? Mbiemer { get; set; }
+    public string? EmerNormalized { get; private set; }
+    public string? MbiemerNormalized { get; private set; }
     public string? Atesi { get; set; }
     public string? Amesi { get; set; }
     public string? Datelindja { get; set; }
