@@ -54,7 +54,6 @@ Runs on `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` to point to the backe
 cd backend
 dotnet test
 ```
-54 NUnit integration tests covering diacritic normalization, prefix search, pagination, input validation, and boundary clamping.
 
 ## Deployment
 
