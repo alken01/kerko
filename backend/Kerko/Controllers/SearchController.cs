@@ -17,6 +17,10 @@ public class Controller : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("version")]
+    [ResponseCache(NoStore = true)]
+    public IActionResult Version() => Ok(new { version = "1.0.1", deployed = DateTime.UtcNow.ToString("o") });
+
     [HttpGet("kerko")]
     public async Task<IActionResult> Kerko([FromQuery] string? emri, [FromQuery] string? mbiemri,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
