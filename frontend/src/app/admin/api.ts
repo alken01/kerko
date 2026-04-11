@@ -101,6 +101,17 @@ export interface LogFilters {
   cursor?: string;
 }
 
+export interface VersionResponse {
+  sha: string;
+  deployed: string;
+}
+
+export async function fetchVersion(): Promise<VersionResponse> {
+  const res = await fetch(`${API_URL}/api/version`);
+  if (!res.ok) throw new Error("Failed to fetch version");
+  return res.json() as Promise<VersionResponse>;
+}
+
 export async function fetchStats(
   window: StatsWindow,
   token?: string

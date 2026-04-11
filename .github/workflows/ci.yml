@@ -7,8 +7,27 @@ on:
     branches: [main]
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
   backend:
     name: Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,6 +48,8 @@ jobs:
 
   frontend:
     name: Frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -54,8 +75,13 @@ jobs:
 
   deploy:
     name: Deploy Backend
-    needs: [backend, frontend]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [changes, backend]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      needs.changes.outputs.backend == 'true' &&
+      needs.backend.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
@@ -71,7 +97,7 @@ jobs:
             cd ~/code/kerko
             git pull origin main
             cd backend
-            docker build --build-arg GIT_SHA=$(git rev-parse --short HEAD) -t kerko-backend .
+            docker build --build-arg GIT_SHA=$(git rev-parse --short HEAD) --build-arg DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t kerko-backend .
             docker stop kerko-backend || true
             docker rm kerko-backend || true
             docker run -d --name kerko-backend -p 8080:8080 \

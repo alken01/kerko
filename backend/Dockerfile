@@ -20,7 +20,9 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 ARG GIT_SHA=unknown
+ARG DEPLOY_TIME=unknown
 ENV GIT_SHA=${GIT_SHA}
+ENV DEPLOY_TIME=${DEPLOY_TIME}
 
 # Expose the port the app runs on
 EXPOSE 8080

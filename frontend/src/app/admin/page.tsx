@@ -6,18 +6,20 @@ import { TokenGate } from "./TokenGate";
 import { StatsCards } from "./StatsCards";
 import { Filters } from "./Filters";
 import { LogsTable } from "./LogsTable";
-import { LogFilters, TOKEN_KEY } from "./api";
+import { LogFilters, TOKEN_KEY, VersionResponse, fetchVersion } from "./api";
 import Link from "next/link";
 
 export default function AdminPage() {
   const [token, setToken] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState<LogFilters>({});
+  const [version, setVersion] = useState<VersionResponse | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(TOKEN_KEY);
     setToken(stored);
     setMounted(true);
+    fetchVersion().then(setVersion).catch(() => {});
   }, []);
 
   function handleAuthenticated() {
@@ -59,6 +61,11 @@ export default function AdminPage() {
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
               Admin
             </h1>
+            {version && (
+              <span className="text-[11px] text-text-tertiary font-mono">
+                {version.sha}{version.deployed !== "unknown" && ` · ${new Date(version.deployed).toLocaleDateString()}`}
+              </span>
+            )}
           </div>
           <Button
             variant="outline"

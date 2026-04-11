@@ -150,7 +150,7 @@ public class AdminController(AnalyticsDbContext db) : ControllerBase
                 return string.Join(" ", parts);
             })
             .Where(s => !string.IsNullOrEmpty(s))
-            .GroupBy(s => s)
+            .GroupBy(s => s.ToLowerInvariant())
             .Select(g => new { term = g.Key, count = g.Count() })
             .OrderByDescending(x => x.count)
             .Take(5)
