@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Http.Json;
+using System.Net.Sockets;
 using System.Text.Json.Serialization;
 
 namespace Kerko.Analytics;
@@ -14,7 +16,7 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
     {
         var uncachedIps = logs
             .Select(l => l.ClientIp)
-            .Where(ip => !IsPrivateIp(NormalizeIp(ip)) && !_cache.ContainsKey(ip))
+            .Where(ip => !IsPrivateIp(ip) && !_cache.ContainsKey(ip))
             .Distinct()
             .ToList();
 
@@ -35,16 +37,15 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
     public async Task<Dictionary<string, string?>> ResolveBatchAsync(List<string> ips)
     {
         var toResolve = ips
-            .Where(ip => !IsPrivateIp(NormalizeIp(ip)) && !_cache.ContainsKey(ip))
+            .Where(ip => !IsPrivateIp(ip) && !_cache.ContainsKey(ip))
             .Distinct()
             .ToList();
 
-        // ip-api.com batch endpoint accepts up to 100 IPs per request
-        foreach (var chunk in toResolve.Chunk(100))
+        var chunks = toResolve.Chunk(100).ToList();
+        for (var i = 0; i < chunks.Count; i++)
         {
-            await FetchBatchAsync(chunk.ToList());
-            // Respect rate limit (45 req/min) — short delay between batches
-            if (toResolve.Count > 100)
+            await FetchBatchAsync(chunks[i].ToList());
+            if (i < chunks.Count - 1)
                 await Task.Delay(1500);
         }
 
@@ -115,9 +116,6 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
         }
     }
 
-    /// <summary>
-    /// Strips the ::ffff: prefix from IPv4-mapped IPv6 addresses (e.g. ::ffff:3.71.121.233 -> 3.71.121.233).
-    /// </summary>
     private static string NormalizeIp(string ip)
     {
         if (ip.StartsWith(MappedV4Prefix, StringComparison.OrdinalIgnoreCase))
@@ -128,18 +126,20 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
     private static bool IsPrivateIp(string ip)
     {
         if (string.IsNullOrEmpty(ip)) return true;
-        return ip.StartsWith("10.") ||
-               ip.StartsWith("172.16.") || ip.StartsWith("172.17.") ||
-               ip.StartsWith("172.18.") || ip.StartsWith("172.19.") ||
-               ip.StartsWith("172.20.") || ip.StartsWith("172.21.") ||
-               ip.StartsWith("172.22.") || ip.StartsWith("172.23.") ||
-               ip.StartsWith("172.24.") || ip.StartsWith("172.25.") ||
-               ip.StartsWith("172.26.") || ip.StartsWith("172.27.") ||
-               ip.StartsWith("172.28.") || ip.StartsWith("172.29.") ||
-               ip.StartsWith("172.30.") || ip.StartsWith("172.31.") ||
-               ip.StartsWith("192.168.") ||
-               ip.StartsWith("127.") ||
-               ip == "::1";
+        if (!IPAddress.TryParse(ip, out var addr)) return true;
+        if (IPAddress.IsLoopback(addr)) return true;
+
+        if (addr.IsIPv4MappedToIPv6) addr = addr.MapToIPv4();
+
+        if (addr.AddressFamily == AddressFamily.InterNetwork)
+        {
+            var bytes = addr.GetAddressBytes();
+            return bytes[0] == 10 ||
+                   (bytes[0] == 172 && bytes[1] is >= 16 and <= 31) ||
+                   (bytes[0] == 192 && bytes[1] == 168);
+        }
+
+        return addr.IsIPv6LinkLocal || addr.IsIPv6SiteLocal;
     }
 
     private class IpApiResult

@@ -69,6 +69,8 @@ function statusColor(code: number): string {
   return "text-green-700 dark:text-green-400";
 }
 
+const thClass = "text-left px-3 py-2 text-text-tertiary font-medium text-xs";
+
 function DateSeparator({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 py-2">
@@ -253,14 +255,14 @@ export function LogsTable({ filters, onUnauthorized }: LogsTableProps) {
                 <table className="w-full text-sm">
                   <thead className="bg-surface-secondary border-b-2 border-border-semantic-secondary">
                     <tr>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">Time</th>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">Endpoint</th>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">Query</th>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">IP / Location</th>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">UA</th>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">Status</th>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">Duration</th>
-                      <th className="text-left px-3 py-2 text-text-tertiary font-medium text-xs">Results</th>
+                      <th className={thClass}>Time</th>
+                      <th className={thClass}>Endpoint</th>
+                      <th className={thClass}>Query</th>
+                      <th className={thClass}>IP / Location</th>
+                      <th className={thClass}>UA</th>
+                      <th className={thClass}>Status</th>
+                      <th className={thClass}>Duration</th>
+                      <th className={thClass}>Results</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-semantic-secondary text-text-primary">
