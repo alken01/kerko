@@ -83,6 +83,7 @@ export interface RequestLog {
   durationMs: number;
   resultCount: number | null;
   requestId: string;
+  location: string | null;
 }
 
 export interface LogsResponse {
