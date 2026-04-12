@@ -462,6 +462,25 @@ public class AdminIntegrationTests
         Assert.That(r7d.RootElement.GetProperty("total").GetInt32(), Is.EqualTo(3));
     }
 
+    // ─── Timestamp serialization ────────────────────────────────────────────
+
+    [Test]
+    public async Task AdminLogs_TimestampUtc_SerializedWithZSuffix()
+    {
+        var now = DateTime.UtcNow;
+        await SeedLogsAsync(new[] { MakeLog(now.AddMinutes(-1)) });
+
+        var response = await AuthedClient().GetAsync("/api/admin/logs");
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        var items = doc.RootElement.GetProperty("items");
+        Assert.That(items.GetArrayLength(), Is.GreaterThan(0));
+
+        var timestamp = items[0].GetProperty("timestampUtc").GetString()!;
+        Assert.That(timestamp, Does.EndWith("Z"),
+            $"TimestampUtc must end with Z to indicate UTC, got: {timestamp}");
+    }
+
     // ─── Middleware scope: non-admin endpoints are not blocked ───────────────
 
     [Test]

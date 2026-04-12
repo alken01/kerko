@@ -51,7 +51,11 @@ if (!builder.Environment.IsEnvironment("Testing"))
     });
 }
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new Kerko.Infrastructure.UtcDateTimeJsonConverter());
+    });
 
 builder.Services.AddResponseCompression(options =>
 {
