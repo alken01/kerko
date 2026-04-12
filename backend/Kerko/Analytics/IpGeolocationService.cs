@@ -28,6 +28,35 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
         }
     }
 
+    /// <summary>
+    /// Resolves a list of IPs to locations. Returns a dictionary of original IP -> location.
+    /// Batches into groups of 100 (ip-api.com limit) with delays to respect rate limits.
+    /// </summary>
+    public async Task<Dictionary<string, string?>> ResolveBatchAsync(List<string> ips)
+    {
+        var toResolve = ips
+            .Where(ip => !IsPrivateIp(NormalizeIp(ip)) && !_cache.ContainsKey(ip))
+            .Distinct()
+            .ToList();
+
+        // ip-api.com batch endpoint accepts up to 100 IPs per request
+        foreach (var chunk in toResolve.Chunk(100))
+        {
+            await FetchBatchAsync(chunk.ToList());
+            // Respect rate limit (45 req/min) — short delay between batches
+            if (toResolve.Count > 100)
+                await Task.Delay(1500);
+        }
+
+        var result = new Dictionary<string, string?>();
+        foreach (var ip in ips)
+        {
+            if (_cache.TryGetValue(ip, out var location))
+                result[ip] = location;
+        }
+        return result;
+    }
+
     private async Task FetchBatchAsync(List<string> originalIps)
     {
         // Map original IP -> normalized IP for the API call

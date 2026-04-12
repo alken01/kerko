@@ -136,6 +136,7 @@ builder.Services.AddHttpClient("IpGeo", c =>
     c.Timeout = TimeSpan.FromSeconds(5);
 });
 builder.Services.AddSingleton<IpGeolocationService>();
+builder.Services.AddHostedService<LocationBackfillService>();
 
 // Register services
 builder.Services.AddScoped<ISearchService, SearchService>();

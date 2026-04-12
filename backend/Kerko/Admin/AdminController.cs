@@ -8,7 +8,7 @@ namespace Kerko.Admin;
 [ApiController]
 [Route("api/admin")]
 [ResponseCache(NoStore = true)]
-public class AdminController(AnalyticsDbContext db) : ControllerBase
+public class AdminController(AnalyticsDbContext db, IpGeolocationService geoService) : ControllerBase
 {
     [HttpGet("logs")]
     public async Task<IActionResult> Logs(
@@ -165,5 +165,31 @@ public class AdminController(AnalyticsDbContext db) : ControllerBase
             topIps,
             topQueries
         });
+    }
+
+    [HttpPost("backfill-locations")]
+    public async Task<IActionResult> BackfillLocations()
+    {
+        // Get distinct IPs that have no location set
+        var ips = await db.RequestLogs
+            .Where(r => r.Location == null)
+            .Select(r => r.ClientIp)
+            .Distinct()
+            .ToListAsync();
+
+        if (ips.Count == 0)
+            return Ok(new { message = "No logs need backfilling.", updated = 0 });
+
+        var resolved = await geoService.ResolveBatchAsync(ips);
+
+        var updated = 0;
+        foreach (var (ip, location) in resolved)
+        {
+            if (location == null) continue;
+            updated += await db.Database.ExecuteSqlAsync(
+                $"UPDATE RequestLogs SET Location = {location} WHERE ClientIp = {ip} AND Location IS NULL");
+        }
+
+        return Ok(new { message = $"Backfilled {updated} log(s) across {resolved.Count(r => r.Value != null)} IP(s).", updated });
     }
 }
