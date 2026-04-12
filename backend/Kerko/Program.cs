@@ -106,6 +106,7 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = null; // Allow unlimited proxy hops (API Gateway + Docker)
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
@@ -136,7 +137,6 @@ builder.Services.AddHttpClient("IpGeo", c =>
     c.Timeout = TimeSpan.FromSeconds(5);
 });
 builder.Services.AddSingleton<IpGeolocationService>();
-builder.Services.AddHostedService<LocationBackfillService>();
 
 // Register services
 builder.Services.AddScoped<ISearchService, SearchService>();

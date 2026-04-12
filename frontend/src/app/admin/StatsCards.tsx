@@ -112,12 +112,15 @@ export function StatsCards({ onUnauthorized }: StatsCardsProps) {
                 ) : (
                   <ol className="space-y-0.5">
                     {stats.topIps.slice(0, 5).map((item, i) => (
-                      <li key={item.ip} className="flex justify-between text-xs text-text-primary">
-                        <span>
+                      <li key={item.ip} className="flex justify-between text-xs text-text-primary gap-2">
+                        <span className="truncate">
                           <span className="text-text-tertiary mr-1.5">{i + 1}.</span>
                           <span className="font-mono">{item.ip}</span>
+                          {item.location && (
+                            <span className="text-text-tertiary ml-1.5">{item.location}</span>
+                          )}
                         </span>
-                        <span className="font-bold">{item.count}</span>
+                        <span className="font-bold shrink-0">{item.count}</span>
                       </li>
                     ))}
                   </ol>

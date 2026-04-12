@@ -37,11 +37,6 @@ public class GeolocationIntegrationTests
                     services.AddDbContext<AnalyticsDbContext>(options =>
                         options.UseSqlite($"Data Source={_analyticsTempDb}"));
 
-                    // Remove the backfill hosted service so it doesn't race with our tests
-                    var backfillDescriptor = services.SingleOrDefault(
-                        d => d.ImplementationType == typeof(LocationBackfillService));
-                    if (backfillDescriptor != null)
-                        services.Remove(backfillDescriptor);
                 });
                 builder.ConfigureAppConfiguration((ctx, cfg) =>
                 {
@@ -161,81 +156,6 @@ public class GeolocationIntegrationTests
         await service.ResolveLocationsAsync(logs2);
 
         Assert.That(logs2[0].Location, Is.EqualTo(firstLocation));
-    }
-
-    // ─── Backfill endpoint tests ─────────────────────────────────────────────
-
-    [Test]
-    public async Task BackfillLocations_PopulatesLocationForExistingLogs()
-    {
-        // Seed logs with real IPs but no location
-        await SeedLogsAsync(new[]
-        {
-            MakeLog("::ffff:3.71.121.233"),
-            MakeLog("::ffff:3.71.121.233"),  // duplicate IP
-            MakeLog("::ffff:3.71.123.63"),
-            MakeLog("::ffff:3.127.74.190"),
-        });
-
-        // Verify no locations yet
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AnalyticsDbContext>();
-            var nullCount = await db.RequestLogs.CountAsync(r => r.Location == null);
-            Assert.That(nullCount, Is.EqualTo(4));
-        }
-
-        // Call backfill
-        var response = await AuthedClient().PostAsync("/api/admin/backfill-locations", null);
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-
-        var json = await response.Content.ReadAsStringAsync();
-        var doc = JsonDocument.Parse(json);
-        var updated = doc.RootElement.GetProperty("updated").GetInt32();
-        Assert.That(updated, Is.GreaterThan(0), "Expected some logs to be updated");
-
-        TestContext.Out.WriteLine($"Backfill response: {json}");
-
-        // Verify locations are now populated
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AnalyticsDbContext>();
-            var logs = await db.RequestLogs.ToListAsync();
-
-            foreach (var log in logs)
-            {
-                Assert.That(log.Location, Is.Not.Null.And.Not.Empty,
-                    $"Expected location for {log.ClientIp} after backfill");
-                TestContext.Out.WriteLine($"  {log.ClientIp} -> {log.Location}");
-            }
-
-            // Both rows with same IP should have same location
-            var grouped = logs.GroupBy(l => l.ClientIp);
-            foreach (var group in grouped)
-            {
-                var locations = group.Select(l => l.Location).Distinct().ToList();
-                Assert.That(locations, Has.Count.EqualTo(1),
-                    $"All rows with IP {group.Key} should have the same location");
-            }
-        }
-    }
-
-    [Test]
-    public async Task BackfillLocations_RequiresAuth()
-    {
-        var client = _factory.CreateClient();
-        var response = await client.PostAsync("/api/admin/backfill-locations", null);
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-    }
-
-    [Test]
-    public async Task BackfillLocations_NoLogs_ReturnsZeroUpdated()
-    {
-        var response = await AuthedClient().PostAsync("/api/admin/backfill-locations", null);
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-
-        var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.That(doc.RootElement.GetProperty("updated").GetInt32(), Is.EqualTo(0));
     }
 
     // ─── Logs endpoint returns location field ────────────────────────────────

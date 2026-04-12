@@ -117,13 +117,23 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
         var totalToday = counts?.totalToday ?? 0;
         var totalLast7d = counts?.totalLast7d ?? 0;
 
-        var topIps = await db.RequestLogs
+        var topIpsRaw = await db.RequestLogs
             .Where(r => r.TimestampUtc >= windowStart)
             .GroupBy(r => r.ClientIp)
             .Select(g => new { ip = g.Key, count = g.Count() })
             .OrderByDescending(x => x.count)
             .Take(5)
             .ToListAsync();
+
+        // Resolve locations for top IPs
+        var ipList = topIpsRaw.Select(x => x.ip).ToList();
+        var locations = await geoService.ResolveBatchAsync(ipList);
+        var topIps = topIpsRaw.Select(x => new
+        {
+            x.ip,
+            x.count,
+            location = locations.GetValueOrDefault(x.ip)
+        }).ToList();
 
         // Coalesce query terms into a normalized string for grouping
         var topQueriesRaw = await db.RequestLogs
@@ -167,29 +177,4 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
         });
     }
 
-    [HttpPost("backfill-locations")]
-    public async Task<IActionResult> BackfillLocations()
-    {
-        // Get distinct IPs that have no location set
-        var ips = await db.RequestLogs
-            .Where(r => r.Location == null)
-            .Select(r => r.ClientIp)
-            .Distinct()
-            .ToListAsync();
-
-        if (ips.Count == 0)
-            return Ok(new { message = "No logs need backfilling.", updated = 0 });
-
-        var resolved = await geoService.ResolveBatchAsync(ips);
-
-        var updated = 0;
-        foreach (var (ip, location) in resolved)
-        {
-            if (location == null) continue;
-            updated += await db.Database.ExecuteSqlAsync(
-                $"UPDATE RequestLogs SET Location = {location} WHERE ClientIp = {ip} AND Location IS NULL");
-        }
-
-        return Ok(new { message = $"Backfilled {updated} log(s) across {resolved.Count(r => r.Value != null)} IP(s).", updated });
-    }
 }

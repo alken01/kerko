@@ -50,6 +50,7 @@ export type StatsWindow = "1h" | "24h" | "7d" | "30d";
 export interface IpCount {
   ip: string;
   count: number;
+  location: string | null;
 }
 
 export interface QueryCount {

@@ -4,6 +4,16 @@ public static class ClientInfo
 {
     public static string GetClientIpAddress(HttpRequest request)
     {
+        // UseForwardedHeaders middleware already processes X-Forwarded-For
+        // and sets RemoteIpAddress to the real client IP, so just use that.
+        // Fall back to header parsing only if RemoteIpAddress is missing.
+        var remoteIp = request.HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (!string.IsNullOrEmpty(remoteIp) && remoteIp != "::1" && remoteIp != "127.0.0.1")
+        {
+            return remoteIp;
+        }
+
+        // Fallback: parse headers directly (e.g. in dev without forwarded headers middleware)
         var xForwardedFor = request.Headers["X-Forwarded-For"].FirstOrDefault();
         if (!string.IsNullOrEmpty(xForwardedFor))
         {
@@ -16,7 +26,7 @@ public static class ClientInfo
             return xRealIp;
         }
 
-        return request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+        return remoteIp ?? "Unknown";
     }
 
     public static string SimplifyUserAgent(string? userAgent)
