@@ -21,7 +21,7 @@ public class RequestLogWriter(
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         try { channel.Writer.Complete(); } catch (InvalidOperationException) { /* already completed */ }
-        _cts.Cancel();
+        try { _cts.Cancel(); } catch (ObjectDisposedException) { /* already disposed */ }
 
         if (_backgroundTask != null)
         {
