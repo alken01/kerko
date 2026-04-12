@@ -129,6 +129,14 @@ builder.Services.AddSingleton(_ => Channel.CreateBounded<RequestLog>(new Bounded
 // Register analytics writer hosted service
 builder.Services.AddHostedService<RequestLogWriter>();
 
+// Register IP geolocation service
+builder.Services.AddHttpClient("IpGeo", c =>
+{
+    c.BaseAddress = new Uri("http://ip-api.com/");
+    c.Timeout = TimeSpan.FromSeconds(5);
+});
+builder.Services.AddSingleton<IpGeolocationService>();
+
 // Register services
 builder.Services.AddScoped<ISearchService, SearchService>();
 
@@ -146,6 +154,10 @@ using (var scope = app.Services.CreateScope())
 {
     var analyticsDb = scope.ServiceProvider.GetRequiredService<AnalyticsDbContext>();
     analyticsDb.Database.EnsureCreated();
+
+    // Add Location column for existing DBs (EnsureCreated won't alter existing tables)
+    try { analyticsDb.Database.ExecuteSqlRaw("ALTER TABLE RequestLogs ADD COLUMN Location TEXT"); }
+    catch (Microsoft.Data.Sqlite.SqliteException) { /* column already exists */ }
 }
 
 app.UseForwardedHeaders();

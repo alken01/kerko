@@ -18,4 +18,5 @@ public class RequestLog
     public int DurationMs { get; set; }
     public int? ResultCount { get; set; }
     public string RequestId { get; set; } = string.Empty;
+    public string? Location { get; set; }
 }

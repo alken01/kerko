@@ -6,6 +6,7 @@ namespace Kerko.Analytics;
 public class RequestLogWriter(
     Channel<RequestLog> channel,
     IServiceProvider serviceProvider,
+    IpGeolocationService geoService,
     ILogger<RequestLogWriter> logger) : IHostedService, IDisposable
 {
     private Task? _backgroundTask;
@@ -131,6 +132,15 @@ public class RequestLogWriter(
     private async Task FlushBatchAsync(List<RequestLog> batch)
     {
         if (batch.Count == 0) return;
+
+        try
+        {
+            await geoService.ResolveLocationsAsync(batch);
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug(ex, "Geolocation resolution failed, persisting without location");
+        }
 
         try
         {
