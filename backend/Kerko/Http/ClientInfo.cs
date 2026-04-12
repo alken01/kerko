@@ -4,29 +4,20 @@ public static class ClientInfo
 {
     public static string GetClientIpAddress(HttpRequest request)
     {
-        // UseForwardedHeaders middleware already processes X-Forwarded-For
-        // and sets RemoteIpAddress to the real client IP, so just use that.
-        // Fall back to header parsing only if RemoteIpAddress is missing.
-        var remoteIp = request.HttpContext.Connection.RemoteIpAddress?.ToString();
-        if (!string.IsNullOrEmpty(remoteIp) && remoteIp != "::1" && remoteIp != "127.0.0.1")
+        // API Gateway can't override X-Forwarded-For, so it sends X-Client-IP instead
+        var xClientIp = request.Headers["X-Client-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(xClientIp))
         {
-            return remoteIp;
+            return xClientIp.Split(',').FirstOrDefault()?.Trim() ?? "Unknown";
         }
 
-        // Fallback: parse headers directly (e.g. in dev without forwarded headers middleware)
         var xForwardedFor = request.Headers["X-Forwarded-For"].FirstOrDefault();
         if (!string.IsNullOrEmpty(xForwardedFor))
         {
             return xForwardedFor.Split(',').FirstOrDefault()?.Trim() ?? "Unknown";
         }
 
-        var xRealIp = request.Headers["X-Real-IP"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(xRealIp))
-        {
-            return xRealIp;
-        }
-
-        return remoteIp ?? "Unknown";
+        return request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
     }
 
     public static string SimplifyUserAgent(string? userAgent)

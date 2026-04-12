@@ -38,14 +38,6 @@ public class RequestLoggingMiddleware(RequestDelegate next, Channel<RequestLog> 
             var endpoint = path.TrimStart('/').Split('/').LastOrDefault() ?? string.Empty;
             var userAgentRaw = context.Request.Headers.UserAgent.ToString();
 
-            var clientIp = ClientInfo.GetClientIpAddress(context.Request);
-            logger.LogInformation(
-                "IP debug — RemoteIp={RemoteIp}, XFF={XFF}, XRealIp={XRealIp}, Resolved={Resolved}",
-                context.Connection.RemoteIpAddress?.ToString(),
-                context.Request.Headers["X-Forwarded-For"].FirstOrDefault(),
-                context.Request.Headers["X-Real-IP"].FirstOrDefault(),
-                clientIp);
-
             var log = new RequestLog
             {
                 TimestampUtc = timestamp,
@@ -56,7 +48,7 @@ public class RequestLoggingMiddleware(RequestDelegate next, Channel<RequestLog> 
                 NumriTelefonit = query["numriTelefonit"].FirstOrDefault(),
                 PageNumber = int.TryParse(query["pageNumber"].FirstOrDefault(), out var pn) ? pn : 1,
                 PageSize = int.TryParse(query["pageSize"].FirstOrDefault(), out var ps) ? ps : 10,
-                ClientIp = clientIp,
+                ClientIp = ClientInfo.GetClientIpAddress(context.Request),
                 UserAgentRaw = userAgentRaw,
                 UserAgentSimplified = ClientInfo.SimplifyUserAgent(userAgentRaw),
                 StatusCode = context.Response.StatusCode,

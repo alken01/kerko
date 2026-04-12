@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using System.Threading.Channels;
 using Kerko.Analytics;
 using Kerko.Admin;
+using Kerko.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +42,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
     {
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
             RateLimitPartition.GetFixedWindowLimiter(
-                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
+                partitionKey: ClientInfo.GetClientIpAddress(context.Request),
                 factory: partition => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
@@ -160,22 +161,6 @@ using (var scope = app.Services.CreateScope())
     try { analyticsDb.Database.ExecuteSqlRaw("ALTER TABLE RequestLogs ADD COLUMN Location TEXT"); }
     catch (Microsoft.Data.Sqlite.SqliteException) { /* column already exists */ }
 }
-
-// Temporary: log raw headers BEFORE UseForwardedHeaders consumes them
-app.Use(async (context, next) =>
-{
-    var path = context.Request.Path.Value ?? "";
-    if (path.StartsWith("/api/kerko") || path.StartsWith("/api/targat") || path.StartsWith("/api/telefon"))
-    {
-        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("RawHeaders");
-        logger.LogInformation(
-            "RAW before ForwardedHeaders — RemoteIp={RemoteIp}, XFF={XFF}, XRealIp={XRealIp}",
-            context.Connection.RemoteIpAddress?.ToString(),
-            context.Request.Headers["X-Forwarded-For"].FirstOrDefault(),
-            context.Request.Headers["X-Real-IP"].FirstOrDefault());
-    }
-    await next();
-});
 
 app.UseForwardedHeaders();
 app.UseResponseCompression();
