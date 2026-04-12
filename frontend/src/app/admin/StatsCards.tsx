@@ -111,7 +111,7 @@ export function StatsCards({ onUnauthorized }: StatsCardsProps) {
                   <p className="text-text-tertiary text-xs">No data.</p>
                 ) : (
                   <ol className="space-y-0.5">
-                    {stats.topIps.slice(0, 5).map((item, i) => (
+                    {stats.topIps.map((item, i) => (
                       <li key={item.ip} className="flex justify-between text-xs text-text-primary gap-2">
                         <span className="truncate">
                           <span className="text-text-tertiary mr-1.5">{i + 1}.</span>
@@ -133,7 +133,7 @@ export function StatsCards({ onUnauthorized }: StatsCardsProps) {
                   <p className="text-text-tertiary text-xs">No data.</p>
                 ) : (
                   <ol className="space-y-0.5">
-                    {stats.topQueries.slice(0, 5).map((item, i) => (
+                    {stats.topQueries.map((item, i) => (
                       <li key={item.term} className="flex justify-between text-xs text-text-primary gap-2">
                         <span className="truncate">
                           <span className="text-text-tertiary mr-1.5">{i + 1}.</span>

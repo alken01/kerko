@@ -10,7 +10,6 @@ public interface ISearchService
     Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<TargatResponse>> TargatAsync(string? numriTarges, int pageNumber = 1, int pageSize = 10);
     Task<PaginatedResult<PatronazhistResponse>> TelefonAsync(string? numriTelefonit, int pageNumber = 1, int pageSize = 10);
-    Task<List<Dictionary<string, int>>> DbStatusAsync();
 }
 
 public class SearchService : ISearchService
@@ -319,18 +318,7 @@ public class SearchService : ISearchService
         }
     }
 
-    public async Task<List<Dictionary<string, int>>> DbStatusAsync()
-    {
-        return
-        [
-            new() { { "Person", await _db.Person.CountAsync() } },
-            new() { { "Rrogat", await _db.Rrogat.CountAsync() } },
-            new() { { "Targat", await _db.Targat.CountAsync() } },
-            new() { { "Patronazhist", await _db.Patronazhist.CountAsync() } }
-        ];
-    }
-
-    /// <summary>
+/// <summary>
     /// Prefix-matches on precomputed normalized columns using a pure range query
     /// (col >= prefix AND col <= prefix + '\uFFFF'), which is directly sargable
     /// against the composite B-tree index on (MbiemriNormalized, EmriNormalized).

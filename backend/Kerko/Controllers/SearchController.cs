@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Kerko.Services;
-using Kerko.Http;
 
 namespace Kerko.Controllers;
 
@@ -28,7 +27,6 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Search request | emri: {Emri} mbiemri: {Mbiemri} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", emri ?? "-", mbiemri ?? "-", pageNumber, pageSize, ClientInfo.GetClientIpAddress(Request), ClientInfo.SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
             var result = await _searchService.KerkoAsync(mbiemri, emri, pageNumber, pageSize);
             HttpContext.Items["Kerko.ResultCount"] = result.Person.Pagination.TotalItems;
             return Ok(result);
@@ -39,7 +37,7 @@ public class Controller : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while searching");
+            _logger.LogError(ex, "Error searching kerko");
             return StatusCode(500, "An error occurred while processing your request");
         }
     }
@@ -50,8 +48,6 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Targat request | numriTarges: {NumriTarges} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", numriTarges ?? "-", pageNumber, pageSize, ClientInfo.GetClientIpAddress(Request), ClientInfo.SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
-
             var result = await _searchService.TargatAsync(numriTarges, pageNumber, pageSize);
             HttpContext.Items["Kerko.ResultCount"] = result.Pagination.TotalItems;
             return Ok(result);
@@ -62,7 +58,7 @@ public class Controller : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while searching for targat");
+            _logger.LogError(ex, "Error searching targat");
             return StatusCode(500, "An error occurred while processing your request");
         }
     }
@@ -73,7 +69,6 @@ public class Controller : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Telefon request | numriTelefonit: {NumriTelefonit} page: {PageNumber}/{PageSize} | IP: {IP} | {UA}", numriTelefonit ?? "-", pageNumber, pageSize, ClientInfo.GetClientIpAddress(Request), ClientInfo.SimplifyUserAgent(Request.Headers.UserAgent.ToString()));
             var result = await _searchService.TelefonAsync(numriTelefonit, pageNumber, pageSize);
             HttpContext.Items["Kerko.ResultCount"] = result.Pagination.TotalItems;
             return Ok(result);
@@ -84,7 +79,7 @@ public class Controller : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while searching for telefon");
+            _logger.LogError(ex, "Error searching telefon");
             return StatusCode(500, "An error occurred while processing your request");
         }
     }

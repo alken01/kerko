@@ -15,7 +15,6 @@ public class RequestLoggingMiddleware(RequestDelegate next, Channel<RequestLog> 
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Check if we should log this request
         var path = context.Request.Path.Value ?? string.Empty;
         var shouldLog = _trackedPaths.Contains(path);
 

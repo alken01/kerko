@@ -293,17 +293,4 @@ public class SearchServiceTests
         Assert.That(result.Person.Pagination.PageSize, Is.EqualTo(1));
     }
 
-    // ─── DbStatus ────────────────────────────────────────────────────
-
-    [Test]
-    public async Task DbStatus_ReturnsCountsForAllTables()
-    {
-        var status = await _service.DbStatusAsync();
-
-        Assert.That(status, Has.Count.EqualTo(4));
-        Assert.That(status[0]["Person"], Is.EqualTo(7));
-        Assert.That(status[1]["Rrogat"], Is.EqualTo(2));
-        Assert.That(status[2]["Targat"], Is.EqualTo(2));
-        Assert.That(status[3]["Patronazhist"], Is.EqualTo(2));
-    }
 }

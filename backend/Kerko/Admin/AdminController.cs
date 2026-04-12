@@ -135,36 +135,24 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
             location = locations.GetValueOrDefault(x.ip)
         }).ToList();
 
-        // Coalesce query terms into a normalized string for grouping
         var topQueriesRaw = await db.RequestLogs
             .Where(r => r.TimestampUtc >= windowStart)
             .Where(r => r.Emri != null || r.Mbiemri != null || r.NumriTarges != null || r.NumriTelefonit != null)
-            .Select(r => new
-            {
-                r.Emri,
-                r.Mbiemri,
-                r.NumriTarges,
-                r.NumriTelefonit
-            })
-            .Take(10_000)
-            .ToListAsync();
-
-        var topQueries = topQueriesRaw
-            .Select(r =>
-            {
-                var parts = new List<string>();
-                if (!string.IsNullOrEmpty(r.Emri)) parts.Add($"emri={r.Emri}");
-                if (!string.IsNullOrEmpty(r.Mbiemri)) parts.Add($"mbiemri={r.Mbiemri}");
-                if (!string.IsNullOrEmpty(r.NumriTarges)) parts.Add($"numriTarges={r.NumriTarges}");
-                if (!string.IsNullOrEmpty(r.NumriTelefonit)) parts.Add($"numriTelefonit={r.NumriTelefonit}");
-                return string.Join(" ", parts);
-            })
-            .Where(s => !string.IsNullOrEmpty(s))
-            .GroupBy(s => s.ToLowerInvariant())
-            .Select(g => new { term = g.Key, count = g.Count() })
+            .GroupBy(r => new { emri = r.Emri!.ToLower(), mbiemri = r.Mbiemri!.ToLower(), numriTarges = r.NumriTarges!.ToLower(), numriTelefonit = r.NumriTelefonit!.ToLower() })
+            .Select(g => new { g.Key.emri, g.Key.mbiemri, g.Key.numriTarges, g.Key.numriTelefonit, count = g.Count() })
             .OrderByDescending(x => x.count)
             .Take(5)
-            .ToList();
+            .ToListAsync();
+
+        var topQueries = topQueriesRaw.Select(r =>
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrEmpty(r.emri)) parts.Add($"emri={r.emri}");
+            if (!string.IsNullOrEmpty(r.mbiemri)) parts.Add($"mbiemri={r.mbiemri}");
+            if (!string.IsNullOrEmpty(r.numriTarges)) parts.Add($"numriTarges={r.numriTarges}");
+            if (!string.IsNullOrEmpty(r.numriTelefonit)) parts.Add($"numriTelefonit={r.numriTelefonit}");
+            return new { term = string.Join(" ", parts), r.count };
+        }).ToList();
 
         return Ok(new
         {
@@ -176,5 +164,4 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
             topQueries
         });
     }
-
 }
