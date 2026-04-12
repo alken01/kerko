@@ -8,11 +8,13 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
 {
     private readonly ConcurrentDictionary<string, string?> _cache = new();
 
+    private const string MappedV4Prefix = "::ffff:";
+
     public async Task ResolveLocationsAsync(List<RequestLog> logs)
     {
         var uncachedIps = logs
             .Select(l => l.ClientIp)
-            .Where(ip => !IsPrivateIp(ip) && !_cache.ContainsKey(ip))
+            .Where(ip => !IsPrivateIp(NormalizeIp(ip)) && !_cache.ContainsKey(ip))
             .Distinct()
             .ToList();
 
@@ -26,27 +28,33 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
         }
     }
 
-    private async Task FetchBatchAsync(List<string> ips)
+    private async Task FetchBatchAsync(List<string> originalIps)
     {
+        // Map original IP -> normalized IP for the API call
+        var normalizedMap = originalIps.ToDictionary(ip => ip, NormalizeIp);
+        var lookupIps = normalizedMap.Values.Distinct().ToList();
+
         try
         {
             var client = httpClientFactory.CreateClient("IpGeo");
-            var response = await client.PostAsJsonAsync("batch?fields=status,query,country,city", ips);
+            var response = await client.PostAsJsonAsync("batch?fields=status,query,country,city", lookupIps);
 
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogDebug("ip-api.com batch returned {Status}", response.StatusCode);
-                foreach (var ip in ips) _cache.TryAdd(ip, null);
+                foreach (var ip in originalIps) _cache.TryAdd(ip, null);
                 return;
             }
 
             var results = await response.Content.ReadFromJsonAsync<List<IpApiResult>>();
             if (results == null)
             {
-                foreach (var ip in ips) _cache.TryAdd(ip, null);
+                foreach (var ip in originalIps) _cache.TryAdd(ip, null);
                 return;
             }
 
+            // Build normalized IP -> location map from results
+            var locationByNormalized = new Dictionary<string, string?>();
             foreach (var r in results)
             {
                 if (r.Query == null) continue;
@@ -56,19 +64,36 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
                     var loc = !string.IsNullOrEmpty(r.City)
                         ? $"{r.City}, {r.Country}"
                         : r.Country;
-                    _cache.TryAdd(r.Query, loc);
+                    locationByNormalized[r.Query] = loc;
                 }
                 else
                 {
-                    _cache.TryAdd(r.Query, null);
+                    locationByNormalized[r.Query] = null;
                 }
+            }
+
+            // Cache using the original IP keys
+            foreach (var (original, normalized) in normalizedMap)
+            {
+                var loc = locationByNormalized.GetValueOrDefault(normalized);
+                _cache.TryAdd(original, loc);
             }
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Failed to fetch IP geolocation for {Count} IPs", ips.Count);
-            foreach (var ip in ips) _cache.TryAdd(ip, null);
+            logger.LogDebug(ex, "Failed to fetch IP geolocation for {Count} IPs", originalIps.Count);
+            foreach (var ip in originalIps) _cache.TryAdd(ip, null);
         }
+    }
+
+    /// <summary>
+    /// Strips the ::ffff: prefix from IPv4-mapped IPv6 addresses (e.g. ::ffff:3.71.121.233 -> 3.71.121.233).
+    /// </summary>
+    private static string NormalizeIp(string ip)
+    {
+        if (ip.StartsWith(MappedV4Prefix, StringComparison.OrdinalIgnoreCase))
+            return ip[MappedV4Prefix.Length..];
+        return ip;
     }
 
     private static bool IsPrivateIp(string ip)
