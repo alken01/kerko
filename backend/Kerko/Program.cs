@@ -161,6 +161,22 @@ using (var scope = app.Services.CreateScope())
     catch (Microsoft.Data.Sqlite.SqliteException) { /* column already exists */ }
 }
 
+// Temporary: log raw headers BEFORE UseForwardedHeaders consumes them
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? "";
+    if (path.StartsWith("/api/kerko") || path.StartsWith("/api/targat") || path.StartsWith("/api/telefon"))
+    {
+        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("RawHeaders");
+        logger.LogInformation(
+            "RAW before ForwardedHeaders — RemoteIp={RemoteIp}, XFF={XFF}, XRealIp={XRealIp}",
+            context.Connection.RemoteIpAddress?.ToString(),
+            context.Request.Headers["X-Forwarded-For"].FirstOrDefault(),
+            context.Request.Headers["X-Real-IP"].FirstOrDefault());
+    }
+    await next();
+});
+
 app.UseForwardedHeaders();
 app.UseResponseCompression();
 app.UseResponseCaching();
