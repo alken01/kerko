@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text;
 using Kerko.Infrastructure;
 using Kerko.Models;
 using Microsoft.EntityFrameworkCore;
@@ -12,388 +13,134 @@ public interface ISearchService
     Task<PaginatedResult<PatronazhistResponse>> TelefonAsync(string? numriTelefonit, int pageNumber = 1, int pageSize = 10);
 }
 
-public class SearchService : ISearchService
+public class SearchService(ApplicationDbContext db) : ISearchService
 {
-    private readonly ApplicationDbContext _db;
-    private readonly ILogger<SearchService> _logger;
     private const int DefaultPageSize = 10;
     private const int MaxPageSize = 100;
-    private const int MinTargesLength = 6;
     private const int MinNameLength = 2;
+    private const int MinTargesLength = 6;
+    private const int MinPhoneLength = 10;
     private const int MaxInputLength = 100;
 
     // Sentinel char appended to a prefix to form an inclusive upper bound for a
     // range scan: any string starting with `prefix` is <= `prefix + \uFFFF`.
-    // This turns StartsWith into a pure B-tree range query that uses the index.
     private const char RangeUpperSentinel = '\uFFFF';
 
     // EF Core translates string.Compare(col, const) op 0 to col op const in SQL.
     private static readonly System.Reflection.MethodInfo StringCompareMethod = typeof(string).GetMethod(
         nameof(string.Compare), [typeof(string), typeof(string)])!;
 
-    public SearchService(ApplicationDbContext db, ILogger<SearchService> logger)
-    {
-        _db = db;
-        _logger = logger;
-    }
-
-    private static (int pageNumber, int pageSize) ValidatePagination(int pageNumber, int pageSize)
-    {
-        pageNumber = Math.Max(1, pageNumber);
-        pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
-        return (pageNumber, pageSize);
-    }
-
     public async Task<SearchResponse> KerkoAsync(string? mbiemri, string? emri, int pageNumber = 1, int pageSize = DefaultPageSize)
     {
-        try
+        ValidateBothNames(mbiemri, emri);
+        (pageNumber, pageSize) = ClampPagination(pageNumber, pageSize);
+
+        var normalizedEmri = NormalizeAlbanian(emri!);
+        var normalizedMbiemri = NormalizeAlbanian(mbiemri!);
+
+        if (normalizedEmri.Length == 0 || normalizedMbiemri.Length == 0)
         {
-            if (string.IsNullOrEmpty(mbiemri) || string.IsNullOrEmpty(emri))
-            {
-                throw new ArgumentException("Emri dhe mbiemri nuk mund te jene bosh");
-            }
-
-            if (mbiemri.Length < MinNameLength || emri.Length < MinNameLength)
-            {
-                throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
-            }
-
-            if (mbiemri.Length > MaxInputLength || emri.Length > MaxInputLength)
-            {
-                throw new ArgumentException($"Emri dhe mbiemri nuk mund te kete me shume se {MaxInputLength} karaktere");
-            }
-
-            (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
-
-            var normalizedMbiemri = NormalizeAlbanian(mbiemri);
-            var normalizedEmri = NormalizeAlbanian(emri);
-
-            // Reject any input that would leave us without a usable prefix. After
-            // normalization the search term must still have characters; a user
-            // typing only wildcards/whitespace should not match everything.
-            if (normalizedMbiemri.Length == 0 || normalizedEmri.Length == 0)
-            {
-                return EmptySearchResponse(pageNumber, pageSize);
-            }
-
-            // Run sequentially — DbContext is not thread-safe and SQLite
-            // serializes access anyway, so parallelism would buy nothing.
-            var person = await SearchByNameAsync(
-                _db.Person,
-                p => p.EmerNormalized,
-                p => p.MbiemerNormalized,
-                p => new PersonResponse
-                {
-                    Adresa = p.Adresa,
-                    NrBaneses = p.NrBaneses,
-                    Emri = p.Emer,
-                    Mbiemri = p.Mbiemer,
-                    Atesi = p.Atesi,
-                    Amesi = p.Amesi,
-                    Datelindja = p.Datelindja,
-                    Vendlindja = p.Vendlindja,
-                    Seksi = p.Seksi,
-                    LidhjaMeKryefamiljarin = p.LidhjaMeKryefamiljarin,
-                    Qyteti = p.Qyteti,
-                    GjendjeCivile = p.GjendjeCivile,
-                    Kombesia = p.Kombesia
-                },
-                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
-
-            var rrogat = await SearchByNameAsync(
-                _db.Rrogat,
-                r => r.EmriNormalized,
-                r => r.MbiemriNormalized,
-                r => new RrogatResponse
-                {
-                    NumriPersonal = r.NumriPersonal,
-                    Emri = r.Emri,
-                    Mbiemri = r.Mbiemri,
-                    NIPT = r.NIPT,
-                    DRT = r.DRT,
-                    PagaBruto = r.PagaBruto,
-                    Profesioni = r.Profesioni,
-                    Kategoria = r.Kategoria
-                },
-                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
-
-            var targat = await SearchByNameAsync(
-                _db.Targat,
-                t => t.EmriNormalized,
-                t => t.MbiemriNormalized,
-                t => new TargatResponse
-                {
-                    NumriTarges = t.NumriTarges,
-                    Marka = t.Marka,
-                    Modeli = t.Modeli,
-                    Ngjyra = t.Ngjyra,
-                    NumriPersonal = t.NumriPersonal,
-                    Emri = t.Emri,
-                    Mbiemri = t.Mbiemri
-                },
-                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
-
-            var patronazhist = await SearchByNameAsync(
-                _db.Patronazhist,
-                p => p.EmriNormalized,
-                p => p.MbiemriNormalized,
-                p => new PatronazhistResponse
-                {
-                    NumriPersonal = p.NumriPersonal,
-                    Emri = p.Emri,
-                    Mbiemri = p.Mbiemri,
-                    Atesi = p.Atesi,
-                    Datelindja = p.Datelindja,
-                    QV = p.QV,
-                    ListaNr = p.ListaNr,
-                    Tel = p.Tel,
-                    Emigrant = p.Emigrant,
-                    Country = p.Country,
-                    ISigurte = p.ISigurte,
-                    Koment = p.Koment,
-                    Patronazhisti = p.Patronazhisti,
-                    Preferenca = p.Preferenca,
-                    Census2013Preferenca = p.Census2013Preferenca,
-                    Census2013Siguria = p.Census2013Siguria,
-                    Vendlindja = p.Vendlindja,
-                    Kompania = p.Kompania,
-                    KodBanese = p.KodBanese
-                },
-                normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
-
-            return new SearchResponse
-            {
-                Person = person,
-                Rrogat = rrogat,
-                Targat = targat,
-                Patronazhist = patronazhist
-            };
+            return EmptySearchResponse(pageNumber, pageSize);
         }
-        catch (Exception ex)
+
+        // Sequential — DbContext is not thread-safe and SQLite serializes
+        // access anyway, so parallelism would buy nothing.
+        var person = await PrefixSearchAsync(db.Person, p => p.EmerNormalized, p => p.MbiemerNormalized,
+            SearchProjections.Person, normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
+        var rrogat = await PrefixSearchAsync(db.Rrogat, r => r.EmriNormalized, r => r.MbiemriNormalized,
+            SearchProjections.Rrogat, normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
+        var targat = await PrefixSearchAsync(db.Targat, t => t.EmriNormalized, t => t.MbiemriNormalized,
+            SearchProjections.Targat, normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
+        var patronazhist = await PrefixSearchAsync(db.Patronazhist, p => p.EmriNormalized, p => p.MbiemriNormalized,
+            SearchProjections.Patronazhist, normalizedEmri, normalizedMbiemri, pageNumber, pageSize);
+
+        return new SearchResponse
         {
-            _logger.LogError(ex, "Error searching for {mbiemri} {emri}", mbiemri, emri);
-            throw;
-        }
+            Person = person,
+            Rrogat = rrogat,
+            Targat = targat,
+            Patronazhist = patronazhist
+        };
     }
 
     public async Task<PaginatedResult<TargatResponse>> TargatAsync(string? numriTarges, int pageNumber = 1, int pageSize = DefaultPageSize)
     {
-        try
-        {
-            if (string.IsNullOrEmpty(numriTarges))
-            {
-                throw new ArgumentException("Numri i targes nuk mund te jene bosh");
-            }
+        ValidateSingleField(numriTarges, "Numri i targes", MinTargesLength);
+        (pageNumber, pageSize) = ClampPagination(pageNumber, pageSize);
 
-            if (numriTarges.Length < MinTargesLength)
-            {
-                throw new ArgumentException($"Numri i targes duhet te kete te pakten {MinTargesLength} karaktere");
-            }
+        var needle = numriTarges!.ToLower().Trim();
+        var query = db.Targat
+            .AsNoTracking()
+            .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(needle))
+            .OrderBy(t => t.NumriTarges!.ToLower() == needle ? 0
+                        : t.NumriTarges!.ToLower().StartsWith(needle) ? 1 : 2)
+            .ThenBy(t => t.NumriTarges);
 
-            if (numriTarges.Length > MaxInputLength)
-            {
-                throw new ArgumentException($"Numri i targes nuk mund te kete me shume se {MaxInputLength} karaktere");
-            }
-
-            (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
-
-            var normalizedNumriTarges = numriTarges.ToLower().Trim();
-
-            var query = _db.Targat
-                .AsNoTracking()
-                .Where(t => t.NumriTarges != null && t.NumriTarges.ToLower().Contains(normalizedNumriTarges))
-                .OrderBy(t => t.NumriTarges!.ToLower() == normalizedNumriTarges ? 0 :
-                             t.NumriTarges!.ToLower().StartsWith(normalizedNumriTarges) ? 1 : 2)
-                .ThenBy(t => t.NumriTarges);
-
-            var totalItems = await query.CountAsync();
-
-            var results = await query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(t => new TargatResponse
-                {
-                    NumriTarges = t.NumriTarges,
-                    Marka = t.Marka,
-                    Modeli = t.Modeli,
-                    Ngjyra = t.Ngjyra,
-                    NumriPersonal = t.NumriPersonal,
-                    Emri = t.Emri,
-                    Mbiemri = t.Mbiemri
-                })
-                .ToListAsync();
-
-            return new PaginatedResult<TargatResponse>
-            {
-                Items = results,
-                Pagination = new PaginationInfo
-                {
-                    CurrentPage = pageNumber,
-                    PageSize = pageSize,
-                    TotalItems = totalItems
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error searching for targat {numriTarges}", numriTarges);
-            throw;
-        }
+        return await PaginateAsync(query, SearchProjections.Targat, pageNumber, pageSize);
     }
 
     public async Task<PaginatedResult<PatronazhistResponse>> TelefonAsync(string? numriTelefonit, int pageNumber = 1, int pageSize = DefaultPageSize)
     {
-        try
-        {
-            if (string.IsNullOrEmpty(numriTelefonit))
-            {
-                throw new ArgumentException("Numri i telefonit nuk mund te jene bosh");
-            }
+        ValidateSingleField(numriTelefonit, "Numri i telefonit", MinPhoneLength);
+        (pageNumber, pageSize) = ClampPagination(pageNumber, pageSize);
 
-            if (numriTelefonit.Length < 10)
-            {
-                throw new ArgumentException("Numri i telefonit duhet te kete te pakten 10 karaktere");
-            }
+        var needle = numriTelefonit!.Trim();
+        var query = db.Patronazhist
+            .AsNoTracking()
+            .Where(p => p.Tel != null && p.Tel.Contains(needle))
+            .OrderBy(p => p.Tel == needle ? 0
+                        : p.Tel!.StartsWith(needle) ? 1 : 2)
+            .ThenBy(p => p.Tel);
 
-            if (numriTelefonit.Length > MaxInputLength)
-            {
-                throw new ArgumentException($"Numri i telefonit nuk mund te kete me shume se {MaxInputLength} karaktere");
-            }
-
-            (pageNumber, pageSize) = ValidatePagination(pageNumber, pageSize);
-
-            var normalizedNumriTelefonit = numriTelefonit.Trim();
-
-            var query = _db.Patronazhist
-                .AsNoTracking()
-                .Where(p => p.Tel != null && p.Tel.Contains(normalizedNumriTelefonit))
-                .OrderBy(p => p.Tel == normalizedNumriTelefonit ? 0 :
-                             p.Tel!.StartsWith(normalizedNumriTelefonit) ? 1 : 2)
-                .ThenBy(p => p.Tel);
-
-            var totalItems = await query.CountAsync();
-
-            var results = await query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new PatronazhistResponse
-                {
-                    NumriPersonal = p.NumriPersonal,
-                    Emri = p.Emri,
-                    Mbiemri = p.Mbiemri,
-                    Atesi = p.Atesi,
-                    Datelindja = p.Datelindja,
-                    QV = p.QV,
-                    ListaNr = p.ListaNr,
-                    Tel = p.Tel,
-                    Emigrant = p.Emigrant,
-                    Country = p.Country,
-                    ISigurte = p.ISigurte,
-                    Koment = p.Koment,
-                    Patronazhisti = p.Patronazhisti,
-                    Preferenca = p.Preferenca,
-                    Census2013Preferenca = p.Census2013Preferenca,
-                    Census2013Siguria = p.Census2013Siguria,
-                    Vendlindja = p.Vendlindja,
-                    Kompania = p.Kompania,
-                    KodBanese = p.KodBanese
-                })
-                .ToListAsync();
-
-            return new PaginatedResult<PatronazhistResponse>
-            {
-                Items = results,
-                Pagination = new PaginationInfo
-                {
-                    CurrentPage = pageNumber,
-                    PageSize = pageSize,
-                    TotalItems = totalItems
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error searching for telefon {numriTelefonit}", numriTelefonit);
-            throw;
-        }
+        return await PaginateAsync(query, SearchProjections.Patronazhist, pageNumber, pageSize);
     }
 
-    /// <summary>
-    /// Prefix-matches on precomputed normalized columns using a pure range query
-    /// (col >= prefix AND col <= prefix + '\uFFFF'), which is directly sargable
-    /// against the composite B-tree index on (MbiemriNormalized, EmriNormalized).
-    /// No per-row REPLACE/LOWER calls, no LIKE/ESCAPE — SQLite can seek the index.
-    /// </summary>
-    private async Task<PaginatedResult<TResponse>> SearchByNameAsync<TEntity, TResponse>(
-        DbSet<TEntity> dbSet,
-        Expression<Func<TEntity, string?>> emriNormalizedSelector,
-        Expression<Func<TEntity, string?>> mbiemriNormalizedSelector,
-        Expression<Func<TEntity, TResponse>> mapToResponse,
-        string emri,
-        string mbiemri,
-        int pageNumber,
-        int pageSize)
-        where TEntity : class
+    // ─── Validation ──────────────────────────────────────────────────────
+
+    private static void ValidateBothNames(string? mbiemri, string? emri)
     {
-        var param = emriNormalizedSelector.Parameters[0];
-        var emriBody = emriNormalizedSelector.Body;
-        var mbiemriBody = new ParameterReplacer(mbiemriNormalizedSelector.Parameters[0], param)
-            .Visit(mbiemriNormalizedSelector.Body);
+        if (string.IsNullOrEmpty(mbiemri) || string.IsNullOrEmpty(emri))
+            throw new ArgumentException("Emri dhe mbiemri nuk mund te jene bosh");
 
-        var emriUpper = emri + RangeUpperSentinel;
-        var mbiemriUpper = mbiemri + RangeUpperSentinel;
+        if (mbiemri.Length < MinNameLength || emri.Length < MinNameLength)
+            throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
 
-        var zero = Expression.Constant(0);
+        if (mbiemri.Length > MaxInputLength || emri.Length > MaxInputLength)
+            throw new ArgumentException($"Emri dhe mbiemri nuk mund te kete me shume se {MaxInputLength} karaktere");
+    }
 
-        Expression GeRange(Expression col, string lower) =>
-            Expression.GreaterThanOrEqual(
-                Expression.Call(null, StringCompareMethod, col, Expression.Constant(lower)),
-                zero);
-        Expression LeRange(Expression col, string upper) =>
-            Expression.LessThanOrEqual(
-                Expression.Call(null, StringCompareMethod, col, Expression.Constant(upper)),
-                zero);
+    private static void ValidateSingleField(string? value, string fieldName, int minLength)
+    {
+        if (string.IsNullOrEmpty(value))
+            throw new ArgumentException($"{fieldName} nuk mund te jene bosh");
 
-        var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
-        var mbiemriNotNull = Expression.NotEqual(mbiemriBody, Expression.Constant(null, typeof(string)));
+        if (value.Length < minLength)
+            throw new ArgumentException($"{fieldName} duhet te kete te pakten {minLength} karaktere");
 
-        // (MbiemriNormalized >= mbiemri AND MbiemriNormalized <= mbiemri+0xFFFF)
-        //  AND (EmriNormalized >= emri AND EmriNormalized <= emri+0xFFFF)
-        // Ordered this way so the composite index (Mbiemri_N, Emri_N) is used.
-        var condition = Expression.AndAlso(
-            Expression.AndAlso(mbiemriNotNull, emriNotNull),
-            Expression.AndAlso(
-                Expression.AndAlso(
-                    GeRange(mbiemriBody, mbiemri),
-                    LeRange(mbiemriBody, mbiemriUpper)),
-                Expression.AndAlso(
-                    GeRange(emriBody, emri),
-                    LeRange(emriBody, emriUpper))));
+        if (value.Length > MaxInputLength)
+            throw new ArgumentException($"{fieldName} nuk mund te kete me shume se {MaxInputLength} karaktere");
+    }
 
-        var whereLambda = Expression.Lambda<Func<TEntity, bool>>(condition, param);
+    private static (int pageNumber, int pageSize) ClampPagination(int pageNumber, int pageSize)
+        => (Math.Max(1, pageNumber), Math.Clamp(pageSize, 1, MaxPageSize));
 
-        // Order: exact match first, then by surname then first name.
-        var isExact = Expression.AndAlso(
-            Expression.Equal(mbiemriBody, Expression.Constant(mbiemri, typeof(string))),
-            Expression.Equal(emriBody, Expression.Constant(emri, typeof(string))));
-        var orderRank = Expression.Condition(isExact, Expression.Constant(0), Expression.Constant(1));
-        var orderRankLambda = Expression.Lambda<Func<TEntity, int>>(orderRank, param);
+    // ─── Generic paginated projection ────────────────────────────────────
 
-        var query = dbSet.AsNoTracking()
-            .Where(whereLambda)
-            .OrderBy(orderRankLambda);
-
+    private static async Task<PaginatedResult<TResponse>> PaginateAsync<TEntity, TResponse>(
+        IQueryable<TEntity> query,
+        Expression<Func<TEntity, TResponse>> projection,
+        int pageNumber, int pageSize)
+    {
         var totalItems = await query.CountAsync();
-
-        var results = await query
+        var items = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(mapToResponse)
+            .Select(projection)
             .ToListAsync();
 
         return new PaginatedResult<TResponse>
         {
-            Items = results,
+            Items = items,
             Pagination = new PaginationInfo
             {
                 CurrentPage = pageNumber,
@@ -402,6 +149,77 @@ public class SearchService : ISearchService
             }
         };
     }
+
+    // ─── Normalized prefix search (range query on indexed column) ───────
+
+    /// <summary>
+    /// Prefix-matches on precomputed normalized columns using a pure range query
+    /// (col &gt;= prefix AND col &lt;= prefix + '\uFFFF'), which is directly sargable
+    /// against the composite B-tree index on (MbiemriNormalized, EmriNormalized).
+    /// No per-row REPLACE/LOWER calls, no LIKE/ESCAPE — SQLite can seek the index.
+    /// </summary>
+    private static async Task<PaginatedResult<TResponse>> PrefixSearchAsync<TEntity, TResponse>(
+        DbSet<TEntity> dbSet,
+        Expression<Func<TEntity, string?>> emriNormalizedSelector,
+        Expression<Func<TEntity, string?>> mbiemriNormalizedSelector,
+        Expression<Func<TEntity, TResponse>> projection,
+        string emri,
+        string mbiemri,
+        int pageNumber,
+        int pageSize)
+        where TEntity : class
+    {
+        var (where, rank) = BuildPrefixPredicate(
+            emriNormalizedSelector, mbiemriNormalizedSelector, emri, mbiemri);
+
+        var query = dbSet.AsNoTracking().Where(where).OrderBy(rank);
+        return await PaginateAsync(query, projection, pageNumber, pageSize);
+    }
+
+    private static (Expression<Func<TEntity, bool>> Where, Expression<Func<TEntity, int>> Rank)
+        BuildPrefixPredicate<TEntity>(
+        Expression<Func<TEntity, string?>> emriSelector,
+        Expression<Func<TEntity, string?>> mbiemriSelector,
+        string emri,
+        string mbiemri)
+    {
+        var param = emriSelector.Parameters[0];
+        var emriBody = emriSelector.Body;
+        var mbiemriBody = new ParameterReplacer(mbiemriSelector.Parameters[0], param)
+            .Visit(mbiemriSelector.Body);
+
+        var zero = Expression.Constant(0);
+        Expression GeRange(Expression col, string lower) => Expression.GreaterThanOrEqual(
+            Expression.Call(null, StringCompareMethod, col, Expression.Constant(lower)), zero);
+        Expression LeRange(Expression col, string upper) => Expression.LessThanOrEqual(
+            Expression.Call(null, StringCompareMethod, col, Expression.Constant(upper)), zero);
+
+        var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
+        var mbiemriNotNull = Expression.NotEqual(mbiemriBody, Expression.Constant(null, typeof(string)));
+
+        // (MbiemriNormalized >= mbiemri AND MbiemriNormalized <= mbiemri+0xFFFF)
+        //  AND (EmriNormalized  >= emri    AND EmriNormalized  <= emri+0xFFFF)
+        // Ordered this way so the composite index (Mbiemri_N, Emri_N) is used.
+        var condition = Expression.AndAlso(
+            Expression.AndAlso(mbiemriNotNull, emriNotNull),
+            Expression.AndAlso(
+                Expression.AndAlso(
+                    GeRange(mbiemriBody, mbiemri),
+                    LeRange(mbiemriBody, mbiemri + RangeUpperSentinel)),
+                Expression.AndAlso(
+                    GeRange(emriBody, emri),
+                    LeRange(emriBody, emri + RangeUpperSentinel))));
+
+        var isExact = Expression.AndAlso(
+            Expression.Equal(mbiemriBody, Expression.Constant(mbiemri, typeof(string))),
+            Expression.Equal(emriBody, Expression.Constant(emri, typeof(string))));
+        var rank = Expression.Condition(isExact, Expression.Constant(0), Expression.Constant(1));
+        return (
+            Expression.Lambda<Func<TEntity, bool>>(condition, param),
+            Expression.Lambda<Func<TEntity, int>>(rank, param));
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────
 
     /// <summary>
     /// Normalizes an input search string to match the stored normalized columns:
@@ -415,9 +233,7 @@ public class SearchService : ISearchService
             .Replace("ç", "c")
             .Replace("ë", "e");
 
-        // Strip chars that have no place in a name and would otherwise pollute
-        // the range query bounds.
-        var cleaned = new System.Text.StringBuilder(lowered.Length);
+        var cleaned = new StringBuilder(lowered.Length);
         foreach (var c in lowered)
         {
             if (c == '%' || c == '_' || c == '\\')
@@ -446,8 +262,7 @@ public class SearchService : ISearchService
         };
     }
 
-    private class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam)
-        : ExpressionVisitor
+    private class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam) : ExpressionVisitor
     {
         protected override Expression VisitParameter(ParameterExpression node)
             => node == oldParam ? newParam : base.VisitParameter(node);

@@ -27,15 +27,23 @@ public static class ClientInfo
             return "Unknown";
         }
 
-        // Detect browser
+        // Detect browser. Order matters: Chromium-derivatives (Edge, Opera, Brave,
+        // Samsung) all include "Chrome" in their UA, so check them before falling
+        // through to plain Chrome.
         var browser = "Unknown";
-        if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg"))
-            browser = "Chrome";
-        else if (userAgent.Contains("Edg"))
+        if (userAgent.Contains("Edg"))
             browser = "Edge";
+        else if (userAgent.Contains("OPR") || userAgent.Contains("Opera"))
+            browser = "Opera";
+        else if (userAgent.Contains("SamsungBrowser"))
+            browser = "Samsung Internet";
+        else if (userAgent.Contains("Brave"))
+            browser = "Brave";
         else if (userAgent.Contains("Firefox"))
             browser = "Firefox";
-        else if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome"))
+        else if (userAgent.Contains("Chrome"))
+            browser = "Chrome";
+        else if (userAgent.Contains("Safari"))
             browser = "Safari";
 
         // Detect OS

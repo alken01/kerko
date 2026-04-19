@@ -135,10 +135,18 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
             location = locations.GetValueOrDefault(x.ip)
         }).ToList();
 
+        // Coalesce nulls to empty string before lowering so SQLite GROUP BY keys
+        // are non-null and the null-forgiving operator is not needed.
         var topQueriesRaw = await db.RequestLogs
             .Where(r => r.TimestampUtc >= windowStart)
             .Where(r => r.Emri != null || r.Mbiemri != null || r.NumriTarges != null || r.NumriTelefonit != null)
-            .GroupBy(r => new { emri = r.Emri!.ToLower(), mbiemri = r.Mbiemri!.ToLower(), numriTarges = r.NumriTarges!.ToLower(), numriTelefonit = r.NumriTelefonit!.ToLower() })
+            .GroupBy(r => new
+            {
+                emri = (r.Emri ?? string.Empty).ToLower(),
+                mbiemri = (r.Mbiemri ?? string.Empty).ToLower(),
+                numriTarges = (r.NumriTarges ?? string.Empty).ToLower(),
+                numriTelefonit = (r.NumriTelefonit ?? string.Empty).ToLower()
+            })
             .Select(g => new { g.Key.emri, g.Key.mbiemri, g.Key.numriTarges, g.Key.numriTelefonit, count = g.Count() })
             .OrderByDescending(x => x.count)
             .Take(5)

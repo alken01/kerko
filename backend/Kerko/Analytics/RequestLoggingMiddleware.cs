@@ -16,9 +16,7 @@ public class RequestLoggingMiddleware(RequestDelegate next, Channel<RequestLog> 
     public async Task InvokeAsync(HttpContext context)
     {
         var path = context.Request.Path.Value ?? string.Empty;
-        var shouldLog = _trackedPaths.Contains(path);
-
-        if (!shouldLog)
+        if (!_trackedPaths.Contains(path))
         {
             await next(context);
             return;
@@ -27,10 +25,19 @@ public class RequestLoggingMiddleware(RequestDelegate next, Channel<RequestLog> 
         var sw = Stopwatch.StartNew();
         var timestamp = DateTime.UtcNow;
 
-        await next(context);
+        try
+        {
+            await next(context);
+        }
+        finally
+        {
+            sw.Stop();
+            EnqueueLog(context, path, timestamp, sw.ElapsedMilliseconds);
+        }
+    }
 
-        sw.Stop();
-
+    private void EnqueueLog(HttpContext context, string path, DateTime timestamp, long durationMs)
+    {
         try
         {
             var query = context.Request.Query;
@@ -51,7 +58,7 @@ public class RequestLoggingMiddleware(RequestDelegate next, Channel<RequestLog> 
                 UserAgentRaw = userAgentRaw,
                 UserAgentSimplified = ClientInfo.SimplifyUserAgent(userAgentRaw),
                 StatusCode = context.Response.StatusCode,
-                DurationMs = (int)sw.ElapsedMilliseconds,
+                DurationMs = (int)durationMs,
                 ResultCount = context.Items.TryGetValue("Kerko.ResultCount", out var rc) ? rc as int? : null,
                 RequestId = context.TraceIdentifier
             };

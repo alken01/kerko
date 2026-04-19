@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using Microsoft.EntityFrameworkCore;
 
 namespace Kerko.Analytics;
 
@@ -7,10 +6,11 @@ public class RequestLogWriter(
     Channel<RequestLog> channel,
     IServiceProvider serviceProvider,
     IpGeolocationService geoService,
-    ILogger<RequestLogWriter> logger) : IHostedService, IDisposable
+    ILogger<RequestLogWriter> logger) : IHostedService, IAsyncDisposable
 {
     private Task? _backgroundTask;
     private readonly CancellationTokenSource _cts = new();
+    private bool _disposed;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -170,8 +170,28 @@ public class RequestLogWriter(
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
+        if (_disposed)
+            return;
+        _disposed = true;
+
+        // Cancel first so the drain loop wakes up. Swallow ObjectDisposedException
+        // in case StopAsync already disposed _cts (different shutdown orderings in
+        // host vs. test teardown).
+        try
+        { _cts.Cancel(); }
+        catch (ObjectDisposedException) { }
+
+        if (_backgroundTask != null)
+        {
+            try
+            { await _backgroundTask.ConfigureAwait(false); }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) { logger.LogDebug(ex, "RequestLogWriter background task faulted during dispose"); }
+        }
+
         _cts.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -2,7 +2,6 @@ using Kerko.Infrastructure;
 using Kerko.Models;
 using Kerko.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Kerko.Tests;
@@ -25,7 +24,7 @@ public class SearchServiceTests
         await _db.Database.EnsureCreatedAsync();
 
         SeedData();
-        _service = new SearchService(_db, NullLogger<SearchService>.Instance);
+        _service = new SearchService(_db);
     }
 
     [TearDown]
