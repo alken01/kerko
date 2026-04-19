@@ -128,7 +128,9 @@ public class SearchService(ApplicationDbContext db) : ISearchService
     }
 
     private static (int pageNumber, int pageSize) ClampPagination(int pageNumber, int pageSize)
-        => (Math.Max(1, pageNumber), Math.Clamp(pageSize, 1, MaxPageSize));
+    {
+        return (Math.Max(1, pageNumber), Math.Clamp(pageSize, 1, MaxPageSize));
+    }
 
     // ─── Generic paginated projection ────────────────────────────────────
 
@@ -297,6 +299,8 @@ public class SearchService(ApplicationDbContext db) : ISearchService
     private class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam) : ExpressionVisitor
     {
         protected override Expression VisitParameter(ParameterExpression node)
-            => node == oldParam ? newParam : base.VisitParameter(node);
+        {
+            return node == oldParam ? newParam : base.VisitParameter(node);
+        }
     }
 }

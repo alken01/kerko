@@ -12,8 +12,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     // SQL expression that folds Albanian diacritics: Ç/ç → c, Ë/ë → e, and lowercases ASCII.
     // SQLite's LOWER() only touches ASCII, so we replace both cases of the diacritics explicitly.
-    private static string NormalizeExpr(string column) =>
-        $"REPLACE(REPLACE(REPLACE(REPLACE(LOWER(\"{column}\"), 'Ç', 'c'), 'ç', 'c'), 'Ë', 'e'), 'ë', 'e')";
+    private static string NormalizeExpr(string column)
+    {
+        return $"REPLACE(REPLACE(REPLACE(REPLACE(LOWER(\"{column}\"), 'Ç', 'c'), 'ç', 'c'), 'Ë', 'e'), 'ë', 'e')";
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

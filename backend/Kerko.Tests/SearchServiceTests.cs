@@ -60,8 +60,10 @@ public class SearchServiceTests
         _db.SaveChanges();
     }
 
-    private static Person MakePerson(int id, string emer, string mbiemer, string qyteti) =>
-        new() { Id = id, Emer = emer, Mbiemer = mbiemer, Qyteti = qyteti };
+    private static Person MakePerson(int id, string emer, string mbiemer, string qyteti)
+    {
+        return new() { Id = id, Emer = emer, Mbiemer = mbiemer, Qyteti = qyteti };
+    }
 
     // ─── Diacritic normalization ─────────────────────────────────────
 

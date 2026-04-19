@@ -80,19 +80,22 @@ public class GeolocationIntegrationTests
         await db.SaveChangesAsync();
     }
 
-    private static RequestLog MakeLog(string ip, string endpoint = "kerko") => new()
+    private static RequestLog MakeLog(string ip, string endpoint = "kerko")
     {
-        TimestampUtc = DateTime.UtcNow.AddMinutes(-1),
-        Endpoint = endpoint,
-        PageNumber = 1,
-        PageSize = 10,
-        ClientIp = ip,
-        UserAgentRaw = "test",
-        UserAgentSimplified = "Unknown/Unknown/Desktop",
-        StatusCode = 200,
-        DurationMs = 10,
-        RequestId = Guid.NewGuid().ToString()
-    };
+        return new()
+        {
+            TimestampUtc = DateTime.UtcNow.AddMinutes(-1),
+            Endpoint = endpoint,
+            PageNumber = 1,
+            PageSize = 10,
+            ClientIp = ip,
+            UserAgentRaw = "test",
+            UserAgentSimplified = "Unknown/Unknown/Desktop",
+            StatusCode = 200,
+            DurationMs = 10,
+            RequestId = Guid.NewGuid().ToString()
+        };
+    }
 
     // ─── IpGeolocationService direct tests ───────────────────────────────────
 

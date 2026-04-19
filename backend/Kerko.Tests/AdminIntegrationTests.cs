@@ -103,7 +103,8 @@ public class AdminIntegrationTests
         int status = 200,
         int durationMs = 10,
         int? resultCount = null)
-        => new()
+    {
+        return new()
         {
             TimestampUtc = timestampUtc,
             Endpoint = endpoint,
@@ -121,6 +122,7 @@ public class AdminIntegrationTests
             ResultCount = resultCount,
             RequestId = Guid.NewGuid().ToString()
         };
+    }
 
     // ─── Admin auth tests ────────────────────────────────────────────────────
 

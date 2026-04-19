@@ -10,11 +10,14 @@ public class SearchController(ISearchService searchService) : ControllerBase
 {
     [HttpGet("version")]
     [ResponseCache(NoStore = true)]
-    public IActionResult Version() => Ok(new
+    public IActionResult Version()
     {
-        sha = Environment.GetEnvironmentVariable("GIT_SHA") ?? "unknown",
-        deployed = Environment.GetEnvironmentVariable("DEPLOY_TIME") ?? "unknown"
-    });
+        return Ok(new
+        {
+            sha = Environment.GetEnvironmentVariable("GIT_SHA") ?? "unknown",
+            deployed = Environment.GetEnvironmentVariable("DEPLOY_TIME") ?? "unknown"
+        });
+    }
 
     [HttpGet("kerko")]
     public async Task<IActionResult> Kerko([FromQuery] string? emri, [FromQuery] string? mbiemri,
