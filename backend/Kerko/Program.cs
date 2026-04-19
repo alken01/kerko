@@ -1,14 +1,14 @@
-using Microsoft.EntityFrameworkCore;
+using System.IO.Compression;
+using System.Threading.Channels;
+using System.Threading.RateLimiting;
+using Kerko.Admin;
+using Kerko.Analytics;
+using Kerko.Http;
 using Kerko.Infrastructure;
 using Kerko.Services;
-using System.Threading.RateLimiting;
-using Microsoft.Extensions.Logging.Console;
-using System.IO.Compression;
 using Microsoft.AspNetCore.ResponseCompression;
-using System.Threading.Channels;
-using Kerko.Analytics;
-using Kerko.Admin;
-using Kerko.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Console;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -136,7 +136,8 @@ using (var scope = app.Services.CreateScope())
     var analyticsDb = scope.ServiceProvider.GetRequiredService<AnalyticsDbContext>();
     analyticsDb.Database.EnsureCreated();
 
-    try { analyticsDb.Database.ExecuteSqlRaw("ALTER TABLE RequestLogs ADD COLUMN Location TEXT"); }
+    try
+    { analyticsDb.Database.ExecuteSqlRaw("ALTER TABLE RequestLogs ADD COLUMN Location TEXT"); }
     catch (Microsoft.Data.Sqlite.SqliteException) { /* column already exists */ }
 }
 

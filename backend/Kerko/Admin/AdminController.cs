@@ -147,10 +147,14 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
         var topQueries = topQueriesRaw.Select(r =>
         {
             var parts = new List<string>();
-            if (!string.IsNullOrEmpty(r.emri)) parts.Add($"emri={r.emri}");
-            if (!string.IsNullOrEmpty(r.mbiemri)) parts.Add($"mbiemri={r.mbiemri}");
-            if (!string.IsNullOrEmpty(r.numriTarges)) parts.Add($"numriTarges={r.numriTarges}");
-            if (!string.IsNullOrEmpty(r.numriTelefonit)) parts.Add($"numriTelefonit={r.numriTelefonit}");
+            if (!string.IsNullOrEmpty(r.emri))
+                parts.Add($"emri={r.emri}");
+            if (!string.IsNullOrEmpty(r.mbiemri))
+                parts.Add($"mbiemri={r.mbiemri}");
+            if (!string.IsNullOrEmpty(r.numriTarges))
+                parts.Add($"numriTarges={r.numriTarges}");
+            if (!string.IsNullOrEmpty(r.numriTelefonit))
+                parts.Add($"numriTelefonit={r.numriTelefonit}");
             return new { term = string.Join(" ", parts), r.count };
         }).ToList();
 

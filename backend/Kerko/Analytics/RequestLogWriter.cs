@@ -20,8 +20,22 @@ public class RequestLogWriter(
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        try { channel.Writer.Complete(); } catch (InvalidOperationException) { /* already completed */ }
-        try { _cts.Cancel(); } catch (ObjectDisposedException) { /* already disposed */ }
+        try
+        {
+            channel.Writer.Complete();
+        }
+        catch (InvalidOperationException)
+        {
+            // already completed
+        }
+        try
+        {
+            _cts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // already disposed
+        }
 
         if (_backgroundTask != null)
         {
@@ -131,7 +145,8 @@ public class RequestLogWriter(
 
     private async Task FlushBatchAsync(List<RequestLog> batch)
     {
-        if (batch.Count == 0) return;
+        if (batch.Count == 0)
+            return;
 
         try
         {

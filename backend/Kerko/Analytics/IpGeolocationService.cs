@@ -72,14 +72,16 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogDebug("ip-api.com batch returned {Status}", response.StatusCode);
-                foreach (var ip in originalIps) _cache.TryAdd(ip, null);
+                foreach (var ip in originalIps)
+                    _cache.TryAdd(ip, null);
                 return;
             }
 
             var results = await response.Content.ReadFromJsonAsync<List<IpApiResult>>();
             if (results == null)
             {
-                foreach (var ip in originalIps) _cache.TryAdd(ip, null);
+                foreach (var ip in originalIps)
+                    _cache.TryAdd(ip, null);
                 return;
             }
 
@@ -87,7 +89,8 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
             var locationByNormalized = new Dictionary<string, string?>();
             foreach (var r in results)
             {
-                if (r.Query == null) continue;
+                if (r.Query == null)
+                    continue;
 
                 if (r.Status == "success")
                 {
@@ -112,7 +115,8 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
         catch (Exception ex)
         {
             logger.LogDebug(ex, "Failed to fetch IP geolocation for {Count} IPs", originalIps.Count);
-            foreach (var ip in originalIps) _cache.TryAdd(ip, null);
+            foreach (var ip in originalIps)
+                _cache.TryAdd(ip, null);
         }
     }
 
@@ -125,11 +129,15 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
 
     private static bool IsPrivateIp(string ip)
     {
-        if (string.IsNullOrEmpty(ip)) return true;
-        if (!IPAddress.TryParse(ip, out var addr)) return true;
-        if (IPAddress.IsLoopback(addr)) return true;
+        if (string.IsNullOrEmpty(ip))
+            return true;
+        if (!IPAddress.TryParse(ip, out var addr))
+            return true;
+        if (IPAddress.IsLoopback(addr))
+            return true;
 
-        if (addr.IsIPv4MappedToIPv6) addr = addr.MapToIPv4();
+        if (addr.IsIPv4MappedToIPv6)
+            addr = addr.MapToIPv4();
 
         if (addr.AddressFamily == AddressFamily.InterNetwork)
         {

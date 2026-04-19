@@ -350,7 +350,7 @@ public class AdminIntegrationTests
     {
         var now = DateTime.UtcNow;
         var inWindowStart = now.AddMinutes(-10);
-        var inWindowEnd   = now.AddMinutes(-5);
+        var inWindowEnd = now.AddMinutes(-5);
 
         await SeedLogsAsync(new[]
         {
@@ -361,7 +361,7 @@ public class AdminIntegrationTests
         });
 
         var from = inWindowStart.ToString("o");
-        var to   = inWindowEnd.ToString("o");
+        var to = inWindowEnd.ToString("o");
         var response = await AuthedClient().GetAsync($"/api/admin/logs?from={from}&to={to}");
         var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 

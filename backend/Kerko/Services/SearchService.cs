@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using Kerko.Infrastructure;
 using Kerko.Models;
-using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kerko.Services;
 
@@ -318,7 +318,7 @@ public class SearchService : ISearchService
         }
     }
 
-/// <summary>
+    /// <summary>
     /// Prefix-matches on precomputed normalized columns using a pure range query
     /// (col >= prefix AND col <= prefix + '\uFFFF'), which is directly sargable
     /// against the composite B-tree index on (MbiemriNormalized, EmriNormalized).
@@ -420,8 +420,10 @@ public class SearchService : ISearchService
         var cleaned = new System.Text.StringBuilder(lowered.Length);
         foreach (var c in lowered)
         {
-            if (c == '%' || c == '_' || c == '\\') continue;
-            if (char.IsControl(c)) continue;
+            if (c == '%' || c == '_' || c == '\\')
+                continue;
+            if (char.IsControl(c))
+                continue;
             cleaned.Append(c);
         }
         return cleaned.ToString();
