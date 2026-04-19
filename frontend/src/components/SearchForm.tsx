@@ -251,6 +251,9 @@ export function SearchForm({
                     }
                   }}
                   autoComplete="given-name"
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="off"
                   className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
                   disabled={isLoading}
                 />
@@ -262,6 +265,9 @@ export function SearchForm({
                   onChange={(e) => setMbiemri(e.target.value)}
                   onFocus={() => filteredHistory.length > 0 && setShowHistory(true)}
                   autoComplete="family-name"
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="off"
                   className="w-full bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary placeholder:text-text-tertiary placeholder:font-normal focus-visible:ring-border-semantic-interactive focus-visible:ring-offset-0 h-12 touch-manipulation"
                   disabled={isLoading}
                 />

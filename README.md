@@ -11,9 +11,10 @@ No data is included in this repository.
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/mobile-homepage.png" width="200" alt="Homepage - search form" />
-  <img src="docs/screenshots/mobile-search-results.png" width="200" alt="Search results with category tabs" />
-  <img src="docs/screenshots/mobile-dark-mode.png" width="200" alt="Dark mode" />
+  <img src="docs/screenshots/1.png" width="200" alt="Homepage - search form" />
+  <img src="docs/screenshots/2.png" width="200" alt="Search results with category tabs" />
+  <img src="docs/screenshots/3.png" width="200" alt="Dark mode" />
+  <img src="docs/screenshots/3.png" width="200" alt="Dark mode expanded" />
 </p>
 
 ## Search types
