@@ -21,12 +21,16 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
             .ToList();
 
         if (uncachedIps.Count > 0)
+        {
             await FetchBatchAsync(uncachedIps);
+        }
 
         foreach (var log in logs)
         {
             if (_cache.TryGetValue(log.ClientIp, out var location))
+            {
                 log.Location = location;
+            }
         }
     }
 
@@ -46,14 +50,18 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
         {
             await FetchBatchAsync(chunks[i].ToList());
             if (i < chunks.Count - 1)
+            {
                 await Task.Delay(1500);
+            }
         }
 
         var result = new Dictionary<string, string?>();
         foreach (var ip in ips)
         {
             if (_cache.TryGetValue(ip, out var location))
+            {
                 result[ip] = location;
+            }
         }
         return result;
     }
@@ -73,7 +81,10 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
             {
                 logger.LogDebug("ip-api.com batch returned {Status}", response.StatusCode);
                 foreach (var ip in originalIps)
+                {
                     _cache.TryAdd(ip, null);
+                }
+
                 return;
             }
 
@@ -81,7 +92,10 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
             if (results == null)
             {
                 foreach (var ip in originalIps)
+                {
                     _cache.TryAdd(ip, null);
+                }
+
                 return;
             }
 
@@ -90,7 +104,9 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
             foreach (var r in results)
             {
                 if (r.Query == null)
+                {
                     continue;
+                }
 
                 if (r.Status == "success")
                 {
@@ -116,28 +132,43 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
         {
             logger.LogDebug(ex, "Failed to fetch IP geolocation for {Count} IPs", originalIps.Count);
             foreach (var ip in originalIps)
+            {
                 _cache.TryAdd(ip, null);
+            }
         }
     }
 
     private static string NormalizeIp(string ip)
     {
         if (ip.StartsWith(MappedV4Prefix, StringComparison.OrdinalIgnoreCase))
+        {
             return ip[MappedV4Prefix.Length..];
+        }
+
         return ip;
     }
 
     private static bool IsPrivateIp(string ip)
     {
         if (string.IsNullOrEmpty(ip))
+        {
             return true;
+        }
+
         if (!IPAddress.TryParse(ip, out var addr))
+        {
             return true;
+        }
+
         if (IPAddress.IsLoopback(addr))
+        {
             return true;
+        }
 
         if (addr.IsIPv4MappedToIPv6)
+        {
             addr = addr.MapToIPv4();
+        }
 
         if (addr.AddressFamily == AddressFamily.InterNetwork)
         {

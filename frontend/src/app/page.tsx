@@ -156,9 +156,9 @@ function SearchContent() {
       handleSearchTarga(targa);
     } else if (telefon) {
       handleSearchTelefon(telefon);
-    } else if (emri && mbiemri) {
-      setSearchFormData({ emri, mbiemri });
-      handleSearch(emri, mbiemri);
+    } else if (emri || mbiemri) {
+      setSearchFormData({ emri: emri ?? "", mbiemri: mbiemri ?? "" });
+      handleSearch(emri ?? "", mbiemri ?? "");
     }
   }, [searchParams, handleSearch, handleSearchTarga, handleSearchTelefon]);
 

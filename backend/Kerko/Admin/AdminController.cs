@@ -27,26 +27,38 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
 
         // Apply filters
         if (!string.IsNullOrEmpty(from) && DateTime.TryParse(from, null, System.Globalization.DateTimeStyles.RoundtripKind, out var fromDt))
+        {
             query = query.Where(r => r.TimestampUtc >= fromDt);
+        }
 
         if (!string.IsNullOrEmpty(to) && DateTime.TryParse(to, null, System.Globalization.DateTimeStyles.RoundtripKind, out var toDt))
+        {
             query = query.Where(r => r.TimestampUtc <= toDt);
+        }
 
         if (!string.IsNullOrEmpty(endpoint))
+        {
             query = query.Where(r => r.Endpoint == endpoint);
+        }
 
         if (!string.IsNullOrEmpty(q))
+        {
             query = query.Where(r =>
                 (r.Emri != null && r.Emri.Contains(q)) ||
                 (r.Mbiemri != null && r.Mbiemri.Contains(q)) ||
                 (r.NumriTarges != null && r.NumriTarges.Contains(q)) ||
                 (r.NumriTelefonit != null && r.NumriTelefonit.Contains(q)));
+        }
 
         if (!string.IsNullOrEmpty(ip))
+        {
             query = query.Where(r => r.ClientIp.Contains(ip));
+        }
 
         if (status.HasValue)
+        {
             query = query.Where(r => r.StatusCode == status.Value);
+        }
 
         // Cursor-based pagination (reverse-chronological)
         if (!string.IsNullOrEmpty(cursor))
@@ -156,13 +168,25 @@ public class AdminController(AnalyticsDbContext db, IpGeolocationService geoServ
         {
             var parts = new List<string>();
             if (!string.IsNullOrEmpty(r.emri))
+            {
                 parts.Add($"emri={r.emri}");
+            }
+
             if (!string.IsNullOrEmpty(r.mbiemri))
+            {
                 parts.Add($"mbiemri={r.mbiemri}");
+            }
+
             if (!string.IsNullOrEmpty(r.numriTarges))
+            {
                 parts.Add($"numriTarges={r.numriTarges}");
+            }
+
             if (!string.IsNullOrEmpty(r.numriTelefonit))
+            {
                 parts.Add($"numriTelefonit={r.numriTelefonit}");
+            }
+
             return new { term = string.Join(" ", parts), r.count };
         }).ToList();
 

@@ -27,6 +27,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             e.Property(p => p.MbiemerNormalized)
                 .HasComputedColumnSql(NormalizeExpr("Mbiemer"), stored: false);
             e.HasIndex(p => new { p.MbiemerNormalized, p.EmerNormalized });
+            e.HasIndex(p => p.EmerNormalized);
         });
 
         // Rrogat
@@ -37,6 +38,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             e.Property(r => r.MbiemriNormalized)
                 .HasComputedColumnSql(NormalizeExpr("Mbiemri"), stored: false);
             e.HasIndex(r => new { r.MbiemriNormalized, r.EmriNormalized });
+            e.HasIndex(r => r.EmriNormalized);
         });
 
         // Targat — keep NumriTarges index for the separate plate search
@@ -47,6 +49,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             e.Property(t => t.MbiemriNormalized)
                 .HasComputedColumnSql(NormalizeExpr("Mbiemri"), stored: false);
             e.HasIndex(t => new { t.MbiemriNormalized, t.EmriNormalized });
+            e.HasIndex(t => t.EmriNormalized);
             e.HasIndex(t => t.NumriTarges);
         });
 
@@ -58,6 +61,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             e.Property(p => p.MbiemriNormalized)
                 .HasComputedColumnSql(NormalizeExpr("Mbiemri"), stored: false);
             e.HasIndex(p => new { p.MbiemriNormalized, p.EmriNormalized });
+            e.HasIndex(p => p.EmriNormalized);
             e.HasIndex(p => p.Tel);
         });
     }

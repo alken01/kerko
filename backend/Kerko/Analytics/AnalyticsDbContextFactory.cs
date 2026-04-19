@@ -12,7 +12,7 @@ public class AnalyticsDbContextFactory : IDesignTimeDbContextFactory<AnalyticsDb
     public AnalyticsDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<AnalyticsDbContext>();
-        optionsBuilder.UseSqlite("Data Source=/Users/alken/Code/kerko/backend/data/analytics.db");
+        optionsBuilder.UseSqlite("Data Source=../data/analytics.db");
         return new AnalyticsDbContext(optionsBuilder.Options);
     }
 }

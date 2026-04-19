@@ -38,7 +38,9 @@ public class AdminIntegrationTests
                     var descriptor = services.SingleOrDefault(
                         d => d.ServiceType == typeof(DbContextOptions<AnalyticsDbContext>));
                     if (descriptor != null)
+                    {
                         services.Remove(descriptor);
+                    }
 
                     services.AddDbContext<AnalyticsDbContext>(options =>
                         options.UseSqlite($"Data Source={_analyticsTempDb}"));
@@ -50,7 +52,10 @@ public class AdminIntegrationTests
                         ["ConnectionStrings:AnalyticsConnection"] = $"Data Source={_analyticsTempDb}"
                     };
                     if (token is not null)
+                    {
                         settings["KERKO_ADMIN_TOKEN"] = token;
+                    }
+
                     cfg.AddInMemoryCollection(settings);
                 });
             });
@@ -82,7 +87,9 @@ public class AdminIntegrationTests
     {
         _factory?.Dispose();
         if (File.Exists(_analyticsTempDb))
+        {
             File.Delete(_analyticsTempDb);
+        }
     }
 
     private static RequestLog MakeLog(
@@ -299,7 +306,9 @@ public class AdminIntegrationTests
 
         Assert.That(items.GetArrayLength(), Is.EqualTo(2));
         foreach (var item in items.EnumerateArray())
+        {
             Assert.That(item.GetProperty("endpoint").GetString(), Is.EqualTo("kerko"));
+        }
     }
 
     [Test]

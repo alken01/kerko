@@ -32,7 +32,9 @@ public class GeolocationIntegrationTests
                     var descriptor = services.SingleOrDefault(
                         d => d.ServiceType == typeof(DbContextOptions<AnalyticsDbContext>));
                     if (descriptor != null)
+                    {
                         services.Remove(descriptor);
+                    }
 
                     services.AddDbContext<AnalyticsDbContext>(options =>
                         options.UseSqlite($"Data Source={_analyticsTempDb}"));
@@ -58,7 +60,9 @@ public class GeolocationIntegrationTests
     {
         _factory?.Dispose();
         if (File.Exists(_analyticsTempDb))
+        {
             File.Delete(_analyticsTempDb);
+        }
     }
 
     private HttpClient AuthedClient()
@@ -117,7 +121,9 @@ public class GeolocationIntegrationTests
         // These are AWS eu-central-1 IPs — should resolve to Germany/Frankfurt area
         TestContext.Out.WriteLine("Resolved locations:");
         foreach (var log in logs)
+        {
             TestContext.Out.WriteLine($"  {log.ClientIp} -> {log.Location}");
+        }
     }
 
     [Test]

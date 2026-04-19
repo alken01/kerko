@@ -32,32 +32,56 @@ public static class ClientInfo
         // through to plain Chrome.
         var browser = "Unknown";
         if (userAgent.Contains("Edg"))
+        {
             browser = "Edge";
+        }
         else if (userAgent.Contains("OPR") || userAgent.Contains("Opera"))
+        {
             browser = "Opera";
+        }
         else if (userAgent.Contains("SamsungBrowser"))
+        {
             browser = "Samsung Internet";
+        }
         else if (userAgent.Contains("Brave"))
+        {
             browser = "Brave";
+        }
         else if (userAgent.Contains("Firefox"))
+        {
             browser = "Firefox";
+        }
         else if (userAgent.Contains("Chrome"))
+        {
             browser = "Chrome";
+        }
         else if (userAgent.Contains("Safari"))
+        {
             browser = "Safari";
+        }
 
         // Detect OS
         var os = "Unknown";
         if (userAgent.Contains("Windows"))
+        {
             os = "Windows";
+        }
         else if (userAgent.Contains("Mac OS X") || userAgent.Contains("Macintosh"))
+        {
             os = "macOS";
+        }
         else if (userAgent.Contains("Linux"))
+        {
             os = "Linux";
+        }
         else if (userAgent.Contains("Android"))
+        {
             os = "Android";
+        }
         else if (userAgent.Contains("iPhone") || userAgent.Contains("iPad"))
+        {
             os = "iOS";
+        }
 
         // Detect if mobile
         var isMobile = userAgent.Contains("Mobile") || userAgent.Contains("Android") ||

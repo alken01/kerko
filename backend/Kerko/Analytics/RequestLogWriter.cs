@@ -86,7 +86,9 @@ public class RequestLogWriter(
                 {
                     var item = await channel.Reader.ReadAsync(timeoutCts.Token);
                     if (firstItemTime == null)
+                    {
                         firstItemTime = DateTime.UtcNow;
+                    }
 
                     batch.Add(item);
 
@@ -146,7 +148,9 @@ public class RequestLogWriter(
     private async Task FlushBatchAsync(List<RequestLog> batch)
     {
         if (batch.Count == 0)
+        {
             return;
+        }
 
         try
         {
@@ -173,7 +177,10 @@ public class RequestLogWriter(
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
+        {
             return;
+        }
+
         _disposed = true;
 
         // Cancel first so the drain loop wakes up. Swallow ObjectDisposedException

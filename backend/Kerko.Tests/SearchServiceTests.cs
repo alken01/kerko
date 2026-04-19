@@ -43,7 +43,7 @@ public class SearchServiceTests
             MakePerson(4, "Çlirim", "Bërdica", "Shkodër"),
             MakePerson(5, "Elena", "Koci", "Vlorë"),
             MakePerson(6, "Ece", "Ece", "Korçë"),
-            MakePerson(7, "Alken", "Rrokaj", "Tiranë"));
+            MakePerson(7, "Ismail", "Kadare", "Tiranë"));
 
         _db.Rrogat.AddRange(
             new Rrogat { Id = 1, Emri = "Andi", Mbiemri = "Kuçi", NumriPersonal = "A1234", PagaBruto = 50000 },
@@ -183,21 +183,33 @@ public class SearchServiceTests
 
     // ─── Validation ──────────────────────────────────────────────────
 
-    [TestCase("", "test", Description = "Empty mbiemri")]
-    [TestCase("test", "", Description = "Empty emri")]
-    [TestCase(null, "test", Description = "Null mbiemri")]
-    [TestCase("test", null, Description = "Null emri")]
+    [TestCase("", "", Description = "Both empty")]
+    [TestCase(null, null, Description = "Both null")]
+    [TestCase("", null, Description = "Empty and null")]
     public void Search_InvalidInput_ThrowsArgumentException(string? mbiemri, string? emri)
     {
         Assert.ThrowsAsync<ArgumentException>(() => _service.KerkoAsync(mbiemri, emri));
     }
 
-    [TestCase("a", "b", Description = "Both too short")]
-    [TestCase("ab", "c", Description = "Emri too short")]
-    [TestCase("a", "bc", Description = "Mbiemri too short")]
-    public void Search_TooShortInput_ThrowsArgumentException(string mbiemri, string emri)
+    // ─── Single-sided search (one field empty) ───────────────────────
+
+    [TestCase("kuci", "", "Kuçi", Description = "Mbiemri only")]
+    [TestCase(null, "andi", "Andi", Description = "Emri only — exact")]
+    [TestCase(null, "an", "Andi", Description = "Emri only — prefix")]
+    public async Task Search_OneSided_FindsMatches(string? mbiemri, string? emri, string expected)
     {
-        Assert.ThrowsAsync<ArgumentException>(() => _service.KerkoAsync(mbiemri, emri));
+        var result = await _service.KerkoAsync(mbiemri, emri);
+
+        Assert.That(result.Person.Items,
+            Has.Some.Matches<PersonResponse>(p => p.Mbiemri == expected || p.Emri == expected));
+    }
+
+    [Test]
+    public async Task Search_OneSided_DoesNotReturnNonMatches()
+    {
+        var result = await _service.KerkoAsync("kuci", string.Empty);
+
+        Assert.That(result.Person.Items, Has.None.Matches<PersonResponse>(p => p.Mbiemri == "Hoxha"));
     }
 
     // ─── Targa search ────────────────────────────────────────────────
@@ -267,28 +279,28 @@ public class SearchServiceTests
     [Test]
     public async Task Search_PageZero_ClampedToOne()
     {
-        var result = await _service.KerkoAsync("rrokaj", "alken", pageNumber: 0);
+        var result = await _service.KerkoAsync("kadare", "ismail", pageNumber: 0);
         Assert.That(result.Person.Pagination.CurrentPage, Is.EqualTo(1));
     }
 
     [Test]
     public async Task Search_NegativePage_ClampedToOne()
     {
-        var result = await _service.KerkoAsync("rrokaj", "alken", pageNumber: -5);
+        var result = await _service.KerkoAsync("kadare", "ismail", pageNumber: -5);
         Assert.That(result.Person.Pagination.CurrentPage, Is.EqualTo(1));
     }
 
     [Test]
     public async Task Search_OversizedPageSize_ClampedToMax()
     {
-        var result = await _service.KerkoAsync("rrokaj", "alken", pageSize: 500);
+        var result = await _service.KerkoAsync("kadare", "ismail", pageSize: 500);
         Assert.That(result.Person.Pagination.PageSize, Is.EqualTo(100));
     }
 
     [Test]
     public async Task Search_ZeroPageSize_ClampedToOne()
     {
-        var result = await _service.KerkoAsync("rrokaj", "alken", pageSize: 0);
+        var result = await _service.KerkoAsync("kadare", "ismail", pageSize: 0);
         Assert.That(result.Person.Pagination.PageSize, Is.EqualTo(1));
     }
 

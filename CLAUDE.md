@@ -19,7 +19,7 @@ Search platform for Albanian public record databases (~1.1GB SQLite, 4 tables: `
 - Test: `cd backend && dotnet test` (single test: `dotnet test --filter "FullyQualifiedName~SearchServiceTests.MethodName"`)
 - Docker: `cd backend && docker build -t kerko-backend .`
 - Two DbContexts: `ApplicationDbContext` (main, `DefaultConnection` → `kerko.db`, ReadOnly in prod), `AnalyticsDbContext` (`AnalyticsConnection` → `analytics.db`, read-write).
-- Main DB uses EF migrations. Apply locally: `dotnet ef database update --project Kerko --connection "Data Source=/Users/alken/Code/kerko/backend/data/kerko.db" -- --environment Development`, then scp to server.
+- Main DB uses EF migrations. Apply locally from `backend/`: `dotnet ef database update --project Kerko --connection "Data Source=../data/kerko.db" -- --environment Development`, then scp to server.
 - Analytics DB does **not** use EF migrations — `EnsureCreated` at startup + manual `ALTER TABLE RequestLogs ADD COLUMN Location` in `Program.cs` (schema drift handled inline).
 - Admin endpoints (`/api/admin/*`) require `X-Admin-Token` header matching `KERKO_ADMIN_TOKEN` env var. Enforced by `AdminAuthMiddleware`, branched via `UseWhen` on path prefix.
 - Request logging: `RequestLoggingMiddleware` writes to a bounded `Channel<RequestLog>` (cap 10k, `DropWrite` on overflow). `RequestLogWriter` hosted service drains the channel into analytics DB. IP geolocation lookup via `ip-api.com` (`IpGeolocationService`).
@@ -31,7 +31,7 @@ Search platform for Albanian public record databases (~1.1GB SQLite, 4 tables: `
 
 | Route | Purpose |
 | ------ | ------- |
-| `/api/kerko` | Search by first + last name across all 4 tables |
+| `/api/kerko` | Search by first and/or last name (at least one required) across all 4 tables |
 | `/api/targat` | Search by license plate |
 | `/api/telefon` | Search by phone number |
 | `/api/admin/*` | Admin (requires `X-Admin-Token`) |
@@ -75,3 +75,4 @@ Search platform for Albanian public record databases (~1.1GB SQLite, 4 tables: `
 - Client IP comes from `X-Client-IP` header (set by API Gateway), not `X-Forwarded-For` or `RemoteIpAddress` — see `ClientInfo.GetClientIpAddress()`.
 - All `DateTime` values serialized with `Z` suffix via `UtcDateTimeJsonConverter` so frontend parses UTC correctly.
 - Use `string.Empty` instead of `""` for empty string literals (including inside EF LINQ expressions — it translates the same).
+- Test data uses Albanian public figures (e.g. Ismail Kadare) — never real personal names of contributors.

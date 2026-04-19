@@ -17,7 +17,6 @@ public class SearchService(ApplicationDbContext db) : ISearchService
 {
     private const int DefaultPageSize = 10;
     private const int MaxPageSize = 100;
-    private const int MinNameLength = 2;
     private const int MinTargesLength = 6;
     private const int MinPhoneLength = 10;
     private const int MaxInputLength = 100;
@@ -35,10 +34,10 @@ public class SearchService(ApplicationDbContext db) : ISearchService
         ValidateBothNames(mbiemri, emri);
         (pageNumber, pageSize) = ClampPagination(pageNumber, pageSize);
 
-        var normalizedEmri = NormalizeAlbanian(emri!);
-        var normalizedMbiemri = NormalizeAlbanian(mbiemri!);
+        var normalizedEmri = NormalizeAlbanian(emri);
+        var normalizedMbiemri = NormalizeAlbanian(mbiemri);
 
-        if (normalizedEmri.Length == 0 || normalizedMbiemri.Length == 0)
+        if (normalizedEmri.Length == 0 && normalizedMbiemri.Length == 0)
         {
             return EmptySearchResponse(pageNumber, pageSize);
         }
@@ -99,26 +98,33 @@ public class SearchService(ApplicationDbContext db) : ISearchService
 
     private static void ValidateBothNames(string? mbiemri, string? emri)
     {
-        if (string.IsNullOrEmpty(mbiemri) || string.IsNullOrEmpty(emri))
-            throw new ArgumentException("Emri dhe mbiemri nuk mund te jene bosh");
+        if (string.IsNullOrEmpty(mbiemri) && string.IsNullOrEmpty(emri))
+        {
+            throw new ArgumentException("Emri ose mbiemri duhet te plotesohet");
+        }
 
-        if (mbiemri.Length < MinNameLength || emri.Length < MinNameLength)
-            throw new ArgumentException($"Emri dhe mbiemri duhet te kete te pakten {MinNameLength} karaktere");
-
-        if (mbiemri.Length > MaxInputLength || emri.Length > MaxInputLength)
+        if ((mbiemri?.Length ?? 0) > MaxInputLength || (emri?.Length ?? 0) > MaxInputLength)
+        {
             throw new ArgumentException($"Emri dhe mbiemri nuk mund te kete me shume se {MaxInputLength} karaktere");
+        }
     }
 
     private static void ValidateSingleField(string? value, string fieldName, int minLength)
     {
         if (string.IsNullOrEmpty(value))
+        {
             throw new ArgumentException($"{fieldName} nuk mund te jene bosh");
+        }
 
         if (value.Length < minLength)
+        {
             throw new ArgumentException($"{fieldName} duhet te kete te pakten {minLength} karaktere");
+        }
 
         if (value.Length > MaxInputLength)
+        {
             throw new ArgumentException($"{fieldName} nuk mund te kete me shume se {MaxInputLength} karaktere");
+        }
     }
 
     private static (int pageNumber, int pageSize) ClampPagination(int pageNumber, int pageSize)
@@ -189,31 +195,46 @@ public class SearchService(ApplicationDbContext db) : ISearchService
             .Visit(mbiemriSelector.Body);
 
         var zero = Expression.Constant(0);
-        Expression GeRange(Expression col, string lower) => Expression.GreaterThanOrEqual(
-            Expression.Call(null, StringCompareMethod, col, Expression.Constant(lower)), zero);
-        Expression LeRange(Expression col, string upper) => Expression.LessThanOrEqual(
-            Expression.Call(null, StringCompareMethod, col, Expression.Constant(upper)), zero);
+        Expression RangeClause(Expression col, string prefix)
+        {
+            var notNull = Expression.NotEqual(col, Expression.Constant(null, typeof(string)));
+            var ge = Expression.GreaterThanOrEqual(
+                Expression.Call(null, StringCompareMethod, col, Expression.Constant(prefix)), zero);
+            var le = Expression.LessThanOrEqual(
+                Expression.Call(null, StringCompareMethod, col, Expression.Constant(prefix + RangeUpperSentinel)), zero);
+            return Expression.AndAlso(notNull, Expression.AndAlso(ge, le));
+        }
 
-        var emriNotNull = Expression.NotEqual(emriBody, Expression.Constant(null, typeof(string)));
-        var mbiemriNotNull = Expression.NotEqual(mbiemriBody, Expression.Constant(null, typeof(string)));
+        var hasMbiemri = mbiemri.Length > 0;
+        var hasEmri = emri.Length > 0;
 
-        // (MbiemriNormalized >= mbiemri AND MbiemriNormalized <= mbiemri+0xFFFF)
-        //  AND (EmriNormalized  >= emri    AND EmriNormalized  <= emri+0xFFFF)
-        // Ordered this way so the composite index (Mbiemri_N, Emri_N) is used.
-        var condition = Expression.AndAlso(
-            Expression.AndAlso(mbiemriNotNull, emriNotNull),
-            Expression.AndAlso(
-                Expression.AndAlso(
-                    GeRange(mbiemriBody, mbiemri),
-                    LeRange(mbiemriBody, mbiemri + RangeUpperSentinel)),
-                Expression.AndAlso(
-                    GeRange(emriBody, emri),
-                    LeRange(emriBody, emri + RangeUpperSentinel))));
+        // (MbiemriNormalized >= mbiemri AND <= mbiemri+0xFFFF)
+        //  AND (EmriNormalized  >= emri AND <= emri+0xFFFF)
+        // One-sided calls omit the missing clause so SQLite can pick the matching
+        // single-column index (IX_*_EmriNormalized) instead of scanning the composite.
+        Expression condition = (hasMbiemri, hasEmri) switch
+        {
+            (true, true) => Expression.AndAlso(RangeClause(mbiemriBody, mbiemri), RangeClause(emriBody, emri)),
+            (true, false) => RangeClause(mbiemriBody, mbiemri),
+            (false, true) => RangeClause(emriBody, emri),
+            _ => throw new InvalidOperationException("BuildPrefixPredicate requires at least one prefix")
+        };
 
-        var isExact = Expression.AndAlso(
-            Expression.Equal(mbiemriBody, Expression.Constant(mbiemri, typeof(string))),
-            Expression.Equal(emriBody, Expression.Constant(emri, typeof(string))));
-        var rank = Expression.Condition(isExact, Expression.Constant(0), Expression.Constant(1));
+        Expression? exactExpr = null;
+        if (hasMbiemri)
+        {
+            exactExpr = Expression.Equal(mbiemriBody, Expression.Constant(mbiemri, typeof(string)));
+        }
+
+        if (hasEmri)
+        {
+            var e = Expression.Equal(emriBody, Expression.Constant(emri, typeof(string)));
+            exactExpr = exactExpr == null ? e : Expression.AndAlso(exactExpr, e);
+        }
+        Expression rank = exactExpr != null
+            ? Expression.Condition(exactExpr, Expression.Constant(0), Expression.Constant(1))
+            : Expression.Constant(1);
+
         return (
             Expression.Lambda<Func<TEntity, bool>>(condition, param),
             Expression.Lambda<Func<TEntity, int>>(rank, param));
@@ -227,8 +248,13 @@ public class SearchService(ApplicationDbContext db) : ISearchService
     /// trims, folds Albanian diacritics (ç → c, ë → e), and strips control chars
     /// and characters that have no place in a name (%, _, \).
     /// </summary>
-    private static string NormalizeAlbanian(string input)
+    private static string NormalizeAlbanian(string? input)
     {
+        if (string.IsNullOrEmpty(input))
+        {
+            return string.Empty;
+        }
+
         var lowered = input.ToLower().Trim()
             .Replace("ç", "c")
             .Replace("ë", "e");
@@ -237,9 +263,15 @@ public class SearchService(ApplicationDbContext db) : ISearchService
         foreach (var c in lowered)
         {
             if (c == '%' || c == '_' || c == '\\')
+            {
                 continue;
+            }
+
             if (char.IsControl(c))
+            {
                 continue;
+            }
+
             cleaned.Append(c);
         }
         return cleaned.ToString();
