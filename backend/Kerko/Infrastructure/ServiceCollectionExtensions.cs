@@ -70,7 +70,9 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<AnalyticsDbContext>(options =>
             options.UseSqlite(configuration.GetConnectionString("AnalyticsConnection")));
 
-        services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
+        services.AddHealthChecks()
+            .AddDbContextCheck<ApplicationDbContext>()
+            .AddDbContextCheck<AnalyticsDbContext>();
 
         return services;
     }
@@ -86,6 +88,7 @@ public static class ServiceCollectionExtensions
         }));
 
         services.AddHostedService<RequestLogWriter>();
+        services.AddHostedService<AnalyticsRetentionService>();
 
         services.AddHttpClient("IpGeo", c =>
         {

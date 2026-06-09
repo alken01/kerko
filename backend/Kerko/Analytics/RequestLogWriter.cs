@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using Kerko.Infrastructure;
 
 namespace Kerko.Analytics;
 
@@ -158,7 +159,7 @@ public class RequestLogWriter(
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Geolocation resolution failed, persisting without location");
+            logger.LogWarning(ex, "Geolocation resolution failed, persisting without location");
         }
 
         try
@@ -170,6 +171,7 @@ public class RequestLogWriter(
         }
         catch (Exception ex)
         {
+            KerkoMetrics.AnalyticsWriteFailures.Add(1);
             logger.LogWarning(ex, "Failed to write analytics batch of {Count} items", batch.Count);
         }
     }
