@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Threading.Channels;
 using Kerko.Http;
+using Kerko.Infrastructure;
 
 namespace Kerko.Analytics;
 
@@ -65,12 +66,14 @@ public class RequestLoggingMiddleware(RequestDelegate next, Channel<RequestLog> 
 
             if (!channel.Writer.TryWrite(log))
             {
-                logger.LogDebug("Analytics channel full, dropping log for {Path}", path);
+                KerkoMetrics.AnalyticsLogsDropped.Add(1);
+                logger.LogWarning("Analytics channel full, dropping log for {Path}", path);
             }
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Failed to enqueue analytics log for {Path}", path);
+            KerkoMetrics.AnalyticsLogsDropped.Add(1);
+            logger.LogWarning(ex, "Failed to enqueue analytics log for {Path}", path);
         }
     }
 }

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cardStyles, DetailRow, InfoItem } from "@/components/ui/card-styles";
 import { SaveButton } from "@/components/ui/save-button";
 import { useTranslation } from "@/i18n/TranslationContext";
+import { formatBirthDate } from "@/lib/dates";
 import { PersonResponse } from "@/types/kerko";
 import { Calendar, ChevronDown, Home, MapPin, User } from "lucide-react";
 import Link from "next/link";
@@ -19,17 +20,6 @@ export function PersonCard({ person, defaultExpanded }: PersonCardProps) {
   const isMarriedWoman = person.seksi === "F" && person.gjendjeCivile?.toLowerCase().includes("martuar");
   const parentLinkHint = isMarriedWoman ? "&hint=mbiemri" : "";
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A";
-    try {
-      // Parse DD/MM/YY format
-      const [month, day, year] = dateString.split("/");
-      return `${day}/${month}/${year}`;
-    } catch {
-      return "N/A";
-    }
-  };
-
   return (
     <Card className={cardStyles.root}>
       <CardHeader className={cardStyles.header}>
@@ -44,7 +34,7 @@ export function PersonCard({ person, defaultExpanded }: PersonCardProps) {
             <InfoItem
               icon={Calendar}
               label={t("person.born")}
-              value={formatDate(person.datelindja)}
+              value={formatBirthDate(person.datelindja)}
             />
             <InfoItem
               icon={MapPin}

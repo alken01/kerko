@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
 import Link from "next/link";
-import { TOKEN_KEY } from "@/app/admin/api";
+import { getStoredToken } from "@/app/admin/api";
 
 export function AdminLink() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setVisible(!!localStorage.getItem(TOKEN_KEY));
+    setVisible(!!getStoredToken());
   }, []);
 
   if (!visible) return null;

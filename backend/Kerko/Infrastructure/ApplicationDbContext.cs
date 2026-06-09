@@ -10,6 +10,32 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Targat> Targat { get; set; }
     public DbSet<Patronazhist> Patronazhist { get; set; }
 
+    // The main DB is opened Mode=ReadOnly in production; fail fast with a clear
+    // message instead of surfacing a cryptic SQLite error at write time. Tests
+    // seed via in-memory connections, which stay writable.
+    private bool IsReadOnlyConnection =>
+        Database.GetConnectionString()?.Contains("Mode=ReadOnly", StringComparison.OrdinalIgnoreCase) == true;
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ThrowIfReadOnly();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ThrowIfReadOnly();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void ThrowIfReadOnly()
+    {
+        if (IsReadOnlyConnection)
+        {
+            throw new InvalidOperationException("ApplicationDbContext is read-only.");
+        }
+    }
+
     // SQL expression that folds Albanian diacritics: Ç/ç → c, Ë/ë → e, and lowercases ASCII.
     // SQLite's LOWER() only touches ASCII, so we replace both cases of the diacritics explicitly.
     private static string NormalizeExpr(string column)

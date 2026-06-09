@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Bookmark, X, Smartphone } from "lucide-react";
+import { useState, useRef } from "react";
+import { Bookmark, X } from "lucide-react";
 import { useSavedItems } from "@/contexts/SavedItemsContext";
 import { useTranslation } from "@/i18n/TranslationContext";
 import { SavedItemsList } from "./SavedItemsList";
-import { PWAInstallGuide } from "./PWAInstallGuide";
 import { cn } from "@/lib/utils";
 
 export function SavedItemsPanel() {
   const { t, tn } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [showPWABanner, setShowPWABanner] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
-  const { savedCount } = useSavedItems();
+  const { savedCount, storageError } = useSavedItems();
 
   const touchStartY = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -30,29 +27,12 @@ export function SavedItemsPanel() {
     touchStartY.current = null;
   };
 
-  useEffect(() => {
-    // Check if already running as PWA
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-    setIsStandalone(standalone);
-
-    // Only show PWA banner if not in standalone mode and not dismissed
-    const dismissed = localStorage.getItem("pwa-banner-dismissed");
-    setShowPWABanner(!standalone && dismissed !== "true");
-  }, []);
-
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(() => {
       setIsOpen(false);
       setIsClosing(false);
     }, 300);
-  };
-
-  const dismissPWABanner = () => {
-    localStorage.setItem("pwa-banner-dismissed", "true");
-    setShowPWABanner(false);
   };
 
   return (
@@ -141,33 +121,13 @@ export function SavedItemsPanel() {
             {/* Content */}
             <div className="flex-1 overflow-auto">
               <div className="px-4 md:px-6 py-6 pb-10">
-                {/* PWA Install Guide Banner */}
-                {showPWABanner && !isStandalone && (
-                  <div className="mb-6 p-4 rounded-xl bg-surface-secondary border-2 border-border-semantic-secondary relative">
-                    <button
-                      onClick={dismissPWABanner}
-                      className="absolute top-3 right-3 p-1 rounded-md hover:bg-surface-interactive transition-colors"
-                    >
-                      <X className="h-4 w-4 text-text-tertiary" />
-                    </button>
-                    <div className="flex items-start gap-3 pr-6">
-                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-accent-saved/20 flex items-center justify-center">
-                        <Smartphone className="h-4 w-4 text-accent-saved" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-text-primary text-sm mb-1">
-                          {t("saved.accessOffline")}
-                        </h3>
-                        <p className="text-xs text-text-secondary mb-3">
-                          {t("saved.installForOffline")}
-                        </p>
-                        <PWAInstallGuide />
-                      </div>
-                    </div>
+                {storageError && (
+                  <div className="mb-4 p-3 rounded-xl border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
+                    <p className="text-yellow-800 dark:text-yellow-200 text-xs">
+                      {t("saved.storageUnavailable")}
+                    </p>
                   </div>
                 )}
-
-                {/* Saved Items List */}
                 <SavedItemsList />
               </div>
             </div>

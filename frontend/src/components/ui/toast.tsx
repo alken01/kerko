@@ -1,35 +1,32 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { Bookmark, X, Smartphone } from "lucide-react";
-import { useTranslation } from "@/i18n/TranslationContext";
+import { Bookmark, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Toast {
   id: string;
   message: string;
   type: "saved" | "removed" | "info";
-  showPWAHint?: boolean;
 }
 
 interface ToastContextType {
-  showToast: (message: string, type: Toast["type"], showPWAHint?: boolean) => void;
+  showToast: (message: string, type: Toast["type"]) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback(
-    (message: string, type: Toast["type"], showPWAHint?: boolean) => {
+    (message: string, type: Toast["type"]) => {
       const id = crypto.randomUUID();
-      setToasts((prev) => [...prev, { id, message, type, showPWAHint }]);
+      setToasts((prev) => [...prev, { id, message, type }]);
 
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, showPWAHint ? 5000 : 3000);
+      }, 3000);
     },
     []
   );
@@ -74,12 +71,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <p className="text-sm font-medium text-text-primary">
                   {toast.message}
                 </p>
-                {toast.showPWAHint && (
-                  <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
-                    <Smartphone className="h-3 w-3" />
-                    {t("pwa.installForOfflineAccess")}
-                  </p>
-                )}
               </div>
               <button
                 onClick={() => removeToast(toast.id)}

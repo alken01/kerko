@@ -139,12 +139,16 @@ public class SearchService(ApplicationDbContext db) : ISearchService
         Expression<Func<TEntity, TResponse>> projection,
         int pageNumber, int pageSize)
     {
-        var totalItems = await query.CountAsync();
         var items = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(projection)
             .ToListAsync();
+
+        // A non-full first page already reveals the total — skip the COUNT round-trip.
+        var totalItems = pageNumber == 1 && items.Count < pageSize
+            ? items.Count
+            : await query.CountAsync();
 
         return new PaginatedResult<TResponse>
         {

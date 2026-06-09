@@ -81,8 +81,6 @@
     "savedItems": "Saved Items",
     "result": "result",
     "results": "results",
-    "accessOffline": "Access Offline",
-    "installForOffline": "Install as an app to view saved items without internet.",
     "people": "People",
     "salary": "Salary",
     "plate": "License Plate",
@@ -92,25 +90,12 @@
     "removedFromSaved": "Removed from saved",
     "wasSaved": "was saved",
     "removeFromSaved": "Remove from saved",
-    "save": "Save"
+    "save": "Save",
+    "storageUnavailable": "Saving is unavailable in this browser (storage is disabled or full)."
   },
   "pagination": {
     "previous": "← Prev",
     "next": "Next →"
-  },
-  "offline": {
-    "youAreOffline": "You are offline",
-    "showSaved": "Show Saved"
-  },
-  "pwa": {
-    "install": "Install",
-    "installApp": "Install the App",
-    "safariStep1": "Press {icon} in Safari",
-    "safariStep2": "Select {icon} \"Add to Home Screen\"",
-    "chromeStep1": "Press menu (⋮) in Chrome",
-    "chromeStep2": "Select \"Install app\"",
-    "gotIt": "Got it",
-    "installForOfflineAccess": "Install the app for offline access"
   },
   "errors": {
     "rateLimit": "Please slow down, wait a bit and try again",

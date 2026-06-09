@@ -1,5 +1,20 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-export const TOKEN_KEY = "kerko_admin_token";
+const TOKEN_KEY = "kerko_admin_token";
+
+// sessionStorage rather than localStorage: the token only lives for the tab's
+// lifetime, which limits the blast radius of an XSS or a shared machine.
+export function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem(TOKEN_KEY);
+}
+
+export function setStoredToken(token: string): void {
+  sessionStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearStoredToken(): void {
+  sessionStorage.removeItem(TOKEN_KEY);
+}
 
 export class AdminUnauthorizedError extends Error {
   constructor() {
@@ -19,8 +34,7 @@ export class AdminApiError extends Error {
 }
 
 function getToken(): string {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem(TOKEN_KEY) ?? "";
+  return getStoredToken() ?? "";
 }
 
 async function adminFetch<T>(

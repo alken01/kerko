@@ -44,7 +44,6 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png", // Remove if you don't have this file
   },
   openGraph: {
     title: "Kërko - Kërkim në Regjistrat Publikë të Shqipërisë",
@@ -70,12 +69,6 @@ export const metadata: Metadata = {
       "Kërko është një platformë për kërkimin e regjistrave publikë shqiptarë, përfshirë emrat, rrogat dhe targat.",
     images: [`${BASE_URL}/metaimage.jpg`], // Absolute URL for Twitter
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Kërko",
-  },
-  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

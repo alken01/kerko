@@ -3,6 +3,7 @@ using System.Text.Json;
 using Kerko.Analytics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,6 +60,9 @@ public class GeolocationIntegrationTests
     public void TearDown()
     {
         _factory?.Dispose();
+        // Pooled SQLite connections keep the file handle open after dispose,
+        // which makes File.Delete fail on Windows.
+        SqliteConnection.ClearAllPools();
         if (File.Exists(_analyticsTempDb))
         {
             File.Delete(_analyticsTempDb);
