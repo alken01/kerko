@@ -81,8 +81,6 @@
     "savedItems": "Të Ruajturat",
     "result": "rezultat",
     "results": "rezultate",
-    "accessOffline": "Akseso offline",
-    "installForOffline": "Instalo si aplikacion për të parë të ruajturat pa internet.",
     "people": "Persona",
     "salary": "Paga",
     "plate": "Targa",
@@ -92,25 +90,12 @@
     "removedFromSaved": "U hoq nga të ruajturat",
     "wasSaved": "u ruajt",
     "removeFromSaved": "Hiq nga të ruajturat",
-    "save": "Ruaj"
+    "save": "Ruaj",
+    "storageUnavailable": "Ruajtja nuk është e disponueshme në këtë shfletues (memoria është e çaktivizuar ose plot)."
   },
   "pagination": {
     "previous": "← Para",
     "next": "Pas →"
-  },
-  "offline": {
-    "youAreOffline": "Jeni offline",
-    "showSaved": "Shfaq të ruajturat"
-  },
-  "pwa": {
-    "install": "Instalo",
-    "installApp": "Instalo aplikacionin",
-    "safariStep1": "Shtyp {icon} në Safari",
-    "safariStep2": "Zgjidh {icon} \"Add to Home Screen\"",
-    "chromeStep1": "Shtyp menunë (⋮) në Chrome",
-    "chromeStep2": "Zgjidh \"Install app\"",
-    "gotIt": "E kuptova",
-    "installForOfflineAccess": "Instalo aplikacionin për akses offline"
   },
   "errors": {
     "rateLimit": "Qetsohu cik mplak, prit pak edhe provo prap",

@@ -43,7 +43,7 @@ Search platform for Albanian public record databases (~1.1GB SQLite, 4 tables: `
 - Build: `npm run build` / Lint: `npm run lint`
 - App Router under `src/app/` (public search at `/`, admin at `/admin`).
 - API client: `src/services/api.ts` (reads `NEXT_PUBLIC_API_URL`). Local storage helpers: `src/services/storage.ts`.
-- i18n under `src/i18n/`, PWA install guide + offline indicator components.
+- i18n under `src/i18n/`. Saved items persist in IndexedDB (`src/services/storage.ts`). No PWA/service worker.
 - Deployed automatically via Vercel on push to main.
 
 ## Deployment

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Bookmark, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSavedItems } from "@/contexts/SavedItemsContext";
@@ -22,18 +22,11 @@ interface SaveButtonProps {
 
 export function SaveButton({ type, data, className }: SaveButtonProps) {
   const { t } = useTranslation();
-  const { isItemSaved, saveItem, removeItemByKey, savedCount } = useSavedItems();
+  const { isItemSaved, saveItem, removeItemByKey } = useSavedItems();
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [hasShownPWAHint, setHasShownPWAHint] = useState(false);
 
   const isSaved = isItemSaved(type, data);
-
-  // Check if we've shown the PWA hint before
-  useEffect(() => {
-    const shown = localStorage.getItem("pwa-hint-shown");
-    setHasShownPWAHint(shown === "true");
-  }, []);
 
   const handleClick = useCallback(
     async (e: React.MouseEvent) => {
@@ -49,14 +42,7 @@ export function SaveButton({ type, data, className }: SaveButtonProps) {
           const result = await saveItem(type, data);
           if (result) {
             const displayName = generateDisplayName(type, data);
-            // Show PWA hint on first save or every 5th save
-            const showPWAHint = !hasShownPWAHint || (savedCount + 1) % 5 === 0;
-            showToast(`${displayName} ${t("saved.wasSaved")}`, "saved", showPWAHint);
-
-            if (!hasShownPWAHint) {
-              localStorage.setItem("pwa-hint-shown", "true");
-              setHasShownPWAHint(true);
-            }
+            showToast(`${displayName} ${t("saved.wasSaved")}`, "saved");
           }
         }
       } catch (error) {
@@ -65,7 +51,7 @@ export function SaveButton({ type, data, className }: SaveButtonProps) {
         setIsLoading(false);
       }
     },
-    [isSaved, type, data, saveItem, removeItemByKey, showToast, hasShownPWAHint, savedCount, t]
+    [isSaved, type, data, saveItem, removeItemByKey, showToast, t]
   );
 
   return (
