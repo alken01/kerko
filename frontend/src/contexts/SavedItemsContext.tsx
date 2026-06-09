@@ -35,6 +35,8 @@ interface SavedItemsContextType {
     data: PersonResponse | RrogatResponse | TargatResponse | PatronazhistResponse
   ) => boolean;
   refreshSavedItems: () => Promise<void>;
+  /** True when IndexedDB is unavailable (private browsing, quota, …). */
+  storageError: boolean;
 }
 
 const SavedItemsContext = createContext<SavedItemsContextType | undefined>(
@@ -48,7 +50,7 @@ export function SavedItemsProvider({
 }) {
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
-  const [mounted, setMounted] = useState(false);
+  const [storageError, setStorageError] = useState(false);
 
   const refreshSavedItems = useCallback(async () => {
     try {
@@ -56,13 +58,15 @@ export function SavedItemsProvider({
       const keys = await storage.getAllSavedKeys();
       setSavedItems(items);
       setSavedKeys(keys);
+      setStorageError(false);
     } catch (error) {
       console.error("Failed to load saved items:", error);
+      setStorageError(true);
     }
   }, []);
 
   useEffect(() => {
-    refreshSavedItems().then(() => setMounted(true));
+    refreshSavedItems();
   }, [refreshSavedItems]);
 
   const saveItem = useCallback(
@@ -115,10 +119,6 @@ export function SavedItemsProvider({
     [savedKeys]
   );
 
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <SavedItemsContext.Provider
       value={{
@@ -130,6 +130,7 @@ export function SavedItemsProvider({
         removeItemByKey,
         isItemSaved,
         refreshSavedItems,
+        storageError,
       }}
     >
       {children}
