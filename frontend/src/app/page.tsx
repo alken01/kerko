@@ -89,14 +89,19 @@ function SearchContent() {
     setActiveTab("person");
     setCurrentSearchTerms({ type: 'person', terms: [emri, mbiemri] });
 
+    // A superseded request must not touch state — the newer search owns it.
+    let superseded = false;
     try {
       const data = await ApiService.searchPerson(emri, mbiemri, page);
       setSearchResults(data);
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        superseded = true;
+        return;
+      }
       setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
     } finally {
-      setIsLoading(false);
+      if (!superseded) setIsLoading(false);
     }
   }, [searchParams]);
 
@@ -110,14 +115,18 @@ function SearchContent() {
 
     setCurrentSearchTerms({ type: 'targa', terms: [numriTarges] });
 
+    let superseded = false;
     try {
       const data = await ApiService.searchTarga(numriTarges, page);
       setSearchResults(data);
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        superseded = true;
+        return;
+      }
       setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
     } finally {
-      setIsLoading(false);
+      if (!superseded) setIsLoading(false);
     }
   }, []);
 
@@ -131,14 +140,18 @@ function SearchContent() {
 
     setCurrentSearchTerms({ type: 'telefon', terms: [numriTelefonit] });
 
+    let superseded = false;
     try {
       const data = await ApiService.searchTelefon(numriTelefonit, page);
       setSearchResults(data);
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        superseded = true;
+        return;
+      }
       setError(err instanceof Error ? err.message : SEARCH_ERROR_KEY);
     } finally {
-      setIsLoading(false);
+      if (!superseded) setIsLoading(false);
     }
   }, []);
 

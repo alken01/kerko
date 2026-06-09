@@ -12,6 +12,9 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 let currentController: AbortController | null = null;
+// Monotonic id per search; a response whose id is no longer current is stale
+// (its abort may not have landed in time) and must not reach the UI.
+let currentGeneration = 0;
 
 async function fetchApi<T>(url: string, fallbackErrorKey: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(url, { headers: NGROK_HEADER, signal });
@@ -35,12 +38,19 @@ function buildParams(params: Record<string, string | number>): URLSearchParams {
   );
 }
 
-function getSignal(): AbortSignal {
+function startRequest(): { signal: AbortSignal; generation: number } {
   if (currentController) {
     currentController.abort();
   }
   currentController = new AbortController();
-  return currentController.signal;
+  currentGeneration += 1;
+  return { signal: currentController.signal, generation: currentGeneration };
+}
+
+function throwIfStale(generation: number): void {
+  if (generation !== currentGeneration) {
+    throw new DOMException("Superseded by a newer search", "AbortError");
+  }
 }
 
 export class ApiService {
@@ -50,13 +60,14 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<SearchResponse> {
-    const signal = getSignal();
+    const { signal, generation } = startRequest();
     const params = buildParams({ emri, mbiemri, pageNumber, pageSize });
     const data = await fetchApi<SearchResponse>(
       `${API_URL}/api/kerko?${params}`,
       PERSON_SEARCH_ERROR_KEY,
       signal
     );
+    throwIfStale(generation);
 
     if (
       !data ||
@@ -78,13 +89,14 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<TargatSearchResponse> {
-    const signal = getSignal();
+    const { signal, generation } = startRequest();
     const params = buildParams({ numriTarges, pageNumber, pageSize });
     const data = await fetchApi<TargatSearchResponse>(
       `${API_URL}/api/targat?${params}`,
       PLATE_SEARCH_ERROR_KEY,
       signal
     );
+    throwIfStale(generation);
 
     if (!data || data.items.length === 0) {
       throw new Error(NO_RESULTS_KEY);
@@ -98,13 +110,14 @@ export class ApiService {
     pageNumber: number = 1,
     pageSize: number = DEFAULT_PAGE_SIZE
   ): Promise<PatronazhistSearchResponse> {
-    const signal = getSignal();
+    const { signal, generation } = startRequest();
     const params = buildParams({ numriTelefonit, pageNumber, pageSize });
     const data = await fetchApi<PatronazhistSearchResponse>(
       `${API_URL}/api/telefon?${params}`,
       PHONE_SEARCH_ERROR_KEY,
       signal
     );
+    throwIfStale(generation);
 
     if (!data || data.items.length === 0) {
       throw new Error(NO_RESULTS_KEY);
