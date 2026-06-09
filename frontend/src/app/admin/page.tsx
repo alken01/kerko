@@ -6,7 +6,13 @@ import { TokenGate } from "./TokenGate";
 import { StatsCards } from "./StatsCards";
 import { Filters } from "./Filters";
 import { LogsTable } from "./LogsTable";
-import { LogFilters, TOKEN_KEY, VersionResponse, fetchVersion } from "./api";
+import {
+  LogFilters,
+  VersionResponse,
+  fetchVersion,
+  getStoredToken,
+  clearStoredToken,
+} from "./api";
 import Link from "next/link";
 
 export default function AdminPage() {
@@ -16,24 +22,22 @@ export default function AdminPage() {
   const [version, setVersion] = useState<VersionResponse | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(TOKEN_KEY);
-    setToken(stored);
+    setToken(getStoredToken());
     setMounted(true);
     fetchVersion().then(setVersion).catch(() => {});
   }, []);
 
   function handleAuthenticated() {
-    const stored = localStorage.getItem(TOKEN_KEY);
-    setToken(stored);
+    setToken(getStoredToken());
   }
 
   function handleSignOut() {
-    localStorage.removeItem(TOKEN_KEY);
+    clearStoredToken();
     window.location.reload();
   }
 
   function handleUnauthorized() {
-    localStorage.removeItem(TOKEN_KEY);
+    clearStoredToken();
     setToken(null);
   }
 

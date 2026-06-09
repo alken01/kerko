@@ -11,6 +11,12 @@ import {
   RequestLog,
   AdminUnauthorizedError,
 } from "./api";
+import {
+  formatLocalTime,
+  formatUtcTime,
+  formatDateHeader,
+  getDateKey,
+} from "@/lib/dates";
 
 interface LogsTableProps {
   filters: LogFilters;
@@ -24,43 +30,6 @@ function formatQuerySummary(log: RequestLog): string {
   if (log.numriTarges) parts.push(`targat=${log.numriTarges}`);
   if (log.numriTelefonit) parts.push(`telefon=${log.numriTelefonit}`);
   return parts.join(" ") || "—";
-}
-
-function formatLocalTime(utcString: string): string {
-  return new Date(utcString).toLocaleString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
-function formatUtcTime(utcString: string): string {
-  return new Date(utcString).toISOString();
-}
-
-function formatDateHeader(utcString: string): string {
-  const date = new Date(utcString);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const logDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffDays = Math.round(
-    (today.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-
-  return date.toLocaleDateString(undefined, {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function getDateKey(utcString: string): string {
-  const d = new Date(utcString);
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
 function statusColor(code: number): string {

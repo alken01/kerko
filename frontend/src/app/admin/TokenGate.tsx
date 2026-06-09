@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cardStyles } from "@/components/ui/card-styles";
-import { fetchStats, AdminUnauthorizedError, TOKEN_KEY } from "./api";
+import { fetchStats, AdminUnauthorizedError, setStoredToken } from "./api";
 
 interface TokenGateProps {
   onAuthenticated: () => void;
@@ -26,7 +26,7 @@ export function TokenGate({ onAuthenticated }: TokenGateProps) {
 
     try {
       await fetchStats("1h", token.trim());
-      localStorage.setItem(TOKEN_KEY, token.trim());
+      setStoredToken(token.trim());
       onAuthenticated();
     } catch (err) {
       if (err instanceof AdminUnauthorizedError) {
