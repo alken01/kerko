@@ -3,26 +3,34 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Text.Json.Serialization;
+using Kerko.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kerko.Analytics;
 
-public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<IpGeolocationService> logger)
+public class IpGeolocationService(
+    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider,
+    ILogger<IpGeolocationService> logger)
 {
     private readonly ConcurrentDictionary<string, string?> _cache = new();
 
     private const string MappedV4Prefix = "::ffff:";
 
+    // Successful lookups persist across restarts; re-resolve after this long.
+    public static readonly TimeSpan CacheTtl = TimeSpan.FromDays(30);
+
     public async Task ResolveLocationsAsync(List<RequestLog> logs)
     {
-        var uncachedIps = logs
-            .Select(l => l.ClientIp)
-            .Where(ip => !IsPrivateIp(ip) && !_cache.ContainsKey(ip))
-            .Distinct()
-            .ToList();
-
+        var uncachedIps = UncachedPublicIps(logs.Select(l => l.ClientIp));
         if (uncachedIps.Count > 0)
         {
-            await FetchBatchAsync(uncachedIps);
+            await HydrateFromDbAsync(uncachedIps);
+            var stillUncached = UncachedPublicIps(uncachedIps);
+            if (stillUncached.Count > 0)
+            {
+                await FetchBatchAsync(stillUncached);
+            }
         }
 
         foreach (var log in logs)
@@ -40,10 +48,13 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
     /// </summary>
     public async Task<Dictionary<string, string?>> ResolveBatchAsync(List<string> ips)
     {
-        var toResolve = ips
-            .Where(ip => !IsPrivateIp(ip) && !_cache.ContainsKey(ip))
-            .Distinct()
-            .ToList();
+        var uncached = UncachedPublicIps(ips);
+        if (uncached.Count > 0)
+        {
+            await HydrateFromDbAsync(uncached);
+        }
+
+        var toResolve = UncachedPublicIps(ips);
 
         var chunks = toResolve.Chunk(100).ToList();
         for (var i = 0; i < chunks.Count; i++)
@@ -66,6 +77,76 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
         return result;
     }
 
+    private List<string> UncachedPublicIps(IEnumerable<string> ips)
+    {
+        return ips
+            .Where(ip => !IsPrivateIp(ip) && !_cache.ContainsKey(ip))
+            .Distinct()
+            .ToList();
+    }
+
+    /// <summary>
+    /// Loads previously resolved locations from the analytics DB into the in-memory
+    /// cache so a restart doesn't re-query ip-api.com for every known IP.
+    /// DB problems are non-fatal — resolution falls through to the HTTP lookup.
+    /// </summary>
+    private async Task HydrateFromDbAsync(List<string> ips)
+    {
+        try
+        {
+            await using var scope = serviceProvider.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<AnalyticsDbContext>();
+            var cutoff = DateTime.UtcNow - CacheTtl;
+            var rows = await db.IpLocations
+                .AsNoTracking()
+                .Where(c => ips.Contains(c.Ip) && c.CachedAtUtc >= cutoff)
+                .ToListAsync();
+            foreach (var row in rows)
+            {
+                _cache.TryAdd(row.Ip, row.Location);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to read IP location cache from analytics DB");
+        }
+    }
+
+    private async Task PersistToDbAsync(Dictionary<string, string?> resolved)
+    {
+        var successful = resolved.Where(kv => kv.Value != null).ToList();
+        if (successful.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await using var scope = serviceProvider.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<AnalyticsDbContext>();
+            var keys = successful.Select(kv => kv.Key).ToList();
+            var existing = await db.IpLocations.Where(c => keys.Contains(c.Ip)).ToDictionaryAsync(c => c.Ip);
+            var now = DateTime.UtcNow;
+            foreach (var (ip, location) in successful)
+            {
+                if (existing.TryGetValue(ip, out var row))
+                {
+                    row.Location = location;
+                    row.CachedAtUtc = now;
+                }
+                else
+                {
+                    db.IpLocations.Add(new IpLocationCache { Ip = ip, Location = location, CachedAtUtc = now });
+                }
+            }
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to persist IP location cache to analytics DB");
+        }
+    }
+
     private async Task FetchBatchAsync(List<string> originalIps)
     {
         // Map original IP -> normalized IP for the API call
@@ -79,7 +160,8 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
 
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogDebug("ip-api.com batch returned {Status}", response.StatusCode);
+                KerkoMetrics.GeolocationFailures.Add(1);
+                logger.LogWarning("ip-api.com batch returned {Status}", response.StatusCode);
                 foreach (var ip in originalIps)
                 {
                     _cache.TryAdd(ip, null);
@@ -122,15 +204,20 @@ public class IpGeolocationService(IHttpClientFactory httpClientFactory, ILogger<
             }
 
             // Cache using the original IP keys
+            var resolved = new Dictionary<string, string?>();
             foreach (var (original, normalized) in normalizedMap)
             {
                 var loc = locationByNormalized.GetValueOrDefault(normalized);
                 _cache.TryAdd(original, loc);
+                resolved[original] = loc;
             }
+
+            await PersistToDbAsync(resolved);
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Failed to fetch IP geolocation for {Count} IPs", originalIps.Count);
+            KerkoMetrics.GeolocationFailures.Add(1);
+            logger.LogWarning(ex, "Failed to fetch IP geolocation for {Count} IPs", originalIps.Count);
             foreach (var ip in originalIps)
             {
                 _cache.TryAdd(ip, null);

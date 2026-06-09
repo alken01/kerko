@@ -47,6 +47,12 @@ using (var scope = app.Services.CreateScope())
     {
         analyticsDb.Database.ExecuteSqlRaw("ALTER TABLE RequestLogs ADD COLUMN Location TEXT");
     }
+
+    // Same drift handling for additions that post-date the original schema.
+    analyticsDb.Database.ExecuteSqlRaw(
+        "CREATE TABLE IF NOT EXISTS \"IpLocationCache\" (\"Ip\" TEXT NOT NULL CONSTRAINT \"PK_IpLocationCache\" PRIMARY KEY, \"Location\" TEXT NULL, \"CachedAtUtc\" TEXT NOT NULL)");
+    analyticsDb.Database.ExecuteSqlRaw(
+        "CREATE INDEX IF NOT EXISTS \"IX_RequestLogs_Endpoint\" ON \"RequestLogs\" (\"Endpoint\")");
 }
 
 app.UseResponseCompression();
