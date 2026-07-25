@@ -45,6 +45,7 @@ async function adminFetch<T>(
   const res = await fetch(`${API_URL}${path}`, {
     headers: {
       "X-Admin-Token": t,
+      "ngrok-skip-browser-warning": "1",
     },
   });
 
