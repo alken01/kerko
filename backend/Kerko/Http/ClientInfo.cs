@@ -4,7 +4,8 @@ public static class ClientInfo
 {
     public static string GetClientIpAddress(HttpRequest request)
     {
-        // API Gateway can't override X-Forwarded-For, so it sends X-Client-IP instead
+        // Legacy proxy support. The active ingress must overwrite these headers;
+        // otherwise callers can spoof the address used for analytics and rate limiting.
         var xClientIp = request.Headers["X-Client-IP"].FirstOrDefault();
         if (!string.IsNullOrEmpty(xClientIp))
         {
