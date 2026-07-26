@@ -48,16 +48,16 @@ Search platform for Albanian public record databases (~1.1GB SQLite, 4 tables: `
 
 ## Deployment
 
-- Backend runs on EC2 t4g.micro (Amazon Linux 2023, ARM64) in eu-central-1.
-- Docker container exposes port 8080.
-- API Gateway (HTTP API) provides HTTPS at `https://kqullbamb0.execute-api.eu-central-1.amazonaws.com`.
-- API Gateway parameter mapping: `header.X-Client-IP` → `$context.identity.sourceIp` (required for client IP extraction — API Gateway blocks overriding `X-Forwarded-For`).
-- CI/CD: `.github/workflows/ci.yml` — path-filtered backend/frontend jobs, backend deploys via SSH on push to main.
-- Docker run: `docker run -d --name kerko-backend -p 8080:8080 -v ~/code/kerko/backend/data:/app/data -e KERKO_ADMIN_TOKEN="..." -e ConnectionStrings__AnalyticsConnection="Data Source=/app/data/analytics.db" kerko-backend`
+- Backend runs locally in Docker and is exposed through ngrok.
+- Vercel's `NEXT_PUBLIC_API_URL` points to the ngrok tunnel. Production search
+  and admin availability therefore depend on the local Docker container,
+  network connection, and ngrok agent remaining online.
+- CI: `.github/workflows/ci.yml` runs path-filtered backend/frontend builds and
+  tests. There is no automated backend deployment.
+- Docker run: use `backend/docker-compose.yml`; local ports and admin token come
+  from the gitignored `backend/.env`.
 - Debug logs: `docker logs kerko-backend --tail 50`
-- SQLite DB lives on the server at `~/code/kerko/backend/data/kerko.db` (not in git).
-- DB migrations must be applied locally then re-uploaded via scp.
-- SSH key: `backend/Kerko/certificates/kerko-key.pem` (gitignored).
+- SQLite data lives under `backend/data/` and is not committed.
 
 ## Sensitive Files (gitignored)
 
@@ -72,7 +72,9 @@ Search platform for Albanian public record databases (~1.1GB SQLite, 4 tables: `
 - Never add Co-Authored-By lines to commits.
 - PRs: squash merge with branch deletion.
 - `DbContext` is not thread-safe — never use `Task.WhenAll` with parallel queries on the same context.
-- Client IP comes from `X-Client-IP` header (set by API Gateway), not `X-Forwarded-For` or `RemoteIpAddress` — see `ClientInfo.GetClientIpAddress()`.
+- `ClientInfo.GetClientIpAddress()` currently accepts `X-Client-IP` and
+  `X-Forwarded-For` before `RemoteIpAddress`; any change must account for the
+  ngrok proxy boundary and include spoofing tests.
 - All `DateTime` values serialized with `Z` suffix via `UtcDateTimeJsonConverter` so frontend parses UTC correctly.
 - Use `string.Empty` instead of `""` for empty string literals (including inside EF LINQ expressions — it translates the same).
 - Test data uses Albanian public figures (e.g. Ismail Kadare) — never real personal names of contributors.

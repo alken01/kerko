@@ -59,5 +59,9 @@ dotnet test
 ## Deployment
 
 - **Frontend:** Vercel (auto-deploys from main) at `kerko.vercel.app`
-- **Backend:** Docker on EC2 (t4g.micro, eu-central-1), HTTPS via API Gateway
-- **CI/CD:** GitHub Actions builds, tests, and deploys via SSH on push to main
+- **Backend:** Local Docker, exposed through an ngrok tunnel configured as the
+  Vercel `NEXT_PUBLIC_API_URL`
+- **Availability:** Searches require the local Docker container and ngrok agent
+  to remain online
+- **CI:** GitHub Actions builds and tests changed frontend/backend code; it does
+  not deploy the backend
