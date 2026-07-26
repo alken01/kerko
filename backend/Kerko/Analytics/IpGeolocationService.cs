@@ -13,7 +13,7 @@ public class IpGeolocationService(
     IServiceProvider serviceProvider,
     ILogger<IpGeolocationService> logger)
 {
-    private readonly ConcurrentDictionary<string, string?> _cache = new();
+    private readonly ConcurrentDictionary<string, CachedLocation> _cache = new();
 
     private const string MappedV4Prefix = "::ffff:";
 
@@ -35,9 +35,9 @@ public class IpGeolocationService(
 
         foreach (var log in logs)
         {
-            if (_cache.TryGetValue(log.ClientIp, out var location))
+            if (_cache.TryGetValue(log.ClientIp, out var cached))
             {
-                log.Location = location;
+                log.Location = cached.Location;
             }
         }
     }
@@ -69,9 +69,9 @@ public class IpGeolocationService(
         var result = new Dictionary<string, string?>();
         foreach (var ip in ips)
         {
-            if (_cache.TryGetValue(ip, out var location))
+            if (_cache.TryGetValue(ip, out var cached))
             {
-                result[ip] = location;
+                result[ip] = cached.Location;
             }
         }
         return result;
@@ -103,7 +103,7 @@ public class IpGeolocationService(
                 .ToListAsync();
             foreach (var row in rows)
             {
-                _cache.TryAdd(row.Ip, row.Location);
+                _cache.TryAdd(row.Ip, new CachedLocation(row.Location));
             }
         }
         catch (Exception ex)
@@ -164,7 +164,7 @@ public class IpGeolocationService(
                 logger.LogWarning("ip-api.com batch returned {Status}", response.StatusCode);
                 foreach (var ip in originalIps)
                 {
-                    _cache.TryAdd(ip, null);
+                    _cache.TryAdd(ip, new CachedLocation(null));
                 }
 
                 return;
@@ -175,7 +175,7 @@ public class IpGeolocationService(
             {
                 foreach (var ip in originalIps)
                 {
-                    _cache.TryAdd(ip, null);
+                    _cache.TryAdd(ip, new CachedLocation(null));
                 }
 
                 return;
@@ -208,7 +208,7 @@ public class IpGeolocationService(
             foreach (var (original, normalized) in normalizedMap)
             {
                 var loc = locationByNormalized.GetValueOrDefault(normalized);
-                _cache.TryAdd(original, loc);
+                _cache.TryAdd(original, new CachedLocation(loc));
                 resolved[original] = loc;
             }
 
@@ -220,7 +220,7 @@ public class IpGeolocationService(
             logger.LogWarning(ex, "Failed to fetch IP geolocation for {Count} IPs", originalIps.Count);
             foreach (var ip in originalIps)
             {
-                _cache.TryAdd(ip, null);
+                _cache.TryAdd(ip, new CachedLocation(null));
             }
         }
     }
@@ -282,4 +282,6 @@ public class IpGeolocationService(
         [JsonPropertyName("city")]
         public string? City { get; set; }
     }
+
+    private readonly record struct CachedLocation(string? Location);
 }

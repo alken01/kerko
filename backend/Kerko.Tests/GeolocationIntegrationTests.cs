@@ -7,6 +7,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Kerko.Tests;
@@ -171,6 +172,29 @@ public class GeolocationIntegrationTests
         Assert.That(logs2[0].Location, Is.EqualTo(firstLocation));
     }
 
+    [Test]
+    public async Task GeoService_NegativeCachesFailedLookupsWithoutThrowing()
+    {
+        var handler = new StaticResponseHandler(HttpStatusCode.ServiceUnavailable);
+        using var client = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("http://geo.test/")
+        };
+        var service = new IpGeolocationService(
+            new StubHttpClientFactory(client),
+            _factory.Services,
+            NullLogger<IpGeolocationService>.Instance);
+
+        var first = new List<RequestLog> { MakeLog("203.0.113.10") };
+        var second = new List<RequestLog> { MakeLog("203.0.113.10") };
+
+        Assert.DoesNotThrowAsync(async () => await service.ResolveLocationsAsync(first));
+        Assert.DoesNotThrowAsync(async () => await service.ResolveLocationsAsync(second));
+        Assert.That(first[0].Location, Is.Null);
+        Assert.That(second[0].Location, Is.Null);
+        Assert.That(handler.RequestCount, Is.EqualTo(1));
+    }
+
     // ─── Logs endpoint returns location field ────────────────────────────────
 
     [Test]
@@ -190,5 +214,26 @@ public class GeolocationIntegrationTests
 
         var location = items[0].GetProperty("location").GetString();
         Assert.That(location, Is.EqualTo("Frankfurt am Main, Germany"));
+    }
+
+    private sealed class StubHttpClientFactory(HttpClient client) : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name)
+        {
+            return client;
+        }
+    }
+
+    private sealed class StaticResponseHandler(HttpStatusCode statusCode) : HttpMessageHandler
+    {
+        public int RequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            RequestCount++;
+            return Task.FromResult(new HttpResponseMessage(statusCode));
+        }
     }
 }

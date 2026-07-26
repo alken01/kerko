@@ -63,6 +63,9 @@ next-env.d.ts
 backend/Kerko/certificates/
 
 # Database
+*.db
+*.db-shm
+*.db-wal
 database/
 backend/Kerko/processed_data/
 backend/data/*
