@@ -6,9 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "${KERKO_BACKEND_PORT:-8081}:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - KERKO_ADMIN_TOKEN=${KERKO_ADMIN_TOKEN}
     volumes:
       - ./data:/app/data
     networks:
@@ -16,4 +17,4 @@ services:
 
 networks:
   kerko-network:
-    driver: bridge 
+    driver: bridge
