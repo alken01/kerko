@@ -237,6 +237,7 @@ public class SearchServiceTests
     // ─── Telefon search ──────────────────────────────────────────────
 
     [TestCase("0691234567", "Kuçi", Description = "Exact phone")]
+    [TestCase("06912345", "Kuçi", Description = "Phone with two unknown suffix digits")]
     [TestCase("0697654321", "Çela", Description = "Different phone")]
     public async Task Telefon_FindsByPhoneNumber(string phone, string expectedMbiemri)
     {
@@ -245,12 +246,20 @@ public class SearchServiceTests
         Assert.That(result.Items, Has.Some.Matches<PatronazhistResponse>(p => p.Mbiemri == expectedMbiemri));
     }
 
-    [TestCase("069", Description = "Too short")]
+    [TestCase("0691234", Description = "Fewer than six digits after 06")]
     [TestCase("", Description = "Empty")]
     [TestCase(null, Description = "Null")]
     public void Telefon_InvalidInput_ThrowsArgumentException(string? phone)
     {
         Assert.ThrowsAsync<ArgumentException>(() => _service.TelefonAsync(phone));
+    }
+
+    [Test]
+    public async Task Telefon_PartialNumber_MatchesPrefixOnly()
+    {
+        var result = await _service.TelefonAsync("91234567");
+
+        Assert.That(result.Items, Is.Empty);
     }
 
     // ─── Adversarial input sanitization ────────────────────────────

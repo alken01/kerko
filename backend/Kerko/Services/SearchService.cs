@@ -18,7 +18,9 @@ public class SearchService(ApplicationDbContext db) : ISearchService
     private const int DefaultPageSize = 10;
     private const int MaxPageSize = 100;
     private const int MinTargesLength = 6;
-    private const int MinPhoneLength = 10;
+    // Six user-entered digits after the fixed domestic "06" prefix. This lets
+    // callers omit at most the final two digits (up to 100 possible suffixes).
+    private const int MinPhoneLength = 8;
     private const int MaxInputLength = 100;
 
     // Sentinel char appended to a prefix to form an inclusive upper bound for a
@@ -86,9 +88,8 @@ public class SearchService(ApplicationDbContext db) : ISearchService
         var needle = numriTelefonit!.Trim();
         var query = db.Patronazhist
             .AsNoTracking()
-            .Where(p => p.Tel != null && p.Tel.Contains(needle))
-            .OrderBy(p => p.Tel == needle ? 0
-                        : p.Tel!.StartsWith(needle) ? 1 : 2)
+            .Where(p => p.Tel != null && p.Tel.StartsWith(needle))
+            .OrderBy(p => p.Tel == needle ? 0 : 1)
             .ThenBy(p => p.Tel);
 
         return await PaginateAsync(query, SearchProjections.Patronazhist, pageNumber, pageSize);

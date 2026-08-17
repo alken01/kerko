@@ -10,7 +10,8 @@ export const PHONE_SEARCH_ERROR_KEY = "errors.phoneSearch";
 export const NGROK_HEADER = { 'ngrok-skip-browser-warning': 'true' };
 
 // Input validation
-export const PHONE_NUMBER_LENGTH = 10;
+// "06" plus at least six entered digits; the final two digits may be unknown.
+export const MIN_PHONE_SEARCH_LENGTH = 8;
 export const LICENSE_PLATE_LENGTH = 7;
 export const ALBANIAN_PHONE_PREFIX = "06";
 

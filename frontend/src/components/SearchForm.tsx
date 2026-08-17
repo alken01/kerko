@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PhoneInput } from "./PhoneInput";
 import { TargaInput } from "./TargaInput";
 import { cardStyles } from "./ui/card-styles";
-import { PHONE_NUMBER_LENGTH, LICENSE_PLATE_LENGTH, ALBANIAN_PHONE_PREFIX } from "@/lib/constants";
+import { MIN_PHONE_SEARCH_LENGTH, LICENSE_PLATE_LENGTH, ALBANIAN_PHONE_PREFIX } from "@/lib/constants";
 import {
   saveSearchToHistory,
   getSearchHistory,
@@ -109,7 +109,7 @@ export function SearchForm({
       router.push(`?${params.toString()}`, { scroll: false });
       saveSearchToHistory("targa", { targa }).then(loadHistory);
     } else if (activeTab === "telefon") {
-      if (telefon.length < PHONE_NUMBER_LENGTH) {
+      if (telefon.length < MIN_PHONE_SEARCH_LENGTH) {
         return;
       }
 
@@ -304,7 +304,7 @@ export function SearchForm({
                 className="flex-1 bg-surface-secondary border-2 border-border-semantic-secondary text-text-primary hover:bg-surface-tertiary h-12 touch-manipulation disabled:opacity-50"
                 disabled={
                   isLoading ||
-                  (activeTab === "telefon" && telefon.length < PHONE_NUMBER_LENGTH) ||
+                  (activeTab === "telefon" && telefon.length < MIN_PHONE_SEARCH_LENGTH) ||
                   (activeTab === "targa" && targa.length < LICENSE_PLATE_LENGTH)
                 }
               >
