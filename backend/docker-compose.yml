@@ -2,6 +2,7 @@ services:
   backend:
     container_name: kerko-backend
     image: kerko-backend
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
